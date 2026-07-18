@@ -1673,31 +1673,6 @@ function clearAllDataConfirm(){
   renderEmployeeList();fillEmployeeSelects();
   showNotification('تم مسح جميع البيانات من هذا المتصفح. ما زال بإمكانك استيراد نسخة احتياطية لاحقًا.');
 }
-
-<!-- قسم النسخ الاحتياطي والاستيراد -->
-<div class="settings-section">
-  <h3>النسخ الاحتياطي للبيانات</h3>
-
-  <div class="backup-buttons">
-    <!-- تصدير البيانات إلى JSON -->
-    <button id="exportDataBtn" class="primary">
-      تصدير البيانات (ملف JSON)
-    </button>
-
-    <!-- استيراد النسخة الاحتياطية -->
-    <button id="importDataBtn" class="secondary">
-      استيراد نسخة احتياطية
-    </button>
-
-    <!-- إدخال ملف مخفي لاختيار ملف النسخة -->
-    <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
-
-    <!-- مسح كل البيانات -->
-    <button id="clearAllDataBtn" class="danger">
-      مسح جميع البيانات من هذا الجهاز
-    </button>
-  </div>
-</div>
 </script>
 </body>
 </html>
