@@ -1085,7 +1085,31 @@ function attachUIEvents(){
       }
     };
   }
-} // ← هذا القوس يغلق attachUIEvents()، لا تحذفه
+
+  // === نافذة تقييمات المعيار ===
+const evaluationsModal = document.getElementById('evaluationsModal');
+const saveEvalBtn = document.getElementById('saveEvalBtn');
+const cancelEvalBtn = document.getElementById('cancelEvalBtn');
+
+// زر الإلغاء: إخفاء النافذة
+if (cancelEvalBtn && evaluationsModal) {
+  cancelEvalBtn.onclick = function () {
+    evaluationsModal.style.display = 'none';
+  };
+}
+
+// زر الحفظ: (يمكنك إضافة منطق الحفظ) ثم إخفاء النافذة
+if (saveEvalBtn && evaluationsModal) {
+  saveEvalBtn.onclick = function () {
+    // منطق الحفظ (قراءة الدرجة والملاحظة وحفظها في البيانات/Firebase) إن أحببت
+
+    evaluationsModal.style.display = 'none';
+    if (typeof showNotification === 'function') {
+      showNotification('تم حفظ التقييم بنجاح.');
+    }
+  };
+}
+}
 
 /* ========== دوال المودالات ========== */
 function toggleModal(id,show){
