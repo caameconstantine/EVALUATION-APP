@@ -1087,23 +1087,23 @@ function attachUIEvents(){
   }
 
   // === نافذة تقييمات المعيار ===
-const evaluationsModal = document.getElementById('evaluationsModal');
-const saveEvalBtn = document.getElementById('saveEvalBtn');
-const cancelEvalBtn = document.getElementById('cancelEvalBtn');
+const assessmentModal = document.getElementById('assessmentModal');
+const saveAssessmentBtn = document.getElementById('saveAssessmentBtn');
+const cancelAssessmentBtn = document.getElementById('cancelAssessmentBtn');
 
 // زر الإلغاء: إخفاء النافذة
-if (cancelEvalBtn && evaluationsModal) {
-  cancelEvalBtn.onclick = function () {
-    evaluationsModal.style.display = 'none';
+if (cancelAssessmentBtn && assessmentModal) {
+  cancelAssessmentBtn.onclick = function () {
+    assessmentModal.style.display = 'none';
   };
 }
 
 // زر الحفظ: (يمكنك إضافة منطق الحفظ) ثم إخفاء النافذة
-if (saveEvalBtn && evaluationsModal) {
-  saveEvalBtn.onclick = function () {
+if (saveAssessmentBtn && assessmentModal) {
+  saveAssessmentBtn.onclick = function () {
     // منطق الحفظ (قراءة الدرجة والملاحظة وحفظها في البيانات/Firebase) إن أحببت
 
-    evaluationsModal.style.display = 'none';
+    assessmentModal.style.display = 'none';
     if (typeof showNotification === 'function') {
       showNotification('تم حفظ التقييم بنجاح.');
     }
