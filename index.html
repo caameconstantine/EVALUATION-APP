@@ -167,18 +167,30 @@
       <button class="login-tab" data-auth="signup">إنشاء حساب جديد</button>
     </div>
 
-    <!-- نموذج تسجيل الدخول -->
-    <div id="loginForm" class="auth-form active">
-      <div class="form-group">
-        <label>البريد الإلكتروني:</label>
-        <input type="email" id="loginEmail" placeholder="example@email.com">
-      </div>
-      <div class="form-group">
-        <label>كلمة المرور:</label>
-        <input type="password" id="loginPassword" placeholder="********​">
-      </div>
-      <button class="btn-primary" id="btnLogin" style="width:100%;margin-top:8px;">🔐 تسجيل الدخول</button>
-    </div>
+ <!-- نموذج تسجيل الدخول -->
+<div id="loginForm" class="auth-form active">
+  <div class="form-group">
+    <label>البريد الإلكتروني:</label>
+    <input type="email" id="loginEmail" placeholder="example@email.com">
+  </div>
+
+  <div class="form-group">
+    <label>كلمة المرور:</label>
+    <input type="password" id="loginPassword" placeholder="​********​">
+  </div>
+
+  <button class="btn-primary" id="btnLogin" style="width:100%;margin-top:8px;">
+    🔒 تسجيل الدخول
+  </button>
+
+  <!-- رابط نسيت كلمة المرور -->
+  <p style="text-align: center; margin-top: 12px;">
+    <a href="#" id="forgotPasswordLink"
+       style="color: #0066cc; text-decoration: none; font-size: 14px;">
+      نسيت كلمة المرور؟
+    </a>
+  </p>
+</div>
 
     <!-- نموذج إنشاء الحساب -->
     <div id="signupForm" class="auth-form">
@@ -445,6 +457,46 @@
     <button id="changePasswordBtn" class="primary">تغيير كلمة المرور</button>
   </div>
 </div>
+
+  <!-- نافذة نسيت كلمة المرور -->
+<div id="forgotPasswordModal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width: 400px;">
+    <h3>إعادة تعيين كلمة المرور</h3>
+    <p>أدخل بريدك الإلكتروني وسنرسل لك رابطًا لتغيير كلمة المرور.</p>
+    
+    <div class="form-group">
+      <label>البريد الإلكتروني</label>
+      <input type="email" id="resetEmail" placeholder="example@email.com">
+    </div>
+    
+    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+      <button id="cancelResetBtn" class="secondary">إلغاء</button>
+      <button id="sendResetBtn" class="primary">إرسال الرابط</button>
+    </div>
+  </div>
+</div>
+
+<!-- تنسيق بسيط للنافذة (يمكنك نقله إلى <style> إن شئت) -->
+<style>
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+</style>
   
 <script>
 /* ========== تكوين Firebase ========== */
@@ -924,6 +976,82 @@ function attachUIEvents(){
           showNotification('للأمان، يرجى تسجيل الدخول من جديد ثم إعادة المحاولة.', true);
         } else {
           showNotification('حدث خطأ أثناء تغيير كلمة المرور: ' + (error.message || ''), true);
+        }
+      }
+    };
+  }
+
+  // === ميزة نسيت كلمة المرور ===
+  
+  const forgotLink = document.getElementById('forgotPasswordLink');
+  const forgotModal = document.getElementById('forgotPasswordModal');
+  const cancelResetBtn = document.getElementById('cancelResetBtn');
+  const sendResetBtn = document.getElementById('sendResetBtn');
+  
+  // فتح النافذة عند الضغط على "نسيت كلمة المرور؟"
+  if (forgotLink) {
+    forgotLink.onclick = function(e) {
+      e.preventDefault();
+      if (forgotModal) {
+        forgotModal.style.display = 'flex';
+      }
+      
+      // لو كان حقل البريد في شاشة الدخول مليئًا، انسخه في نافذة الإعادة
+      const loginEmailInput = document.getElementById('loginEmail');
+      const resetEmailInput = document.getElementById('resetEmail');
+      if (loginEmailInput && resetEmailInput && loginEmailInput.value) {
+        resetEmailInput.value = loginEmailInput.value;
+      }
+    };
+  }
+  
+  // إغلاق النافذة عند الضغط على "إلغاء"
+  if (cancelResetBtn) {
+    cancelResetBtn.onclick = function() {
+      if (forgotModal) {
+        forgotModal.style.display = 'none';
+      }
+    };
+  }
+  
+  // إرسال رابط إعادة تعيين كلمة المرور
+  if (sendResetBtn) {
+    sendResetBtn.onclick = async function() {
+      const email = document.getElementById('resetEmail').value.trim();
+      
+      // التحقق من إدخال البريد
+      if (!email) {
+        showNotification('الرجاء إدخال البريد الإلكتروني.', true);
+        return;
+      }
+      
+      // التحقق من صيغة البريد
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        showNotification('صيغة البريد الإلكتروني غير صحيحة.', true);
+        return;
+      }
+      
+      try {
+        // استدعاء Firebase لإرسال رسالة إعادة التعيين
+        await firebase.auth().sendPasswordResetEmail(email);
+        
+        // إغلاق النافذة وتفريغ الحقل
+        if (forgotModal) {
+          forgotModal.style.display = 'none';
+        }
+        document.getElementById('resetEmail').value = '';
+        
+        showNotification('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. تحقق من صندوق الوارد والبريد العشوائي.');
+      } catch (error) {
+        console.error('Error sending reset email:', error);
+        
+        if (error.code === 'auth/user-not-found') {
+          showNotification('لا يوجد حساب مرتبط بهذا البريد الإلكتروني.', true);
+        } else if (error.code === 'auth/invalid-email') {
+          showNotification('البريد الإلكتروني غير صالح.', true);
+        } else {
+          showNotification('حدث خطأ أثناء إرسال رابط إعادة التعيين: ' + (error.message || ''), true);
         }
       }
     };
