@@ -1055,7 +1055,37 @@ function attachUIEvents(){
       }
     };
   }
-}
+
+  // === لوحة تعديل التقرير النهائي للشهر ===
+  const editReportModal = document.getElementById('editReportModal');
+  const cancelEditReportBtn = document.getElementById('cancelEditReportBtn');
+  const saveEditedReportBtn = document.getElementById('saveEditedReportBtn');
+
+  // زر إلغاء: إخفاء اللوحة بدون حفظ
+  if (cancelEditReportBtn && editReportModal) {
+    cancelEditReportBtn.onclick = function () {
+      editReportModal.style.display = 'none';
+    };
+  }
+
+  // زر حفظ التقرير النهائي
+  if (saveEditedReportBtn && editReportModal) {
+    saveEditedReportBtn.onclick = function () {
+      // هنا منطق الحفظ
+      // مثال: قراءة النص من textarea وحفظه في التخزين أو قاعدة البيانات
+
+      // مثال إن كان عندك textarea للتقرير النهائي:
+      // const editlReportText = document.getElementById('editReportText').value.trim();
+      // saveeditReportToDb(editReportText); // دالة أنت تنفّذها بنفسك
+
+      // بعد الحفظ، يمكنك إخفاء اللوحة وإظهار رسالة نجاح
+      editlReportModal.style.display = 'none';
+      if (typeof showNotification === 'function') {
+        showNotification('تم حفظ التقرير النهائي بنجاح.');
+      }
+    };
+  }
+} // ← هذا القوس يغلق attachUIEvents()، لا تحذفه
 
 /* ========== دوال المودالات ========== */
 function toggleModal(id,show){
