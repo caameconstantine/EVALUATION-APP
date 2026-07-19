@@ -105,6 +105,53 @@
       .score-item{break-inside:avoid;margin-bottom:12px;}
       .image-preview img{width:50px;height:50px;}
     }
+
+    /* ===== تنسيقات حقول كلمة المرور وتغييرها ===== */
+.password-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.password-input-wrapper input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.toggle-password {
+  background: #f0f0f0;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.toggle-password:hover {
+  background: #e0e0e0;
+}
+
+.password-change-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 400px;
+}
+
+.password-change-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.password-change-form label {
+  font-weight: bold;
+  color: #333;
+}
+    
   </style>
 </head>
 <body>
@@ -363,6 +410,39 @@
     <button id="clearAllDataBtn" class="danger">
       مسح جميع البيانات من هذا الجهاز
     </button>
+  </div>
+</div>
+
+<!-- قسم أمان الحساب: تغيير كلمة المرور -->
+<div class="settings-section">
+  <h3>أمان الحساب</h3>
+  
+  <div class="password-change-form">
+    <div class="form-group">
+      <label>كلمة المرور الحالية</label>
+      <div class="password-input-wrapper">
+        <input type="password" id="currentPassword" placeholder="أدخل كلمة المرور الحالية">
+        <button type="button" class="toggle-password" data-target="currentPassword">👁️</button>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label>كلمة المرور الجديدة</label>
+      <div class="password-input-wrapper">
+        <input type="password" id="newPassword" placeholder="أدخل كلمة المرور الجديدة">
+        <button type="button" class="toggle-password" data-target="newPassword">👁️</button>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label>تأكيد كلمة المرور الجديدة</label>
+      <div class="password-input-wrapper">
+        <input type="password" id="confirmPassword" placeholder="أكّد كلمة المرور الجديدة">
+        <button type="button" class="toggle-password" data-target="confirmPassword">👁️</button>
+      </div>
+    </div>
+    
+    <button id="changePasswordBtn" class="primary">تغيير كلمة المرور</button>
   </div>
 </div>
   
@@ -770,6 +850,83 @@ function attachUIEvents(){
 
   if (clearBtn) {
     clearBtn.onclick = clearAllDataConfirm;
+  }
+
+  // === إظهار/إخفاء حقول كلمة المرور في قسم تغيير كلمة السر ===
+  document.querySelectorAll('.toggle-password').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const targetId = this.getAttribute('data-target');
+      const input = document.getElementById(targetId);
+      if (!input) return;
+
+      if (input.type === 'password') {
+        input.type = 'text';
+        this.textContent = '🔒';
+      } else {
+        input.type = 'password';
+        this.textContent = '👁️';
+      }
+    });
+  });
+
+  // === زر تغيير كلمة المرور ===
+  const changePasswordBtn = document.getElementById('changePasswordBtn');
+  if (changePasswordBtn) {
+    changePasswordBtn.onclick = async function() {
+      const currentPassword = document.getElementById('currentPassword').value.trim();
+      const newPassword = document.getElementById('newPassword').value.trim();
+      const confirmPassword = document.getElementById('confirmPassword').value.trim();
+
+      // التحقق من الحقول
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        showNotification('الرجاء ملء جميع الحقول.', true);
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        showNotification('كلمتا المرور الجديدتان غير متطابقتين.', true);
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        showNotification('كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل.', true);
+        return;
+      }
+
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          showNotification('يجب تسجيل الدخول أولاً لتغيير كلمة المرور.', true);
+          return;
+        }
+
+        // إعادة المصادقة بكلمة المرور الحالية (مهم لFirebase)
+        const credential = firebase.auth.EmailAuthProvider.credential(
+          user.email,
+          currentPassword
+        );
+        await user.reauthenticateWithCredential(credential);
+
+        // تحديث كلمة المرور
+        await user.updatePassword(newPassword);
+
+        // تفريغ الحقول بعد النجاح
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+
+        showNotification('تم تغيير كلمة المرور بنجاح.');
+      } catch (error) {
+        console.error('Error changing password:', error);
+        if (error.code === 'auth/wrong-password') {
+          showNotification('كلمة المرور الحالية غير صحيحة.', true);
+        } else if (error.code === 'auth/requires-recent-login') {
+          showNotification('للأمان، يرجى تسجيل الدخول من جديد ثم إعادة المحاولة.', true);
+        } else {
+          showNotification('حدث خطأ أثناء تغيير كلمة المرور: ' + (error.message || ''), true);
+        }
+      }
+    };
   }
 }
 
