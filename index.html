@@ -132,7 +132,7 @@
         <input type="password" id="loginPassword" placeholder="********">
       </div>
       <button class="btn-primary" id="btnLogin" style="width:100%;margin-top:8px;">🔒 تسجيل الدخول</button>
-      <button class="forgot-link" id="forgotPasswordLink" type="button">نسيت كلمة المرور؟</button>
+      <button class="forgot-link" id="forgotPasswordLink" type="button" onclick="event.preventDefault();event.stopPropagation();document.getElementById('forgotPasswordModal').classList.add('show');var le=document.getElementById('loginEmail'),re=document.getElementById('resetEmail');if(le&&re&&le.value)re.value=le.value;">نسيت كلمة المرور؟</button>
     </div>
     <div id="signupForm" class="auth-form">
       <div class="form-group">
@@ -586,11 +586,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const cancelResetBtn = document.getElementById('cancelResetBtn');
   const sendResetBtn = document.getElementById('sendResetBtn');
 
+  /* ========== FORGOT PASSWORD - FIXED ========== */
+  const forgotLink = document.getElementById('forgotPasswordLink');
+  const forgotModal = document.getElementById('forgotPasswordModal');
+  const cancelResetBtn = document.getElementById('cancelResetBtn');
+  const sendResetBtn = document.getElementById('sendResetBtn');
+
   if(forgotLink && forgotModal){
     forgotLink.addEventListener('click', function(e){
       e.preventDefault();
       e.stopPropagation();
-      console.log('[DEBUG] Forgot password clicked');
+      showNotification('⌛ جاري فتح نافذة إعادة تعيين كلمة المرور...');
       forgotModal.classList.add('show');
       const loginEmailInput = document.getElementById('loginEmail');
       const resetEmailInput = document.getElementById('resetEmail');
@@ -603,7 +609,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if(cancelResetBtn && forgotModal){
     cancelResetBtn.addEventListener('click', function(e){
       e.preventDefault();
-      console.log('[DEBUG] Cancel reset clicked');
       forgotModal.classList.remove('show');
     });
   }
@@ -612,26 +617,29 @@ document.addEventListener('DOMContentLoaded', () => {
     sendResetBtn.addEventListener('click', async function(e){
       e.preventDefault();
       e.stopPropagation();
-      console.log('[DEBUG] Send reset clicked');
       const email = document.getElementById('resetEmail').value.trim();
       if(!email){ showNotification('الرجاء إدخال البريد الإلكتروني.', true); return; }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if(!emailRegex.test(email)){ showNotification('صيغة البريد الإلكتروني غير صحيحة.', true); return; }
+      showNotification('⌛ جاري إرسال رابط إعادة التعيين...');
       try{
-        console.log('[DEBUG] Calling auth.sendPasswordResetEmail for:', email);
-        // Use the pre-initialized auth instance
         await auth.sendPasswordResetEmail(email);
-        console.log('[DEBUG] Email sent successfully');
         if(forgotModal) forgotModal.classList.remove('show');
         document.getElementById('resetEmail').value = '';
         showNotification('✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك. تحقق من صندوق الوارد والبريد العشوائي.');
       }catch(error){
-        console.error('[DEBUG] Error:', error.code, error.message);
+        console.error('Error:', error.code, error.message);
         if(error.code === 'auth/user-not-found'){ showNotification('لا يوجد حساب مرتبط بهذا البريد.', true); }
         else if(error.code === 'auth/invalid-email'){ showNotification('البريد الإلكتروني غير صالح.', true); }
         else if(error.code === 'auth/too-many-requests'){ showNotification('عدد محاولات كثير. يرجى المحاولة لاحقًا.', true); }
         else { showNotification('حدث خطأ: ' + (error.message || ''), true); }
       }
+    });
+  }
+
+  if(forgotModal){
+    forgotModal.addEventListener('click', function(e){
+      if(e.target === forgotModal){ forgotModal.classList.remove('show'); }
     });
   }
 
