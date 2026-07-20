@@ -90,6 +90,7 @@
     .password-change-form label{font-weight:bold;color:#333}
     .forgot-link{display:block;margin-top:12px;color:#0066cc;text-decoration:none;font-size:14px;background:none;border:none;cursor:pointer;width:100%}
     .forgot-link:hover{text-decoration:underline}
+    .password-reset-success{background:#d4edda;color:#155724;padding:10px;border-radius:8px;margin-top:10px;font-size:.85rem}
     @media(max-width:600px){
       .container{padding:15px 10px}
       h1{font-size:1.3rem}
@@ -132,7 +133,7 @@
         <input type="password" id="loginPassword" placeholder="********">
       </div>
       <button class="btn-primary" id="btnLogin" style="width:100%;margin-top:8px;">🔒 تسجيل الدخول</button>
-      <button class="forgot-link" id="forgotPasswordLink" type="button" onclick="event.preventDefault();event.stopPropagation();document.getElementById('forgotPasswordModal').classList.add('show');var le=document.getElementById('loginEmail'),re=document.getElementById('resetEmail');if(le&&re&&le.value)re.value=le.value;">نسيت كلمة المرور؟</button>
+      <button class="forgot-link" id="forgotPasswordLink" type="button">نسيت كلمة المرور؟</button>
     </div>
     <div id="signupForm" class="auth-form">
       <div class="form-group">
@@ -291,7 +292,7 @@
     </div>
     <div class="form-group"><label>ملاحظة (اختياري):</label><textarea id="assessNote" placeholder="اكتب ملاحظتك هنا"></textarea></div>
     <div class="form-group">
-      <label>صور (اختياري - تُصغَّر تلقائيًا):</label>
+      <label>صور (اختياري - تُصغَّر تلقائيًا):</label>
       <input type="file" id="assessImages" accept="image/*" multiple>
       <div id="imagePreviewContainer" class="image-preview"></div>
     </div>
@@ -330,6 +331,9 @@
     <h3>إعادة تعيين كلمة المرور</h3>
     <p>أدخل بريدك الإلكتروني وسنرسل لك رابطًا لتغيير كلمة المرور.</p>
     <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="resetEmail" placeholder="example@email.com"></div>
+    <div id="resetSuccessMsg" class="password-reset-success hidden" style="display:none;">
+      ✅ تم إرسال رابط إعادة التعيين! تحقق من بريدك الإلكتروني (وصندوق البريد العشوائي).
+    </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:15px;">
       <button id="cancelResetBtn" class="btn-warning">إلغاء</button>
       <button id="sendResetBtn" class="btn-primary">إرسال الرابط</button>
@@ -534,27 +538,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const authLoading = document.getElementById('authLoading');
 
-  // Login button
+  // ====== Login button ======
   const btnLogin = document.getElementById('btnLogin');
   if(btnLogin){
-    btnLogin.onclick = async () => {
+    btnLogin.addEventListener('click', async () => {
       const email = document.getElementById('loginEmail').value.trim();
       const pass = document.getElementById('loginPassword').value.trim();
       if(!email || !pass){ showNotification('أدخل البريد وكلمة المرور', true); return; }
       try{
         if(authLoading) authLoading.classList.remove('hidden');
         const result = await auth.signInWithEmailAndPassword(email, pass);
-        try{ currentUser = { type: 'firebase', uid: result.user.uid, email: result.user.email }; localStorage.setItem('app_logged_user', JSON.stringify(currentUser)); }
-        catch(e){ console.warn('Failed to save login state', e); }
-      }catch(e){ console.error(e); showNotification('خطأ في تسجيل الدخول: ' + (e.message || ''), true); }
+        currentUser = { type: 'firebase', uid: result.user.uid, email: result.user.email };
+        try{ localStorage.setItem('app_logged_user', JSON.stringify(currentUser)); }catch(e){ console.warn('Failed to save login state', e); }
+        showNotification('تم تسجيل الدخول بنجاح!');
+      }catch(e){ 
+        console.error(e); 
+        showNotification('خطأ في تسجيل الدخول: ' + (e.message || ''), true); 
+      }
       finally{ if(authLoading) authLoading.classList.add('hidden'); }
-    };
+    });
   }
 
-  // Signup button
+  // ====== Signup button ======
   const btnSignup = document.getElementById('btnSignup');
   if(btnSignup){
-    btnSignup.onclick = async () => {
+    btnSignup.addEventListener('click', async () => {
       const email = document.getElementById('signupEmail').value.trim();
       const pass = document.getElementById('signupPassword').value.trim();
       if(!email || !pass){ showNotification('أدخل البريد وكلمة المرور', true); return; }
@@ -563,46 +571,53 @@ document.addEventListener('DOMContentLoaded', () => {
         if(authLoading) authLoading.classList.remove('hidden');
         const result = await auth.createUserWithEmailAndPassword(email, pass);
         showNotification('تم إنشاء الحساب وتسجيل الدخول');
-        try{ currentUser = { type: 'firebase', uid: result.user.uid, email: result.user.email }; localStorage.setItem('app_logged_user', JSON.stringify(currentUser)); }
-        catch(e){ console.warn('Failed to save signup state', e); }
-      }catch(e){ console.error(e); showNotification('خطأ في إنشاء الحساب: ' + (e.message || ''), true); }
+        currentUser = { type: 'firebase', uid: result.user.uid, email: result.user.email };
+        try{ localStorage.setItem('app_logged_user', JSON.stringify(currentUser)); }catch(e){ console.warn('Failed to save signup state', e); }
+      }catch(e){ 
+        console.error(e); 
+        showNotification('خطأ في إنشاء الحساب: ' + (e.message || ''), true); 
+      }
       finally{ if(authLoading) authLoading.classList.add('hidden'); }
-    };
+    });
   }
 
-  // Logout button
+  // ====== Logout button ======
   const logoutBtn = document.getElementById('logoutBtn');
   if(logoutBtn){
-    logoutBtn.onclick = async () => {
-      try{ await auth.signOut(); try{ localStorage.removeItem('app_logged_user'); }catch(e){} }
+    logoutBtn.addEventListener('click', async () => {
+      try{ 
+        await auth.signOut(); 
+        currentUser = null;
+        employees = []; partialAssessments = []; finalReports = [];
+        try{ localStorage.removeItem('app_logged_user'); }catch(e){}
+        showLoginScreen();
+        showNotification('تم تسجيل الخروج');
+      }
       catch(e){ console.error(e); showNotification('حدث خطأ أثناء تسجيل الخروج', true); }
-    };
+    });
   }
 
-  /* ========== FORGOT PASSWORD - FIXED ========== */
-  // Use the pre-initialized auth variable which is always ready
+  // ====== FORGOT PASSWORD - FIXED (works without login) ======
   const forgotLink = document.getElementById('forgotPasswordLink');
   const forgotModal = document.getElementById('forgotPasswordModal');
   const cancelResetBtn = document.getElementById('cancelResetBtn');
   const sendResetBtn = document.getElementById('sendResetBtn');
-
-  /* ========== FORGOT PASSWORD - FIXED ========== */
-  const forgotLink = document.getElementById('forgotPasswordLink');
-  const forgotModal = document.getElementById('forgotPasswordModal');
-  const cancelResetBtn = document.getElementById('cancelResetBtn');
-  const sendResetBtn = document.getElementById('sendResetBtn');
+  const resetSuccessMsg = document.getElementById('resetSuccessMsg');
 
   if(forgotLink && forgotModal){
     forgotLink.addEventListener('click', function(e){
       e.preventDefault();
       e.stopPropagation();
-      showNotification('⌛ جاري فتح نافذة إعادة تعيين كلمة المرور...');
-      forgotModal.classList.add('show');
+      // Reset modal state
+      if(resetSuccessMsg) resetSuccessMsg.style.display = 'none';
+      document.getElementById('resetEmail').value = '';
+      // Pre-fill email if available in login form
       const loginEmailInput = document.getElementById('loginEmail');
       const resetEmailInput = document.getElementById('resetEmail');
-      if(loginEmailInput && resetEmailInput && loginEmailInput.value){ 
-        resetEmailInput.value = loginEmailInput.value; 
+      if(loginEmailInput && resetEmailInput && loginEmailInput.value.trim()){ 
+        resetEmailInput.value = loginEmailInput.value.trim(); 
       }
+      forgotModal.classList.add('show');
     });
   }
 
@@ -624,22 +639,16 @@ document.addEventListener('DOMContentLoaded', () => {
       showNotification('⌛ جاري إرسال رابط إعادة التعيين...');
       try{
         await auth.sendPasswordResetEmail(email);
-        if(forgotModal) forgotModal.classList.remove('show');
         document.getElementById('resetEmail').value = '';
-        showNotification('✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك. تحقق من صندوق الوارد والبريد العشوائي.');
+        if(resetSuccessMsg) resetSuccessMsg.style.display = 'block';
+        showNotification('✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك.');
       }catch(error){
-        console.error('Error:', error.code, error.message);
+        console.error('Reset error:', error.code, error.message);
         if(error.code === 'auth/user-not-found'){ showNotification('لا يوجد حساب مرتبط بهذا البريد.', true); }
         else if(error.code === 'auth/invalid-email'){ showNotification('البريد الإلكتروني غير صالح.', true); }
         else if(error.code === 'auth/too-many-requests'){ showNotification('عدد محاولات كثير. يرجى المحاولة لاحقًا.', true); }
         else { showNotification('حدث خطأ: ' + (error.message || ''), true); }
       }
-    });
-  }
-
-  if(forgotModal){
-    forgotModal.addEventListener('click', function(e){
-      if(e.target === forgotModal){ forgotModal.classList.remove('show'); }
     });
   }
 
@@ -670,61 +679,84 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function attachUIEvents(){
   const addEmpBtn = document.getElementById('addEmpBtn');
-  if(addEmpBtn) addEmpBtn.onclick = addEmployee;
+  if(addEmpBtn) addEmpBtn.addEventListener('click', addEmployee);
+
   const addCriterionBtn = document.getElementById('addCriterionBtn');
-  if(addCriterionBtn) addCriterionBtn.onclick = addModalCriterion;
+  if(addCriterionBtn) addCriterionBtn.addEventListener('click', addModalCriterion);
+
   const saveEmpModalBtn = document.getElementById('saveEmpModalBtn');
-  if(saveEmpModalBtn) saveEmpModalBtn.onclick = saveEmployeeModal;
+  if(saveEmpModalBtn) saveEmpModalBtn.addEventListener('click', saveEmployeeModal);
+
   const cancelEmpModalBtn = document.getElementById('cancelEmpModalBtn');
-  if(cancelEmpModalBtn) cancelEmpModalBtn.onclick = () => toggleModal('employeeModal', false);
+  if(cancelEmpModalBtn) cancelEmpModalBtn.addEventListener('click', () => toggleModal('employeeModal', false));
+
   const importCriteriaBtn = document.getElementById('importCriteriaBtn');
-  if(importCriteriaBtn) importCriteriaBtn.onclick = openImportCriteriaModal;
+  if(importCriteriaBtn) importCriteriaBtn.addEventListener('click', openImportCriteriaModal);
+
   const addSubCriterionBtn = document.getElementById('addSubCriterionBtn');
-  if(addSubCriterionBtn) addSubCriterionBtn.onclick = addModalSubCriterion;
+  if(addSubCriterionBtn) addSubCriterionBtn.addEventListener('click', addModalSubCriterion);
+
   const saveSubCriteriaBtn = document.getElementById('saveSubCriteriaBtn');
-  if(saveSubCriteriaBtn) saveSubCriteriaBtn.onclick = saveSubCriteriaChanges;
+  if(saveSubCriteriaBtn) saveSubCriteriaBtn.addEventListener('click', saveSubCriteriaChanges);
+
   const cancelSubCriteriaBtn = document.getElementById('cancelSubCriteriaBtn');
-  if(cancelSubCriteriaBtn) cancelSubCriteriaBtn.onclick = () => toggleModal('subCriteriaModal', false);
+  if(cancelSubCriteriaBtn) cancelSubCriteriaBtn.addEventListener('click', () => toggleModal('subCriteriaModal', false));
+
   const confirmImportBtn = document.getElementById('confirmImportBtn');
-  if(confirmImportBtn) confirmImportBtn.onclick = confirmImportCriteria;
+  if(confirmImportBtn) confirmImportBtn.addEventListener('click', confirmImportCriteria);
+
   const cancelImportBtn = document.getElementById('cancelImportBtn');
-  if(cancelImportBtn) cancelImportBtn.onclick = () => toggleModal('importCriteriaModal', false);
+  if(cancelImportBtn) cancelImportBtn.addEventListener('click', () => toggleModal('importCriteriaModal', false));
+
   const assessImages = document.getElementById('assessImages');
   if(assessImages) assessImages.addEventListener('change', e => previewImages(e.target));
+
   const saveAssessmentBtn = document.getElementById('saveAssessmentBtn');
-  if(saveAssessmentBtn) saveAssessmentBtn.onclick = saveAssessment;
+  if(saveAssessmentBtn) saveAssessmentBtn.addEventListener('click', saveAssessment);
+
   const cancelAssessmentBtn = document.getElementById('cancelAssessmentBtn');
-  if(cancelAssessmentBtn) cancelAssessmentBtn.onclick = () => toggleModal('assessmentModal', false);
+  if(cancelAssessmentBtn) cancelAssessmentBtn.addEventListener('click', () => toggleModal('assessmentModal', false));
+
   const cancelViewAssessmentsBtn = document.getElementById('cancelViewAssessmentsBtn');
-  if(cancelViewAssessmentsBtn) cancelViewAssessmentsBtn.onclick = () => toggleModal('assessmentViewModal', false);
+  if(cancelViewAssessmentsBtn) cancelViewAssessmentsBtn.addEventListener('click', () => toggleModal('assessmentViewModal', false));
+
   const evalEmpSelect = document.getElementById('evalEmpSelect');
   const evalMonthSelect = document.getElementById('evalMonthSelect');
   const evalYearSelect = document.getElementById('evalYearSelect');
   if(evalEmpSelect) evalEmpSelect.addEventListener('change', onEvalEmployeeChange);
   if(evalMonthSelect) evalMonthSelect.addEventListener('change', onEvalEmployeeChange);
   if(evalYearSelect) evalYearSelect.addEventListener('change', onEvalEmployeeChange);
+
   const showReportBtn = document.getElementById('showReportBtn');
-  if(showReportBtn) showReportBtn.onclick = generateReportPreview;
+  if(showReportBtn) showReportBtn.addEventListener('click', generateReportPreview);
+
   const editReportBtn = document.getElementById('editReportBtn');
-  if(editReportBtn) editReportBtn.onclick = editFinalReport;
+  if(editReportBtn) editReportBtn.addEventListener('click', editFinalReport);
+
   const exportPdfBtn = document.getElementById('exportPdfBtn');
-  if(exportPdfBtn) exportPdfBtn.onclick = exportToPDF;
+  if(exportPdfBtn) exportPdfBtn.addEventListener('click', exportToPDF);
+
   const shareWaBtn = document.getElementById('shareWaBtn');
-  if(shareWaBtn) shareWaBtn.onclick = shareToWhatsApp;
+  if(shareWaBtn) shareWaBtn.addEventListener('click', shareToWhatsApp);
+
   const saveEditedReportBtn = document.getElementById('saveEditedReportBtn');
-  if(saveEditedReportBtn) saveEditedReportBtn.onclick = saveEditedReport;
+  if(saveEditedReportBtn) saveEditedReportBtn.addEventListener('click', saveEditedReport);
+
   const cancelEditReportBtn = document.getElementById('cancelEditReportBtn');
-  if(cancelEditReportBtn) cancelEditReportBtn.onclick = () => toggleModal('editReportModal', false);
+  if(cancelEditReportBtn) cancelEditReportBtn.addEventListener('click', () => toggleModal('editReportModal', false));
+
   const exportDataBtn = document.getElementById('exportDataBtn');
   const importDataBtn = document.getElementById('importDataBtn');
   const importFileInput = document.getElementById('importFileInput');
   const clearAllDataBtn = document.getElementById('clearAllDataBtn');
-  if(exportDataBtn) exportDataBtn.onclick = exportDataToFile;
+
+  if(exportDataBtn) exportDataBtn.addEventListener('click', exportDataToFile);
   if(importDataBtn && importFileInput){
-    importDataBtn.onclick = () => importFileInput.click();
+    importDataBtn.addEventListener('click', () => importFileInput.click());
     importFileInput.addEventListener('change', handleImportDataFile);
   }
-  if(clearAllDataBtn) clearAllDataBtn.onclick = clearAllDataConfirm;
+  if(clearAllDataBtn) clearAllDataBtn.addEventListener('click', clearAllDataConfirm);
+
   document.querySelectorAll('.toggle-password').forEach(btn => {
     btn.addEventListener('click', function(){
       const targetId = this.getAttribute('data-target');
@@ -734,9 +766,10 @@ function attachUIEvents(){
       else { input.type = 'password'; this.textContent = '👁️'; }
     });
   });
+
   const changePasswordBtn = document.getElementById('changePasswordBtn');
   if(changePasswordBtn){
-    changePasswordBtn.onclick = async function(){
+    changePasswordBtn.addEventListener('click', async function(){
       const currentPassword = document.getElementById('currentPassword').value.trim();
       const newPassword = document.getElementById('newPassword').value.trim();
       const confirmPassword = document.getElementById('confirmPassword').value.trim();
@@ -759,7 +792,7 @@ function attachUIEvents(){
         else if(error.code === 'auth/requires-recent-login'){ showNotification('للأمان، يرجى تسجيل الدخول من جديد ثم إعادة المحاولة.', true); }
         else { showNotification('حدث خطأ: ' + (error.message || ''), true); }
       }
-    };
+    });
   }
 }
 
@@ -865,7 +898,7 @@ function renderModalCriteria(criteria){
   if(!ctn) return;
   if(!criteria || !criteria.length){ ctn.innerHTML = '<p>لا توجد معايير. يمكنك استيرادها من موظف آخر أو إضافة معايير جديدة.</p>'; return; }
   const total = criteria.reduce((s, c) => s + Number(c.weight || 0), 0);
-  let html = `<p>مجموع الأوزان الحالي: <strong>${total}</strong> (يُفضَّل أن يكون 100)</p>`;
+  let html = `<p>مجموع الأوزان الحالي: <strong>${total}</strong> (يُفضَّل أن يكون 100)</p>`;
   html += criteria.map((c, i) => `<div class="criteria-list-item">
     <div class="criteria-item-info">
       <label>اسم المعيار:</label>
@@ -1064,7 +1097,7 @@ function onEvalEmployeeChange(){
   const ctn = document.getElementById('criteriaScoresContainer');
   if(!emp){ ctn.innerHTML = '<p>اختر موظفًا أولاً.</p>'; return; }
   const total = (emp.criteria || []).reduce((s, c) => s + Number(c.weight || 0), 0);
-  if(total !== 100) alert(`تنبيه: مجموع أوزان معايير هذا الموظف = ${total} (يُفضَّل أن يكون 100).`);
+  if(total !== 100) alert(`تنبيه: مجموع أوزان معايير هذا الموظف = ${total} (يُفضَّل أن يكون 100).`);
   const month = parseInt(document.getElementById('evalMonthSelect').value);
   const year = parseInt(document.getElementById('evalYearSelect').value);
   if(!emp.criteria || !emp.criteria.length){ ctn.innerHTML = '<p>لا توجد معايير لهذا الموظف.</p>'; return; }
@@ -1143,7 +1176,7 @@ function openAssessmentViewModal(empId, critId, title, maxPoints){
     .filter(a => a.employeeId === empId && a.criterionId === critId && a.month === month && a.year === year)
     .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   const ctn = document.getElementById('viewAssessmentsList');
-  if(!list.length){ ctn.innerHTML = '<p>لا توجد تقييمات مسجّلة لهذا المعيار في هذا الشهر.</p>'; }
+  if(!list.length){ ctn.innerHTML = '<p>لا توجد تقييمات مسجَّلة لهذا المعيار في هذا الشهر.</p>'; }
   else {
     ctn.innerHTML = list.map(a => {
       const d = new Date(a.timestamp);
@@ -1319,7 +1352,7 @@ function calculateMonthlyReport(employeeId, month, year){
         if(mainFinalScore > main.weight) mainFinalScore = main.weight;
       } else {
         mainFinalScore = main.weight;
-        mainNote += 'لم تُسجَّل أي تقييمات على المعايير الفرعية، اعتُبر المعيار كاملاً.\n';
+        mainNote += 'لم تُسجَّل أي تقييمات على المعايير الفرعية، اعتُبر المعيار كاملاً.\n';
       }
     } else {
       const list = allAss.filter(a => a.criterionId === main.id);
@@ -1334,7 +1367,7 @@ function calculateMonthlyReport(employeeId, month, year){
         });
       } else {
         mainFinalScore = main.weight;
-        mainNote += 'لم تُسجَّل أي تقييمات لهذا المعيار خلال الشهر، اعتُبر الأداء كاملاً (حصل على كامل وزنه).\n';
+        mainNote += 'لم تُسجَّل أي تقييمات لهذا المعيار خلال الشهر، اعتُبر الأداء كاملاً (حصل على كامل وزنه).\n';
       }
     }
     criteriaResults[main.id] = {
@@ -1370,8 +1403,8 @@ function displayReport(report, fromSaved){
   let html = `<div class="report-summary">
     <strong>الموظف:</strong> ${emp ? emp.name : ''}<br>
     <strong>الشهر:</strong> ${monthName} ${report.year}<br>
-    <strong>مجموع أوزان المعايير الرئيسية:</strong> ${sumWeights} (يُفضَّل أن يكون 100)<br>
-    <strong>حالة التقرير:</strong> ${fromSaved ? 'نهائي (معدَّل يدويًا ومحفوظ)' : 'تقرير مبدئي محسوب آليًا من التقييمات'}
+    <strong>مجموع أوزان المعايير الرئيسية:</strong> ${sumWeights} (يُفضَّل أن يكون 100)<br>
+    <strong>حالة التقرير:</strong> ${fromSaved ? 'نهائي (معدَّل يدويًا ومحفوظ)' : 'تقرير مبدئي محسوب آليًا من التقييمات'}
   </div>`;
   html += `<div class="total-score">النتيجة الكلية: ${report.finalTotalPoints.toFixed(1)} / ${sumWeights}</div>`;
   html += '<h3>تفاصيل كل معيار رئيسي</h3>';
@@ -1411,7 +1444,7 @@ function editFinalReport(){
         <label>ملاحظة نهائية لهذا المعيار:</label>
         <textarea class="edit-note-input" data-crit-id="${main.id}">${r.note || ''}</textarea>
       </div>
-      <div class="criteria-note">أيام التقييم المسجّلة: ${days}</div>
+      <div class="criteria-note">أيام التقييم المسجَّلة: ${days}</div>
     </div>`;
   });
   recalcEditTotal();
