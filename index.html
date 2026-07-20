@@ -340,6 +340,7 @@
 <div id="notification" class="notification"></div>
 
 <script>
+/* ========== Firebase Config ========== */
 const firebaseConfig = {
   apiKey: "AIzaSyBYPXJRC9GfWwPf5bw6LrIFAeMN9g_wqqQ",
   authDomain: "evaluation-employer.firebaseapp.com",
@@ -370,14 +371,8 @@ let currentViewingMaxPoints = 0;
 let selectedImportEmployeeId = null;
 
 const Storage = {
-  get(key){
-    try{ return JSON.parse(localStorage.getItem(key) || 'null'); }
-    catch(e){ return null; }
-  },
-  set(key, val){
-    try{ localStorage.setItem(key, JSON.stringify(val)); }
-    catch(e){ console.warn('LocalStorage set failed', e); }
-  }
+  get(key){ try{ return JSON.parse(localStorage.getItem(key) || 'null'); } catch(e){ return null; } },
+  set(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); } catch(e){ console.warn('LocalStorage set failed', e); } }
 };
 
 function showNotification(msg, isError){
@@ -453,9 +448,7 @@ async function loadAllDataFromCloud(){
       employees = data.employees || [];
       partialAssessments = data.partialAssessments || [];
       finalReports = data.finalReports || [];
-    } else {
-      employees = []; partialAssessments = []; finalReports = [];
-    }
+    } else { employees = []; partialAssessments = []; finalReports = []; }
     saveLocalOnly();
     renderEmployeeList();
     fillEmployeeSelects();
@@ -515,9 +508,7 @@ function checkLoginStatusOnLoad(){
       }
       hideLoginScreen();
       loadAllData();
-    }catch(e){
-      try{ localStorage.removeItem('app_logged_user'); }catch(_){}
-    }
+    }catch(e){ try{ localStorage.removeItem('app_logged_user'); }catch(_){} }
   }
 }
 
@@ -529,19 +520,21 @@ function toggleModal(id, show){
   if(!show && id === 'assessmentModal') tempImages = [];
 }
 
-/* ========== DOMContentLoaded ========== */
+/* ========== DOMContentLoaded - ALL EVENTS SETUP ========== */
 document.addEventListener('DOMContentLoaded', () => {
-  // إخفاء جميع النوافذ المنبثقة عند التحميل - هذا هو الإصلاح الرئيسي!
+  // CRITICAL FIX: Hide all modals on page load
   document.querySelectorAll('.modal').forEach(m => m.classList.remove('show'));
 
   checkLoginStatusOnLoad();
 
+  // Login tabs
   document.querySelectorAll('.login-tab').forEach(btn => {
     btn.addEventListener('click', () => toggleAuthTab(btn.getAttribute('data-auth')));
   });
 
   const authLoading = document.getElementById('authLoading');
 
+  // Login button
   const btnLogin = document.getElementById('btnLogin');
   if(btnLogin){
     btnLogin.onclick = async () => {
@@ -558,6 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  // Signup button
   const btnSignup = document.getElementById('btnSignup');
   if(btnSignup){
     btnSignup.onclick = async () => {
@@ -576,6 +570,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  // Logout button
   const logoutBtn = document.getElementById('logoutBtn');
   if(logoutBtn){
     logoutBtn.onclick = async () => {
@@ -584,6 +579,64 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  /* ========== CRITICAL FIX: Forgot Password - works BEFORE login ========== */
+  const forgotLink = document.getElementById('forgotPasswordLink');
+  const forgotModal = document.getElementById('forgotPasswordModal');
+  const cancelResetBtn = document.getElementById('cancelResetBtn');
+  const sendResetBtn = document.getElementById('sendResetBtn');
+
+  // Open forgot password modal
+  if(forgotLink && forgotModal){
+    forgotLink.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      forgotModal.classList.add('show');
+      const loginEmailInput = document.getElementById('loginEmail');
+      const resetEmailInput = document.getElementById('resetEmail');
+      if(loginEmailInput && resetEmailInput && loginEmailInput.value){ resetEmailInput.value = loginEmailInput.value; }
+    });
+  }
+
+  // Close forgot password modal
+  if(cancelResetBtn && forgotModal){
+    cancelResetBtn.addEventListener('click', function(e){
+      e.preventDefault();
+      forgotModal.classList.remove('show');
+    });
+  }
+
+  // Send reset email - uses pre-initialized 'auth' variable (not firebase.auth())
+  if(sendResetBtn){
+    sendResetBtn.addEventListener('click', async function(e){
+      e.preventDefault();
+      const email = document.getElementById('resetEmail').value.trim();
+      if(!email){ showNotification('الرجاء إدخال البريد الإلكتروني.', true); return; }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if(!emailRegex.test(email)){ showNotification('صيغة البريد الإلكتروني غير صحيحة.', true); return; }
+      try{
+        // CRITICAL FIX: Use the pre-initialized 'auth' instead of firebase.auth()
+        await auth.sendPasswordResetEmail(email);
+        if(forgotModal) forgotModal.classList.remove('show');
+        document.getElementById('resetEmail').value = '';
+        showNotification('✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك. تحقق من صندوق الوارد والبريد العشوائي.');
+      }catch(error){
+        console.error('Error sending reset email:', error);
+        if(error.code === 'auth/user-not-found'){ showNotification('لا يوجد حساب مرتبط بهذا البريد.', true); }
+        else if(error.code === 'auth/invalid-email'){ showNotification('البريد الإلكتروني غير صالح.', true); }
+        else if(error.code === 'auth/too-many-requests'){ showNotification('عدد محاولات كثير. يرجى المحاولة لاحقًا.', true); }
+        else { showNotification('حدث خطأ: ' + (error.message || ''), true); }
+      }
+    });
+  }
+
+  // Close modal when clicking outside
+  if(forgotModal){
+    forgotModal.addEventListener('click', function(e){
+      if(e.target === forgotModal){ forgotModal.classList.remove('show'); }
+    });
+  }
+
+  // Auth state observer
   auth.onAuthStateChanged(async (user) => {
     if(user){
       currentUser = { type: 'firebase', uid: user.uid, email: user.email };
@@ -600,126 +653,65 @@ document.addEventListener('DOMContentLoaded', () => {
       showLoginScreen();
     }
   });
-
-  // نسيت كلمة المرور
-  const forgotLink = document.getElementById('forgotPasswordLink');
-  const forgotModal = document.getElementById('forgotPasswordModal');
-  const cancelResetBtn = document.getElementById('cancelResetBtn');
-  const sendResetBtn = document.getElementById('sendResetBtn');
-
-  if(forgotLink && forgotModal){
-    forgotLink.onclick = function(e){
-      e.preventDefault();
-      forgotModal.classList.add('show');
-      const loginEmailInput = document.getElementById('loginEmail');
-      const resetEmailInput = document.getElementById('resetEmail');
-      if(loginEmailInput && resetEmailInput && loginEmailInput.value){ resetEmailInput.value = loginEmailInput.value; }
-    };
-  }
-  if(cancelResetBtn && forgotModal){
-    cancelResetBtn.onclick = function(){ forgotModal.classList.remove('show'); };
-  }
-  if(sendResetBtn){
-    sendResetBtn.onclick = async function(){
-      const email = document.getElementById('resetEmail').value.trim();
-      if(!email){ showNotification('الرجاء إدخال البريد الإلكتروني.', true); return; }
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if(!emailRegex.test(email)){ showNotification('صيغة البريد الإلكتروني غير صحيحة.', true); return; }
-      try{
-        await firebase.auth().sendPasswordResetEmail(email);
-        if(forgotModal) forgotModal.classList.remove('show');
-        document.getElementById('resetEmail').value = '';
-        showNotification('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك.');
-      }catch(error){
-        console.error('Error sending reset email:', error);
-        if(error.code === 'auth/user-not-found'){ showNotification('لا يوجد حساب مرتبط بهذا البريد.', true); }
-        else if(error.code === 'auth/invalid-email'){ showNotification('البريد الإلكتروني غير صالح.', true); }
-        else { showNotification('حدث خطأ: ' + (error.message || ''), true); }
-      }
-    };
-  }
 });
 
 function attachUIEvents(){
   const addEmpBtn = document.getElementById('addEmpBtn');
   if(addEmpBtn) addEmpBtn.onclick = addEmployee;
-
   const addCriterionBtn = document.getElementById('addCriterionBtn');
   if(addCriterionBtn) addCriterionBtn.onclick = addModalCriterion;
-
   const saveEmpModalBtn = document.getElementById('saveEmpModalBtn');
   if(saveEmpModalBtn) saveEmpModalBtn.onclick = saveEmployeeModal;
-
   const cancelEmpModalBtn = document.getElementById('cancelEmpModalBtn');
   if(cancelEmpModalBtn) cancelEmpModalBtn.onclick = () => toggleModal('employeeModal', false);
-
   const importCriteriaBtn = document.getElementById('importCriteriaBtn');
   if(importCriteriaBtn) importCriteriaBtn.onclick = openImportCriteriaModal;
-
   const addSubCriterionBtn = document.getElementById('addSubCriterionBtn');
   if(addSubCriterionBtn) addSubCriterionBtn.onclick = addModalSubCriterion;
-
   const saveSubCriteriaBtn = document.getElementById('saveSubCriteriaBtn');
   if(saveSubCriteriaBtn) saveSubCriteriaBtn.onclick = saveSubCriteriaChanges;
-
   const cancelSubCriteriaBtn = document.getElementById('cancelSubCriteriaBtn');
   if(cancelSubCriteriaBtn) cancelSubCriteriaBtn.onclick = () => toggleModal('subCriteriaModal', false);
-
   const confirmImportBtn = document.getElementById('confirmImportBtn');
   if(confirmImportBtn) confirmImportBtn.onclick = confirmImportCriteria;
-
   const cancelImportBtn = document.getElementById('cancelImportBtn');
   if(cancelImportBtn) cancelImportBtn.onclick = () => toggleModal('importCriteriaModal', false);
-
   const assessImages = document.getElementById('assessImages');
   if(assessImages) assessImages.addEventListener('change', e => previewImages(e.target));
-
   const saveAssessmentBtn = document.getElementById('saveAssessmentBtn');
   if(saveAssessmentBtn) saveAssessmentBtn.onclick = saveAssessment;
-
   const cancelAssessmentBtn = document.getElementById('cancelAssessmentBtn');
   if(cancelAssessmentBtn) cancelAssessmentBtn.onclick = () => toggleModal('assessmentModal', false);
-
   const cancelViewAssessmentsBtn = document.getElementById('cancelViewAssessmentsBtn');
   if(cancelViewAssessmentsBtn) cancelViewAssessmentsBtn.onclick = () => toggleModal('assessmentViewModal', false);
-
   const evalEmpSelect = document.getElementById('evalEmpSelect');
   const evalMonthSelect = document.getElementById('evalMonthSelect');
   const evalYearSelect = document.getElementById('evalYearSelect');
   if(evalEmpSelect) evalEmpSelect.addEventListener('change', onEvalEmployeeChange);
   if(evalMonthSelect) evalMonthSelect.addEventListener('change', onEvalEmployeeChange);
   if(evalYearSelect) evalYearSelect.addEventListener('change', onEvalEmployeeChange);
-
   const showReportBtn = document.getElementById('showReportBtn');
   if(showReportBtn) showReportBtn.onclick = generateReportPreview;
-
   const editReportBtn = document.getElementById('editReportBtn');
   if(editReportBtn) editReportBtn.onclick = editFinalReport;
-
   const exportPdfBtn = document.getElementById('exportPdfBtn');
   if(exportPdfBtn) exportPdfBtn.onclick = exportToPDF;
-
   const shareWaBtn = document.getElementById('shareWaBtn');
   if(shareWaBtn) shareWaBtn.onclick = shareToWhatsApp;
-
   const saveEditedReportBtn = document.getElementById('saveEditedReportBtn');
   if(saveEditedReportBtn) saveEditedReportBtn.onclick = saveEditedReport;
-
   const cancelEditReportBtn = document.getElementById('cancelEditReportBtn');
   if(cancelEditReportBtn) cancelEditReportBtn.onclick = () => toggleModal('editReportModal', false);
-
   const exportDataBtn = document.getElementById('exportDataBtn');
   const importDataBtn = document.getElementById('importDataBtn');
   const importFileInput = document.getElementById('importFileInput');
   const clearAllDataBtn = document.getElementById('clearAllDataBtn');
-
   if(exportDataBtn) exportDataBtn.onclick = exportDataToFile;
   if(importDataBtn && importFileInput){
     importDataBtn.onclick = () => importFileInput.click();
     importFileInput.addEventListener('change', handleImportDataFile);
   }
   if(clearAllDataBtn) clearAllDataBtn.onclick = clearAllDataConfirm;
-
   document.querySelectorAll('.toggle-password').forEach(btn => {
     btn.addEventListener('click', function(){
       const targetId = this.getAttribute('data-target');
@@ -729,7 +721,6 @@ function attachUIEvents(){
       else { input.type = 'password'; this.textContent = '👁️'; }
     });
   });
-
   const changePasswordBtn = document.getElementById('changePasswordBtn');
   if(changePasswordBtn){
     changePasswordBtn.onclick = async function(){
@@ -1064,7 +1055,6 @@ function onEvalEmployeeChange(){
   const month = parseInt(document.getElementById('evalMonthSelect').value);
   const year = parseInt(document.getElementById('evalYearSelect').value);
   if(!emp.criteria || !emp.criteria.length){ ctn.innerHTML = '<p>لا توجد معايير لهذا الموظف.</p>'; return; }
-
   let html = '';
   emp.criteria.forEach(main => {
     html += `<div class="score-item">
@@ -1286,14 +1276,12 @@ function calculateMonthlyReport(employeeId, month, year){
   if(!emp) return null;
   const allAss = partialAssessments.filter(a => a.employeeId === employeeId && a.month === month && a.year === year);
   if(!allAss.length) return null;
-
   const criteriaResults = {};
   (emp.criteria || []).forEach(main => {
     let mainFinalScore = 0;
     let mainNote = '';
     let mainImages = [];
     let daysSet = new Set();
-
     if(main.subCriteria && main.subCriteria.length){
       let subFinals = [];
       main.subCriteria.forEach(sub => {
@@ -1312,13 +1300,9 @@ function calculateMonthlyReport(employeeId, month, year){
       });
       if(subFinals.length){
         let sumSub = subFinals.reduce((s, v) => s + v, 0);
-        // FIX: Calculate proportionally based on sub-criteria points vs main weight
         let totalSubPoints = main.subCriteria.reduce((s, sc) => s + Number(sc.points || 0), 0);
-        if(totalSubPoints > 0){
-          mainFinalScore = (sumSub / totalSubPoints) * main.weight;
-        } else {
-          mainFinalScore = sumSub / subFinals.length;
-        }
+        if(totalSubPoints > 0){ mainFinalScore = (sumSub / totalSubPoints) * main.weight; }
+        else { mainFinalScore = sumSub / subFinals.length; }
         if(mainFinalScore > main.weight) mainFinalScore = main.weight;
       } else {
         mainFinalScore = main.weight;
@@ -1340,14 +1324,12 @@ function calculateMonthlyReport(employeeId, month, year){
         mainNote += 'لم تُسجَّل أي تقييمات لهذا المعيار خلال الشهر، اعتُبر الأداء كاملاً (حصل على كامل وزنه).\n';
       }
     }
-
     criteriaResults[main.id] = {
       finalScore: mainFinalScore, maxWeight: main.weight,
       note: (mainNote.trim() || 'لا توجد ملاحظات خاصة بهذا المعيار.'),
       images: mainImages, days: Array.from(daysSet)
     };
   });
-
   const totalPoints = Object.values(criteriaResults).reduce((s, r) => s + r.finalScore, 0);
   return { id: Date.now(), employeeId, month, year, criteriaResults, finalTotalPoints: totalPoints, editedAt: null };
 }
