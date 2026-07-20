@@ -88,6 +88,8 @@
     .password-change-form{display:flex;flex-direction:column;gap:12px;max-width:400px}
     .password-change-form .form-group{display:flex;flex-direction:column;gap:5px}
     .password-change-form label{font-weight:bold;color:#333}
+    .forgot-link{display:block;margin-top:12px;color:#0066cc;text-decoration:none;font-size:14px;background:none;border:none;cursor:pointer;width:100%}
+    .forgot-link:hover{text-decoration:underline}
     @media(max-width:600px){
       .container{padding:15px 10px}
       h1{font-size:1.3rem}
@@ -130,9 +132,7 @@
         <input type="password" id="loginPassword" placeholder="********">
       </div>
       <button class="btn-primary" id="btnLogin" style="width:100%;margin-top:8px;">🔒 تسجيل الدخول</button>
-      <p style="text-align:center;margin-top:12px;">
-        <a href="#" id="forgotPasswordLink" style="color:#0066cc;text-decoration:none;font-size:14px;">نسيت كلمة المرور؟</a>
-      </p>
+      <button class="forgot-link" id="forgotPasswordLink" type="button">نسيت كلمة المرور؟</button>
     </div>
     <div id="signupForm" class="auth-form">
       <div class="form-group">
@@ -520,9 +520,9 @@ function toggleModal(id, show){
   if(!show && id === 'assessmentModal') tempImages = [];
 }
 
-/* ========== DOMContentLoaded - ALL EVENTS SETUP ========== */
+/* ========== DOMContentLoaded ========== */
 document.addEventListener('DOMContentLoaded', () => {
-  // CRITICAL FIX: Hide all modals on page load
+  // CRITICAL: Hide all modals on page load
   document.querySelectorAll('.modal').forEach(m => m.classList.remove('show'));
 
   checkLoginStatusOnLoad();
@@ -579,48 +579,54 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  /* ========== CRITICAL FIX: Forgot Password - works BEFORE login ========== */
+  /* ========== FORGOT PASSWORD - FIXED ========== */
+  // Use the pre-initialized auth variable which is always ready
   const forgotLink = document.getElementById('forgotPasswordLink');
   const forgotModal = document.getElementById('forgotPasswordModal');
   const cancelResetBtn = document.getElementById('cancelResetBtn');
   const sendResetBtn = document.getElementById('sendResetBtn');
 
-  // Open forgot password modal
   if(forgotLink && forgotModal){
     forgotLink.addEventListener('click', function(e){
       e.preventDefault();
       e.stopPropagation();
+      console.log('[DEBUG] Forgot password clicked');
       forgotModal.classList.add('show');
       const loginEmailInput = document.getElementById('loginEmail');
       const resetEmailInput = document.getElementById('resetEmail');
-      if(loginEmailInput && resetEmailInput && loginEmailInput.value){ resetEmailInput.value = loginEmailInput.value; }
+      if(loginEmailInput && resetEmailInput && loginEmailInput.value){ 
+        resetEmailInput.value = loginEmailInput.value; 
+      }
     });
   }
 
-  // Close forgot password modal
   if(cancelResetBtn && forgotModal){
     cancelResetBtn.addEventListener('click', function(e){
       e.preventDefault();
+      console.log('[DEBUG] Cancel reset clicked');
       forgotModal.classList.remove('show');
     });
   }
 
-  // Send reset email - uses pre-initialized 'auth' variable (not firebase.auth())
   if(sendResetBtn){
     sendResetBtn.addEventListener('click', async function(e){
       e.preventDefault();
+      e.stopPropagation();
+      console.log('[DEBUG] Send reset clicked');
       const email = document.getElementById('resetEmail').value.trim();
       if(!email){ showNotification('الرجاء إدخال البريد الإلكتروني.', true); return; }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if(!emailRegex.test(email)){ showNotification('صيغة البريد الإلكتروني غير صحيحة.', true); return; }
       try{
-        // CRITICAL FIX: Use the pre-initialized 'auth' instead of firebase.auth()
+        console.log('[DEBUG] Calling auth.sendPasswordResetEmail for:', email);
+        // Use the pre-initialized auth instance
         await auth.sendPasswordResetEmail(email);
+        console.log('[DEBUG] Email sent successfully');
         if(forgotModal) forgotModal.classList.remove('show');
         document.getElementById('resetEmail').value = '';
         showNotification('✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك. تحقق من صندوق الوارد والبريد العشوائي.');
       }catch(error){
-        console.error('Error sending reset email:', error);
+        console.error('[DEBUG] Error:', error.code, error.message);
         if(error.code === 'auth/user-not-found'){ showNotification('لا يوجد حساب مرتبط بهذا البريد.', true); }
         else if(error.code === 'auth/invalid-email'){ showNotification('البريد الإلكتروني غير صالح.', true); }
         else if(error.code === 'auth/too-many-requests'){ showNotification('عدد محاولات كثير. يرجى المحاولة لاحقًا.', true); }
@@ -629,7 +635,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Close modal when clicking outside
   if(forgotModal){
     forgotModal.addEventListener('click', function(e){
       if(e.target === forgotModal){ forgotModal.classList.remove('show'); }
