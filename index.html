@@ -4,12 +4,9 @@
   <meta charset="UTF-8">
   <title>نظام تقييم الموظفين الشهري - سحابي</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- Firebase SDK (إصدار compat لسهولة الاستخدام مع الكود) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-
   <style>
     *{box-sizing:border-box;font-family:"Segoe UI",Tahoma,sans-serif;margin:0;padding:0}
     body{background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:15px;direction:rtl}
@@ -25,7 +22,7 @@
     .form-group{margin-bottom:12px}
     label{display:block;margin-bottom:5px;font-weight:bold;color:#2c3e50;font-size:.85rem}
     input[type=text],input[type=tel],input[type=number],input[type=email],input[type=password],textarea,select{
-      width:100%;padding:8px 10px;border-radius:8px;border:1px solid:#ddd;font-size:.85rem}
+      width:100%;padding:8px 10px;border-radius:8px;border:1px solid #ddd;font-size:.85rem}
     input:focus,textarea:focus,select:focus{outline:none;border-color:#3498db}
     textarea{resize:vertical;min-height:60px}
     button{padding:8px 14px;border:none;border-radius:8px;font-size:.85rem;font-weight:bold;cursor:pointer;margin:3px}
@@ -55,8 +52,6 @@
     .hidden{display:none!important}
     .notification{position:fixed;top:15px;left:50%;transform:translateX(-50%);background:#27ae60;color:#fff;padding:8px 18px;border-radius:10px;font-size:.85rem;box-shadow:0 4px 10px rgba(0,0,0,.3);z-index:2000;display:none}
     .notification.error{background:#e74c3c}
-
-    /* شاشة تسجيل الدخول */
     .login-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);z-index:9999;justify-content:center;align-items:center;display:flex}
     .login-screen.hidden{display:none}
     .login-box{background:#fff;padding:30px;border-radius:20px;max-width:400px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
@@ -69,23 +64,30 @@
     .login-icon{font-size:3rem;margin-bottom:15px}
     .auth-loading{text-align:center;margin-top:15px;color:#666;font-size:.85rem}
     .user-info{background:#f0f8ff;padding:10px;border-radius:8px;margin-top:10px;font-size:.85rem;text-align:center}
-
-    /* معايير رئيسية وفرعية */
     .criteria-list-item{background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px;margin-bottom:8px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center}
     .criteria-item-info{flex:1;min-width:200px}
     .criteria-item-actions{display:flex;gap:5px;flex-wrap:wrap}
     .sub-criteria-item{background:#f8f9fa;padding:6px 8px;border-radius:6px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:5px}
     .sub-criteria-item input{width:110px;padding:4px 6px;font-size:.8rem}
-
-    /* تقييمات المعيار */
     .assessment-item{background:#fff;border:1px solid #eee;border-radius:8px;padding:10px;margin-bottom:8px}
     .assessment-item:hover{box-shadow:0 2px 8px rgba(0,0,0,.1)}
-
-    /* استيراد المعايير */
     .import-option{background:#f8f9fa;padding:10px;border-radius:8px;margin-bottom:8px;cursor:pointer;border:2px solid transparent;transition:.2s}
     .import-option:hover{border-color:#3498db;background:#e8f4fc}
     .import-option.selected{border-color:#27ae60;background:#d5f4e6}
-
+    .settings-section{background:#f8f9fa;padding:15px;border-radius:10px;margin-top:20px;border:1px solid #e0e0e0}
+    .settings-section h3{color:#2c3e50;margin-bottom:12px;font-size:1rem}
+    .backup-buttons{display:flex;gap:8px;flex-wrap:wrap}
+    .backup-buttons button{flex:1;min-width:140px}
+    .backup-buttons .primary{background:#3498db;color:#fff}
+    .backup-buttons .secondary{background:#95a5a6;color:#fff}
+    .backup-buttons .danger{background:#e74c3c;color:#fff}
+    .password-input-wrapper{display:flex;align-items:center;gap:8px}
+    .password-input-wrapper input{flex:1;padding:8px 10px;border:1px solid #ddd;border-radius:4px;font-size:14px}
+    .toggle-password{background:#f0f0f0;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:16px}
+    .toggle-password:hover{background:#e0e0e0}
+    .password-change-form{display:flex;flex-direction:column;gap:12px;max-width:400px}
+    .password-change-form .form-group{display:flex;flex-direction:column;gap:5px}
+    .password-change-form label{font-weight:bold;color:#333}
     @media(max-width:600px){
       .container{padding:15px 10px}
       h1{font-size:1.3rem}
@@ -93,66 +95,19 @@
       .criteria-item-info{min-width:100%;margin-bottom:8px}
       .criteria-item-actions{width:100%;justify-content:flex-start}
       .score-header{flex-direction:column;align-items:flex-start}
+      .backup-buttons button{min-width:100%}
     }
-
-    @media print {
-      body { background:#fff;padding:0;margin:0; }
-      .container{box-shadow:none;border-radius:0;max-width:100%;padding:10px;}
-      .tabs, #employees, #evaluate, #editReportBtn, #shareWaBtn, #exportPdfBtn,
-      .notification, .modal, .login-screen, .user-info, #logoutContainer{display:none!important;}
-      #reports{display:block!important;}
-      #reportContainer{display:block!important;}
-      .score-item{break-inside:avoid;margin-bottom:12px;}
-      .image-preview img{width:50px;height:50px;}
+    @media print{
+      body{background:#fff;padding:0;margin:0}
+      .container{box-shadow:none;border-radius:0;max-width:100%;padding:10px}
+      .tabs,#employees,#evaluate,#editReportBtn,#shareWaBtn,#exportPdfBtn,.notification,.modal,.login-screen,.user-info,#logoutContainer{display:none!important}
+      #reports{display:block!important}
+      #reportContainer{display:block!important}
+      .score-item{break-inside:avoid;margin-bottom:12px}
+      .image-preview img{width:50px;height:50px}
     }
-
-    /* ===== تنسيقات حقول كلمة المرور وتغييرها ===== */
-.password-input-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.password-input-wrapper input {
-  flex: 1;
-  padding: 8px 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.toggle-password {
-  background: #f0f0f0;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
-}
-
-.toggle-password:hover {
-  background: #e0e0e0;
-}
-
-.password-change-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-width: 400px;
-}
-
-.password-change-form .form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.password-change-form label {
-  font-weight: bold;
-  color: #333;
-}
-    
   </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -161,38 +116,24 @@
   <div class="login-box">
     <div class="login-icon">👤</div>
     <h2>نظام تقييم الموظفين</h2>
-
     <div class="login-tabs">
       <button class="login-tab active" data-auth="login">تسجيل الدخول</button>
       <button class="login-tab" data-auth="signup">إنشاء حساب جديد</button>
     </div>
-
- <!-- نموذج تسجيل الدخول -->
-<div id="loginForm" class="auth-form active">
-  <div class="form-group">
-    <label>البريد الإلكتروني:</label>
-    <input type="email" id="loginEmail" placeholder="example@email.com">
-  </div>
-
-  <div class="form-group">
-    <label>كلمة المرور:</label>
-    <input type="password" id="loginPassword" placeholder="​********​">
-  </div>
-
-  <button class="btn-primary" id="btnLogin" style="width:100%;margin-top:8px;">
-    🔒 تسجيل الدخول
-  </button>
-
-  <!-- رابط نسيت كلمة المرور -->
-  <p style="text-align: center; margin-top: 12px;">
-    <a href="#" id="forgotPasswordLink"
-       style="color: #0066cc; text-decoration: none; font-size: 14px;">
-      نسيت كلمة المرور؟
-    </a>
-  </p>
-</div>
-
-    <!-- نموذج إنشاء الحساب -->
+    <div id="loginForm" class="auth-form active">
+      <div class="form-group">
+        <label>البريد الإلكتروني:</label>
+        <input type="email" id="loginEmail" placeholder="example@email.com">
+      </div>
+      <div class="form-group">
+        <label>كلمة المرور:</label>
+        <input type="password" id="loginPassword" placeholder="********">
+      </div>
+      <button class="btn-primary" id="btnLogin" style="width:100%;margin-top:8px;">🔒 تسجيل الدخول</button>
+      <p style="text-align:center;margin-top:12px;">
+        <a href="#" id="forgotPasswordLink" style="color:#0066cc;text-decoration:none;font-size:14px;">نسيت كلمة المرور؟</a>
+      </p>
+    </div>
     <div id="signupForm" class="auth-form">
       <div class="form-group">
         <label>البريد الإلكتروني:</label>
@@ -200,107 +141,101 @@
       </div>
       <div class="form-group">
         <label>كلمة المرور (6 أحرف على الأقل):</label>
-        <input type="password" id="signupPassword" placeholder="​********">
+        <input type="password" id="signupPassword" placeholder="********">
       </div>
       <button class="btn-success" id="btnSignup" style="width:100%;margin-top:8px;">📝 إنشاء حساب</button>
     </div>
-
     <div id="authLoading" class="auth-loading hidden">جاري المعالجة... ⏳</div>
-
     <div id="userInfoDisplay" class="user-info hidden"></div>
   </div>
 </div>
 
 <div class="container">
   <h1>📋 نظام تقييم الموظفين الشهري</h1>
-
   <div style="text-align:left;margin-bottom:10px;" id="logoutContainer" class="hidden">
     <button class="btn-small btn-danger" id="logoutBtn">🚪 تسجيل خروج</button>
   </div>
-
   <div class="tabs">
     <button class="tab-btn active" data-tab="employees">الموظفين</button>
     <button class="tab-btn" data-tab="evaluate">التقييم اليومي</button>
     <button class="tab-btn" data-tab="reports">التقارير النهائية</button>
   </div>
 
-  <!-- تبويب الموظفين -->
   <div id="employees" class="tab-content active">
     <h2>إدارة الموظفين</h2>
-    <div class="form-group">
-      <label>اسم الموظف:</label>
-      <input type="text" id="empName" placeholder="أدخل اسم الموظف">
-    </div>
-    <div class="form-group">
-      <label>رقم الهاتف (مع رمز الدولة):</label>
-      <input type="tel" id="empPhone" placeholder="مثال: 9665xxxxxxxx">
-    </div>
+    <div class="form-group"><label>اسم الموظف:</label><input type="text" id="empName" placeholder="أدخل اسم الموظف"></div>
+    <div class="form-group"><label>رقم الهاتف (مع رمز الدولة):</label><input type="tel" id="empPhone" placeholder="مثال: 9665xxxxxxxx"></div>
     <button class="btn-primary" id="addEmpBtn">إضافة موظف جديد</button>
-
     <h3>قائمة الموظفين</h3>
     <div id="employeeList"></div>
+    <div class="settings-section">
+      <h3>النسخ الاحتياطي للبيانات</h3>
+      <div class="backup-buttons">
+        <button id="exportDataBtn" class="primary">📥 تصدير البيانات (JSON)</button>
+        <button id="importDataBtn" class="secondary">📤 استيراد نسخة</button>
+        <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
+        <button id="clearAllDataBtn" class="danger">🗑️ مسح جميع البيانات</button>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>🔐 أمان الحساب - تغيير كلمة المرور</h3>
+      <div class="password-change-form">
+        <div class="form-group">
+          <label>كلمة المرور الحالية</label>
+          <div class="password-input-wrapper">
+            <input type="password" id="currentPassword" placeholder="أدخل كلمة المرور الحالية">
+            <button type="button" class="toggle-password" data-target="currentPassword">👁️</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>كلمة المرور الجديدة</label>
+          <div class="password-input-wrapper">
+            <input type="password" id="newPassword" placeholder="أدخل كلمة المرور الجديدة">
+            <button type="button" class="toggle-password" data-target="newPassword">👁️</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>تأكيد كلمة المرور الجديدة</label>
+          <div class="password-input-wrapper">
+            <input type="password" id="confirmPassword" placeholder="أكّد كلمة المرور الجديدة">
+            <button type="button" class="toggle-password" data-target="confirmPassword">👁️</button>
+          </div>
+        </div>
+        <button id="changePasswordBtn" class="btn-primary">تغيير كلمة المرور</button>
+      </div>
+    </div>
   </div>
 
-  <!-- تبويب التقييم اليومي -->
   <div id="evaluate" class="tab-content">
     <h2>تقييم يومي لكل معيار</h2>
-    <div class="form-group">
-      <label>اختر الموظف:</label>
-      <select id="evalEmpSelect"></select>
-    </div>
-    <div class="form-group">
-      <label>الشهر:</label>
-      <select id="evalMonthSelect"></select>
-    </div>
-    <div class="form-group">
-      <label>السنة:</label>
-      <select id="evalYearSelect"></select>
-    </div>
+    <div class="form-group"><label>اختر الموظف:</label><select id="evalEmpSelect"></select></div>
+    <div class="form-group"><label>الشهر:</label><select id="evalMonthSelect"></select></div>
+    <div class="form-group"><label>السنة:</label><select id="evalYearSelect"></select></div>
     <div id="criteriaScoresContainer"></div>
   </div>
 
-  <!-- تبويب التقارير -->
   <div id="reports" class="tab-content">
     <h2>تقرير شهري نهائي</h2>
-    <div class="form-group">
-      <label>اختر الموظف:</label>
-      <select id="reportEmpSelect"></select>
-    </div>
-    <div class="form-group">
-      <label>الشهر:</label>
-      <select id="reportMonthSelect"></select>
-    </div>
-    <div class="form-group">
-      <label>السنة:</label>
-      <select id="reportYearSelect"></select>
-    </div>
+    <div class="form-group"><label>اختر الموظف:</label><select id="reportEmpSelect"></select></div>
+    <div class="form-group"><label>الشهر:</label><select id="reportMonthSelect"></select></div>
+    <div class="form-group"><label>السنة:</label><select id="reportYearSelect"></select></div>
     <button class="btn-primary" id="showReportBtn">إنشاء / عرض التقرير</button>
-    <button class="btn-success hidden" id="editReportBtn">تعديل التقرير</button>
+    <button class="btn-success hidden" id="editReportBtn">تعديل التقرير النهائي</button>
     <button class="btn-warning hidden" id="exportPdfBtn">تصدير إلى PDF</button>
     <button class="btn-primary hidden" id="shareWaBtn">مشاركة ملخص واتساب</button>
-
     <div id="reportContainer" class="hidden"></div>
   </div>
 </div>
 
-<!-- نافذة تعديل الموظف والمعايير -->
 <div id="employeeModal" class="modal">
   <div class="modal-content">
     <h2>تعديل بيانات الموظف ومعاييره</h2>
-    <div class="form-group">
-      <label>اسم الموظف:</label>
-      <input type="text" id="modalEmpName">
-    </div>
-    <div class="form-group">
-      <label>رقم الهاتف:</label>
-      <input type="tel" id="modalEmpPhone">
-    </div>
-
+    <div class="form-group"><label>اسم الموظف:</label><input type="text" id="modalEmpName"></div>
+    <div class="form-group"><label>رقم الهاتف:</label><input type="tel" id="modalEmpPhone"></div>
     <div style="display:flex;gap:8px;margin:15px 0;">
       <button class="btn-info btn-small" id="importCriteriaBtn" style="flex:1;">📥 استيراد معايير من موظف آخر</button>
       <button class="btn-warning btn-small" onclick="resetToDefaultCriteria()" style="flex:1;">🔄 المعايير الافتراضية</button>
     </div>
-
     <h3>معايير التقييم (مجموع الأوزان = 100 يفضّل)</h3>
     <div id="modalCriteriaList"></div>
     <div class="form-group" style="margin-top:15px;">
@@ -316,7 +251,6 @@
   </div>
 </div>
 
-<!-- نافذة استيراد المعايير -->
 <div id="importCriteriaModal" class="modal">
   <div class="modal-content">
     <h2>استيراد معايير من موظف آخر</h2>
@@ -329,7 +263,6 @@
   </div>
 </div>
 
-<!-- نافذة المعايير الفرعية -->
 <div id="subCriteriaModal" class="modal">
   <div class="modal-content">
     <h3>المعايير الفرعية</h3>
@@ -348,7 +281,6 @@
   </div>
 </div>
 
-<!-- نافذة تقييم -->
 <div id="assessmentModal" class="modal">
   <div class="modal-content">
     <h2 id="assessModalTitle">تقييم المعيار</h2>
@@ -357,10 +289,7 @@
       <input type="number" id="assessScore" min="0" step="0.5" value="0">
       <small style="font-size:0.75rem;color:#555" id="assessScoreHint"></small>
     </div>
-    <div class="form-group">
-      <label>ملاحظة (اختياري):</label>
-      <textarea id="assessNote" placeholder="اكتب ملاحظتك هنا"></textarea>
-    </div>
+    <div class="form-group"><label>ملاحظة (اختياري):</label><textarea id="assessNote" placeholder="اكتب ملاحظتك هنا"></textarea></div>
     <div class="form-group">
       <label>صور (اختياري - تُصغَّر تلقائيًا):</label>
       <input type="file" id="assessImages" accept="image/*" multiple>
@@ -373,7 +302,6 @@
   </div>
 </div>
 
-<!-- نافذة عرض/تعديل التقييمات -->
 <div id="assessmentViewModal" class="modal">
   <div class="modal-content">
     <h2 id="viewAssessmentsTitle">تقييمات المعيار</h2>
@@ -385,7 +313,6 @@
   </div>
 </div>
 
-<!-- نافذة تعديل التقرير النهائي -->
 <div id="editReportModal" class="modal">
   <div class="modal-content">
     <h2>تعديل التقرير النهائي للشهر</h2>
@@ -398,107 +325,21 @@
   </div>
 </div>
 
-<div id="notification" class="notification"></div>
-
-  <!-- قسم النسخ الاحتياطي والاستيراد -->
-<div class="settings-section">
-  <h3>النسخ الاحتياطي للبيانات</h3>
-
-  <div class="backup-buttons">
-    <!-- تصدير البيانات إلى JSON -->
-    <button id="exportDataBtn" class="primary">
-      تصدير البيانات (ملف JSON)
-    </button>
-
-    <!-- استيراد النسخة الاحتياطية -->
-    <button id="importDataBtn" class="secondary">
-      استيراد نسخة احتياطية
-    </button>
-
-    <!-- إدخال ملف مخفي لاختيار ملف النسخة -->
-    <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
-
-    <!-- مسح كل البيانات -->
-    <button id="clearAllDataBtn" class="danger">
-      مسح جميع البيانات من هذا الجهاز
-    </button>
-  </div>
-</div>
-
-<!-- قسم أمان الحساب: تغيير كلمة المرور -->
-<div class="settings-section">
-  <h3>أمان الحساب</h3>
-  
-  <div class="password-change-form">
-    <div class="form-group">
-      <label>كلمة المرور الحالية</label>
-      <div class="password-input-wrapper">
-        <input type="password" id="currentPassword" placeholder="أدخل كلمة المرور الحالية">
-        <button type="button" class="toggle-password" data-target="currentPassword">👁️</button>
-      </div>
-    </div>
-    
-    <div class="form-group">
-      <label>كلمة المرور الجديدة</label>
-      <div class="password-input-wrapper">
-        <input type="password" id="newPassword" placeholder="أدخل كلمة المرور الجديدة">
-        <button type="button" class="toggle-password" data-target="newPassword">👁️</button>
-      </div>
-    </div>
-    
-    <div class="form-group">
-      <label>تأكيد كلمة المرور الجديدة</label>
-      <div class="password-input-wrapper">
-        <input type="password" id="confirmPassword" placeholder="أكّد كلمة المرور الجديدة">
-        <button type="button" class="toggle-password" data-target="confirmPassword">👁️</button>
-      </div>
-    </div>
-    
-    <button id="changePasswordBtn" class="primary">تغيير كلمة المرور</button>
-  </div>
-</div>
-
-  <!-- نافذة نسيت كلمة المرور -->
-<div id="forgotPasswordModal" class="modal" style="display:none;">
-  <div class="modal-content" style="max-width: 400px;">
+<div id="forgotPasswordModal" class="modal">
+  <div class="modal-content" style="max-width:400px;">
     <h3>إعادة تعيين كلمة المرور</h3>
     <p>أدخل بريدك الإلكتروني وسنرسل لك رابطًا لتغيير كلمة المرور.</p>
-    
-    <div class="form-group">
-      <label>البريد الإلكتروني</label>
-      <input type="email" id="resetEmail" placeholder="example@email.com">
-    </div>
-    
-    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
-      <button id="cancelResetBtn" class="secondary">إلغاء</button>
-      <button id="sendResetBtn" class="primary">إرسال الرابط</button>
+    <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="resetEmail" placeholder="example@email.com"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:15px;">
+      <button id="cancelResetBtn" class="btn-warning">إلغاء</button>
+      <button id="sendResetBtn" class="btn-primary">إرسال الرابط</button>
     </div>
   </div>
 </div>
 
-<style>
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-}
-</style>
-  
+<div id="notification" class="notification"></div>
+
 <script>
-/* ========== تكوين Firebase ========== */
 const firebaseConfig = {
   apiKey: "AIzaSyBYPXJRC9GfWwPf5bw6LrIFAeMN9g_wqqQ",
   authDomain: "evaluation-employer.firebaseapp.com",
@@ -507,197 +348,150 @@ const firebaseConfig = {
   messagingSenderId: "126360689450",
   appId: "1:126360689450:web:a9a71bc10214d5846b9c53"
 };
-
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const db   = firebase.firestore();
+const db = firebase.firestore();
 
-/* ========== المتغيّرات العامة ========== */
-const monthNames=['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const monthNames = ['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 
-let currentUser=null;
-let employees=[];
-let partialAssessments=[];
-let finalReports=[];
+let currentUser = null;
+let employees = [];
+let partialAssessments = [];
+let finalReports = [];
+let currentEditingEmployeeId = null;
+let currentAssessmentCriterionId = null;
+let currentAssessmentMax = 0;
+let currentMainCriterionId = null;
+let tempImages = [];
+let currentReportForEdit = null;
+let currentViewingEmployeeId = null;
+let currentViewingCriterionId = null;
+let currentViewingMaxPoints = 0;
+let selectedImportEmployeeId = null;
 
-let currentEditingEmployeeId=null;
-let currentAssessmentCriterionId=null;
-let currentAssessmentMax=0;
-let currentMainCriterionId=null;
-let tempImages=[];
-let currentReportForEdit=null;
-function checkLoginStatusOnLoad() {
-  let raw = null;
-  try {
-    raw = localStorage.getItem('app_logged_user');
-  } catch (e) {
-    console.warn('Failed to read app_logged_user from localStorage', e);
-    raw = null;
-  }
-
-  if (raw) {
-    try {
-      const u = JSON.parse(raw);
-      currentUser = u;
-
-      const ui = document.getElementById('userInfoDisplay');
-      if (ui) {
-        ui.classList.remove('hidden');
-        if (u.type === 'firebase' && u.email) {
-          ui.innerHTML = `<strong>مرحبًا:</strong> ${u.email}`;
-        } else {
-          ui.innerHTML = `<strong>وضع الضيف:</strong> البيانات محلية على هذا الجهاز فقط`;
-        }
-      }
-
-      hideLoginScreen();
-      loadAllData();
-    } catch (e) {
-      // لو فشل التحويل نحذف القيمة التالفة
-      try { localStorage.removeItem('app_logged_user'); } catch (_) {}
-    }
-  }
-}
-
-// عرض/تعديل التقييمات
-let currentViewingEmployeeId=null;
-let currentViewingCriterionId=null;
-let currentViewingMaxPoints=0;
-
-// استيراد المعايير
-let selectedImportEmployeeId=null;
-
-/* ========== تخزين محلي احتياطي ========== */
 const Storage = {
   get(key){
-    try{
-      return JSON.parse(localStorage.getItem(key) || 'null');
-    }catch(e){
-      console.warn('LocalStorage get failed, returning null', e);
-      return null;
-    }
+    try{ return JSON.parse(localStorage.getItem(key) || 'null'); }
+    catch(e){ return null; }
   },
   set(key, val){
-   try{
-  localStorage.setItem('app_logged_user', JSON.stringify(currentUser));
-}catch(e){
-  console.warn('Failed to save guest user in localStorage', e);
-}
+    try{ localStorage.setItem(key, JSON.stringify(val)); }
+    catch(e){ console.warn('LocalStorage set failed', e); }
   }
 };
 
-/* ========== إشعارات ========== */
-function showNotification(msg,isError=false){
-  const n=document.getElementById('notification');
-  n.textContent=msg;
-  n.classList.toggle('error',!!isError);
-  n.style.display='block';
-  setTimeout(()=>{n.style.display='none';},3000);
+function showNotification(msg, isError){
+  const n = document.getElementById('notification');
+  if(!n) return;
+  n.textContent = msg;
+  n.classList.toggle('error', !!isError);
+  n.style.display = 'block';
+  setTimeout(() => { n.style.display = 'none'; }, 3000);
 }
 
-/* ========== واجهة الدخول والتبويبات ========== */
 function toggleAuthTab(tab){
-  document.querySelectorAll('.login-tab').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
-  document.querySelector(`.login-tab[data-auth="${tab}"]`).classList.add('active');
-  document.getElementById(tab==='login'?'loginForm':'signupForm').classList.add('active');
+  document.querySelectorAll('.login-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+  const btn = document.querySelector(`.login-tab[data-auth="${tab}"]`);
+  if(btn) btn.classList.add('active');
+  const form = document.getElementById(tab === 'login' ? 'loginForm' : 'signupForm');
+  if(form) form.classList.add('active');
 }
 
 function hideLoginScreen(){
-  document.getElementById('loginScreen').classList.add('hidden');
-  document.getElementById('logoutContainer').classList.remove('hidden');
+  const screen = document.getElementById('loginScreen');
+  if(screen) screen.classList.add('hidden');
+  const logout = document.getElementById('logoutContainer');
+  if(logout) logout.classList.remove('hidden');
 }
 
 function showLoginScreen(){
-  document.getElementById('loginScreen').classList.remove('hidden');
-  document.getElementById('logoutContainer').classList.add('hidden');
+  const screen = document.getElementById('loginScreen');
+  if(screen) screen.classList.remove('hidden');
+  const logout = document.getElementById('logoutContainer');
+  if(logout) logout.classList.add('hidden');
 }
 
 function initTabs(){
-  document.querySelectorAll('.tab-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      const tab=btn.getAttribute('data-tab');
-      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.getAttribute('data-tab');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       btn.classList.add('active');
-      document.getElementById(tab).classList.add('active');
+      const content = document.getElementById(tab);
+      if(content) content.classList.add('active');
     });
   });
 }
 
 function initDates(){
-  const curYear=(new Date()).getFullYear();
-  const monthSelects=[document.getElementById('evalMonthSelect'),document.getElementById('reportMonthSelect')];
-  const yearSelects=[document.getElementById('evalYearSelect'),document.getElementById('reportYearSelect')];
-
-  monthSelects.forEach(sel=>{
-    monthNames.forEach((m,i)=>{
-      const o=document.createElement('option');
-      o.value=i+1;o.textContent=m;
-      sel.appendChild(o);
-    });
-    sel.value=(new Date().getMonth()+1);
+  const curYear = (new Date()).getFullYear();
+  const monthSelects = [document.getElementById('evalMonthSelect'), document.getElementById('reportMonthSelect')];
+  const yearSelects = [document.getElementById('evalYearSelect'), document.getElementById('reportYearSelect')];
+  monthSelects.forEach(sel => {
+    if(!sel) return;
+    sel.innerHTML = '';
+    monthNames.forEach((m, i) => { const o = document.createElement('option'); o.value = i + 1; o.textContent = m; sel.appendChild(o); });
+    sel.value = (new Date().getMonth() + 1);
   });
-
-  yearSelects.forEach(sel=>{
-    for(let y=curYear-1;y<=curYear+1;y++){
-      const o=document.createElement('option');
-      o.value=y;o.textContent=y;
-      sel.appendChild(o);
-    }
-    sel.value=curYear;
+  yearSelects.forEach(sel => {
+    if(!sel) return;
+    sel.innerHTML = '';
+    for(let y = curYear - 1; y <= curYear + 1; y++){ const o = document.createElement('option'); o.value = y; o.textContent = y; sel.appendChild(o); }
+    sel.value = curYear;
   });
 }
 
-/* ========== تحميل/حفظ من/إلى السحابة ========== */
 async function loadAllDataFromCloud(){
-  if(!currentUser)return;
+  if(!currentUser) return;
   try{
-    const docRef=db.collection('users').doc(currentUser.uid);
-    const snap=await docRef.get();
+    const docRef = db.collection('users').doc(currentUser.uid);
+    const snap = await docRef.get();
     if(snap.exists){
-      const data=snap.data();
-      employees=data.employees||[];
-      partialAssessments=data.partialAssessments||[];
-      finalReports=data.finalReports||[];
-    }else{
-      employees=[];partialAssessments=[];finalReports=[];
+      const data = snap.data();
+      employees = data.employees || [];
+      partialAssessments = data.partialAssessments || [];
+      finalReports = data.finalReports || [];
+    } else {
+      employees = []; partialAssessments = []; finalReports = [];
     }
-    // حفظ محلي احتياطي
     saveLocalOnly();
     renderEmployeeList();
     fillEmployeeSelects();
   }catch(e){
     console.error(e);
-    showNotification('تعذّر تحميل البيانات من السحابة، تم استخدام النسخة المحلية إن وجدت.',true);
-    // محاولة استخدام النسخة المحلية
-    employees=Storage.get('app_employees')||[];
-    partialAssessments=Storage.get('app_partial_assessments')||[];
-    finalReports=Storage.get('app_final_reports')||[];
+    showNotification('تعذّر تحميل البيانات من السحابة، تم استخدام النسخة المحلية.', true);
+    employees = Storage.get('app_employees') || [];
+    partialAssessments = Storage.get('app_partial_assessments') || [];
+    finalReports = Storage.get('app_final_reports') || [];
     renderEmployeeList();
     fillEmployeeSelects();
   }
 }
 
+function loadAllData(){
+  employees = Storage.get('app_employees') || [];
+  partialAssessments = Storage.get('app_partial_assessments') || [];
+  finalReports = Storage.get('app_final_reports') || [];
+  renderEmployeeList();
+  fillEmployeeSelects();
+}
+
 function saveLocalOnly(){
-  Storage.set('app_employees',employees);
-  Storage.set('app_partial_assessments',partialAssessments);
-  Storage.set('app_final_reports',finalReports);
+  Storage.set('app_employees', employees);
+  Storage.set('app_partial_assessments', partialAssessments);
+  Storage.set('app_final_reports', finalReports);
 }
 
 async function saveAllToCloud(){
-  if(!currentUser)return;
+  if(!currentUser) return;
   try{
-    const docRef=db.collection('users').doc(currentUser.uid);
-    await docRef.set({
-      employees,
-      partialAssessments,
-      finalReports,
-      lastUpdated:new Date().toISOString()
-    },{merge:true});
+    const docRef = db.collection('users').doc(currentUser.uid);
+    await docRef.set({ employees, partialAssessments, finalReports, lastUpdated: new Date().toISOString() }, {merge: true});
   }catch(e){
     console.error(e);
-    showNotification('تعذّر مزامنة البيانات مع السحابة، ستُحفظ محليًا فقط.',true);
+    showNotification('تعذّر مزامنة البيانات مع السحابة، ستُحفظ محليًا فقط.', true);
   }
 }
 
@@ -706,496 +500,323 @@ function saveAll(){
   saveAllToCloud();
 }
 
-/* ========== فحص حالة الدخول المحفوظة محليًا عند تحميل الصفحة ========== */
-function checkLoginStatusOnLoad() {
+function checkLoginStatusOnLoad(){
   let raw = null;
-  try {
-    raw = localStorage.getItem('app_logged_user');
-  } catch (e) {
-    console.warn('Failed to read app_logged_user from localStorage', e);
-    raw = null;
-  }
-
-  if (raw) {
-    try {
+  try{ raw = localStorage.getItem('app_logged_user'); }catch(e){ raw = null; }
+  if(raw){
+    try{
       const u = JSON.parse(raw);
       currentUser = u;
-
       const ui = document.getElementById('userInfoDisplay');
-      if (ui) {
+      if(ui){
         ui.classList.remove('hidden');
-        if (u.type === 'firebase' && u.email) {
-          ui.innerHTML = `<strong>مرحبًا:</strong> ${u.email}`;
-        } else {
-          ui.innerHTML = `<strong>وضع الضيف:</strong> البيانات محلية على هذا الجهاز فقط`;
-        }
+        if(u.type === 'firebase' && u.email){ ui.innerHTML = `<strong>مرحبًا:</strong> ${u.email}`; }
+        else { ui.innerHTML = `<strong>وضع الضيف:</strong> البيانات محلية على هذا الجهاز فقط`; }
       }
-
       hideLoginScreen();
-      loadAllData();   // تحميل البيانات من localStorage
-    } catch (e) {
-      try { localStorage.removeItem('app_logged_user'); } catch (_) {}
+      loadAllData();
+    }catch(e){
+      try{ localStorage.removeItem('app_logged_user'); }catch(_){}
     }
   }
 }
-/* ========== إدارة تسجيل الدخول Firebase ========== */
+
+function toggleModal(id, show){
+  const el = document.getElementById(id);
+  if(!el) return;
+  if(show){ el.classList.add('show'); }
+  else { el.classList.remove('show'); }
+  if(!show && id === 'assessmentModal') tempImages = [];
+}
+
+/* ========== DOMContentLoaded ========== */
 document.addEventListener('DOMContentLoaded', () => {
-  // 1) فحص حالة الدخول المخزّنة محليًا (إن وُجدت)
+  // إخفاء جميع النوافذ المنبثقة عند التحميل - هذا هو الإصلاح الرئيسي!
+  document.querySelectorAll('.modal').forEach(m => m.classList.remove('show'));
+
   checkLoginStatusOnLoad();
 
-  // تبويبات شاشة الدخول
-  document.querySelectorAll('.login-tab').forEach(btn=>{
-    btn.addEventListener('click',()=>toggleAuthTab(btn.getAttribute('data-auth')));
+  document.querySelectorAll('.login-tab').forEach(btn => {
+    btn.addEventListener('click', () => toggleAuthTab(btn.getAttribute('data-auth')));
   });
 
-  // أزرار الدخول/التسجيل
-  const authLoading=document.getElementById('authLoading');
+  const authLoading = document.getElementById('authLoading');
 
-  // زر تسجيل الدخول
-  document.getElementById('btnLogin').onclick = async () => {
-    const email = document.getElementById('loginEmail').value.trim();
-    const pass  = document.getElementById('loginPassword').value.trim();
-    if (!email || !pass) {
-      showNotification('أدخل البريد وكلمة المرور', true);
-      return;
-    }
-    try {
-      authLoading.classList.remove('hidden');
-      const result = await auth.signInWithEmailAndPassword(email, pass);
+  const btnLogin = document.getElementById('btnLogin');
+  if(btnLogin){
+    btnLogin.onclick = async () => {
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass = document.getElementById('loginPassword').value.trim();
+      if(!email || !pass){ showNotification('أدخل البريد وكلمة المرور', true); return; }
+      try{
+        if(authLoading) authLoading.classList.remove('hidden');
+        const result = await auth.signInWithEmailAndPassword(email, pass);
+        try{ currentUser = { type: 'firebase', uid: result.user.uid, email: result.user.email }; localStorage.setItem('app_logged_user', JSON.stringify(currentUser)); }
+        catch(e){ console.warn('Failed to save login state', e); }
+      }catch(e){ console.error(e); showNotification('خطأ في تسجيل الدخول: ' + (e.message || ''), true); }
+      finally{ if(authLoading) authLoading.classList.add('hidden'); }
+    };
+  }
 
-      // حفظ حالة الدخول في localStorage مع حماية
-      try {
-        currentUser = { type: 'firebase', uid: result.user.uid, email: result.user.email };
-        localStorage.setItem('app_logged_user', JSON.stringify(currentUser));
-      } catch(e) {
-        console.warn('Failed to save login state', e);
-      }
+  const btnSignup = document.getElementById('btnSignup');
+  if(btnSignup){
+    btnSignup.onclick = async () => {
+      const email = document.getElementById('signupEmail').value.trim();
+      const pass = document.getElementById('signupPassword').value.trim();
+      if(!email || !pass){ showNotification('أدخل البريد وكلمة المرور', true); return; }
+      if(pass.length < 6){ showNotification('كلمة المرور يجب أن تكون 6 أحرف على الأقل', true); return; }
+      try{
+        if(authLoading) authLoading.classList.remove('hidden');
+        const result = await auth.createUserWithEmailAndPassword(email, pass);
+        showNotification('تم إنشاء الحساب وتسجيل الدخول');
+        try{ currentUser = { type: 'firebase', uid: result.user.uid, email: result.user.email }; localStorage.setItem('app_logged_user', JSON.stringify(currentUser)); }
+        catch(e){ console.warn('Failed to save signup state', e); }
+      }catch(e){ console.error(e); showNotification('خطأ في إنشاء الحساب: ' + (e.message || ''), true); }
+      finally{ if(authLoading) authLoading.classList.add('hidden'); }
+    };
+  }
 
-    } catch(e) {
-      console.error(e);
-      showNotification('خطأ في تسجيل الدخول: ' + (e.message || ''), true);
-    } finally {
-      authLoading.classList.add('hidden');
-    }
-  };
+  const logoutBtn = document.getElementById('logoutBtn');
+  if(logoutBtn){
+    logoutBtn.onclick = async () => {
+      try{ await auth.signOut(); try{ localStorage.removeItem('app_logged_user'); }catch(e){} }
+      catch(e){ console.error(e); showNotification('حدث خطأ أثناء تسجيل الخروج', true); }
+    };
+  }
 
-  // زر إنشاء حساب
-  document.getElementById('btnSignup').onclick = async () => {
-    const email = document.getElementById('signupEmail').value.trim();
-    const pass  = document.getElementById('signupPassword').value.trim();
-    if (!email || !pass) {
-      showNotification('أدخل البريد وكلمة المرور', true);
-      return;
-    }
-    if (pass.length < 6) {
-      showNotification('كلمة المرور يجب أن تكون 6 أحرف على الأقل', true);
-      return;
-    }
-    try {
-      authLoading.classList.remove('hidden');
-      const result = await auth.createUserWithEmailAndPassword(email, pass);
-      showNotification('تم إنشاء الحساب وتسجيل الدخول');
-
-      // حفظ حالة الدخول في localStorage مع حماية
-      try {
-        currentUser = { type: 'firebase', uid: result.user.uid, email: result.user.email };
-        localStorage.setItem('app_logged_user', JSON.stringify(currentUser));
-      } catch(e) {
-        console.warn('Failed to save signup state', e);
-      }
-
-    } catch(e) {
-      console.error(e);
-      showNotification('خطأ في إنشاء الحساب: ' + (e.message || ''), true);
-    } finally {
-      authLoading.classList.add('hidden');
-    }
-  };
-
-  // زر تسجيل الخروج
-  document.getElementById('logoutBtn').onclick = async () => {
-    try {
-      await auth.signOut();
-      try {
-        localStorage.removeItem('app_logged_user');
-      } catch(e) {
-        console.warn('Failed to clear login state', e);
-      }
-    } catch(e) {
-      console.error(e);
-      showNotification('حدث خطأ أثناء تسجيل الخروج', true);
-    }
-  };
-
-  // مراقبة حالة تسجيل الدخول من Firebase
   auth.onAuthStateChanged(async (user) => {
-    if (user) {
+    if(user){
       currentUser = { type: 'firebase', uid: user.uid, email: user.email };
-
       const ui = document.getElementById('userInfoDisplay');
-      if (ui) {
-        ui.classList.remove('hidden');
-        ui.innerHTML = `<strong>مسجّل الدخول:</strong> ${user.email}`;
-      }
-
+      if(ui){ ui.classList.remove('hidden'); ui.innerHTML = `<strong>مسجّل الدخول:</strong> ${user.email}`; }
       hideLoginScreen();
       initTabs();
       initDates();
       await loadAllDataFromCloud();
       attachUIEvents();
-
     } else {
       currentUser = null;
       employees = []; partialAssessments = []; finalReports = [];
       showLoginScreen();
     }
   });
-});
 
-/* ========== تهيئة باقي الأزرار بعد الدخول ========== */
-function attachUIEvents(){
-  document.getElementById('addEmpBtn').onclick=addEmployee;
-  document.getElementById('addCriterionBtn').onclick=addModalCriterion;
-  document.getElementById('saveEmpModalBtn').onclick=saveEmployeeModal;
-  document.getElementById('cancelEmpModalBtn').onclick=()=>toggleModal('employeeModal',false);
-  document.getElementById('importCriteriaBtn').onclick=openImportCriteriaModal;
-
-  document.getElementById('addSubCriterionBtn').onclick=addModalSubCriterion;
-  document.getElementById('saveSubCriteriaBtn').onclick=saveSubCriteriaChanges;
-  document.getElementById('cancelSubCriteriaBtn').onclick=()=>toggleModal('subCriteriaModal',false);
-
-  document.getElementById('confirmImportBtn').onclick=confirmImportCriteria;
-  document.getElementById('cancelImportBtn').onclick=()=>toggleModal('importCriteriaModal',false);
-
-  document.getElementById('assessImages').addEventListener('change',e=>previewImages(e.target));
-  document.getElementById('saveAssessmentBtn').onclick=saveAssessment;
-  document.getElementById('cancelAssessmentBtn').onclick=()=>toggleModal('assessmentModal',false);
-
-  document.getElementById('evalEmpSelect').addEventListener('change',onEvalEmployeeChange);
-  document.getElementById('evalMonthSelect').addEventListener('change',onEvalEmployeeChange);
-  document.getElementById('evalYearSelect').addEventListener('change',onEvalEmployeeChange);
-
-  document.getElementById('showReportBtn').onclick=generateReportPreview;
-  document.getElementById('editReportBtn').onclick=editFinalReport;
-  document.getElementById('exportPdfBtn').onclick=exportToPDF;
-  document.getElementById('shareWaBtn').onclick=shareToWhatsApp;
-
-  document.getElementById('saveEditedReportBtn').onclick=saveEditedReport;
-  document.getElementById('cancelEditReportBtn').onclick=()=>toggleModal('editReportModal',false);
-
-  document.getElementById('cancelViewAssessmentsBtn').onclick=()=>toggleModal('assessmentViewModal',false);
-  // === أزرار النسخ الاحتياطي ===
-  const exportBtn = document.getElementById('exportDataBtn');
-  const importBtn = document.getElementById('importDataBtn');
-  const importInput = document.getElementById('importFileInput');
-  const clearBtn = document.getElementById('clearAllDataBtn');
-
-  if (exportBtn) {
-    exportBtn.onclick = exportDataToFile;
-  }
-
-  if (importBtn && importInput) {
-    importBtn.onclick = () => importInput.click();
-    importInput.addEventListener('change', handleImportDataFile);
-  }
-
-  if (clearBtn) {
-    clearBtn.onclick = clearAllDataConfirm;
-  }
-
-  // === إظهار/إخفاء حقول كلمة المرور في قسم تغيير كلمة السر ===
-  document.querySelectorAll('.toggle-password').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const targetId = this.getAttribute('data-target');
-      const input = document.getElementById(targetId);
-      if (!input) return;
-
-      if (input.type === 'password') {
-        input.type = 'text';
-        this.textContent = '🔒';
-      } else {
-        input.type = 'password';
-        this.textContent = '👁️';
-      }
-    });
-  });
-
-  // === زر تغيير كلمة المرور ===
-  const changePasswordBtn = document.getElementById('changePasswordBtn');
-  if (changePasswordBtn) {
-    changePasswordBtn.onclick = async function() {
-      const currentPassword = document.getElementById('currentPassword').value.trim();
-      const newPassword = document.getElementById('newPassword').value.trim();
-      const confirmPassword = document.getElementById('confirmPassword').value.trim();
-
-      // التحقق من الحقول
-      if (!currentPassword || !newPassword || !confirmPassword) {
-        showNotification('الرجاء ملء جميع الحقول.', true);
-        return;
-      }
-
-      if (newPassword !== confirmPassword) {
-        showNotification('كلمتا المرور الجديدتان غير متطابقتين.', true);
-        return;
-      }
-
-      if (newPassword.length < 6) {
-        showNotification('كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل.', true);
-        return;
-      }
-
-      try {
-        const user = firebase.auth().currentUser;
-        if (!user) {
-          showNotification('يجب تسجيل الدخول أولاً لتغيير كلمة المرور.', true);
-          return;
-        }
-
-        // إعادة المصادقة بكلمة المرور الحالية (مهم لFirebase)
-        const credential = firebase.auth.EmailAuthProvider.credential(
-          user.email,
-          currentPassword
-        );
-        await user.reauthenticateWithCredential(credential);
-
-        // تحديث كلمة المرور
-        await user.updatePassword(newPassword);
-
-        // تفريغ الحقول بعد النجاح
-        document.getElementById('currentPassword').value = '';
-        document.getElementById('newPassword').value = '';
-        document.getElementById('confirmPassword').value = '';
-
-        showNotification('تم تغيير كلمة المرور بنجاح.');
-      } catch (error) {
-        console.error('Error changing password:', error);
-        if (error.code === 'auth/wrong-password') {
-          showNotification('كلمة المرور الحالية غير صحيحة.', true);
-        } else if (error.code === 'auth/requires-recent-login') {
-          showNotification('للأمان، يرجى تسجيل الدخول من جديد ثم إعادة المحاولة.', true);
-        } else {
-          showNotification('حدث خطأ أثناء تغيير كلمة المرور: ' + (error.message || ''), true);
-        }
-      }
-    };
-  }
-
-  // === ميزة نسيت كلمة المرور ===
-  
+  // نسيت كلمة المرور
   const forgotLink = document.getElementById('forgotPasswordLink');
   const forgotModal = document.getElementById('forgotPasswordModal');
   const cancelResetBtn = document.getElementById('cancelResetBtn');
   const sendResetBtn = document.getElementById('sendResetBtn');
-  
-  // فتح النافذة عند الضغط على "نسيت كلمة المرور؟"
-  if (forgotLink) {
-    forgotLink.onclick = function(e) {
+
+  if(forgotLink && forgotModal){
+    forgotLink.onclick = function(e){
       e.preventDefault();
-      if (forgotModal) {
-        forgotModal.style.display = 'flex';
-      }
-      
-      // لو كان حقل البريد في شاشة الدخول مليئًا، انسخه في نافذة الإعادة
+      forgotModal.classList.add('show');
       const loginEmailInput = document.getElementById('loginEmail');
       const resetEmailInput = document.getElementById('resetEmail');
-      if (loginEmailInput && resetEmailInput && loginEmailInput.value) {
-        resetEmailInput.value = loginEmailInput.value;
-      }
+      if(loginEmailInput && resetEmailInput && loginEmailInput.value){ resetEmailInput.value = loginEmailInput.value; }
     };
   }
-  
-  // إغلاق النافذة عند الضغط على "إلغاء"
-  if (cancelResetBtn) {
-    cancelResetBtn.onclick = function() {
-      if (forgotModal) {
-        forgotModal.style.display = 'none';
-      }
-    };
+  if(cancelResetBtn && forgotModal){
+    cancelResetBtn.onclick = function(){ forgotModal.classList.remove('show'); };
   }
-  
-  // إرسال رابط إعادة تعيين كلمة المرور
-  if (sendResetBtn) {
-    sendResetBtn.onclick = async function() {
+  if(sendResetBtn){
+    sendResetBtn.onclick = async function(){
       const email = document.getElementById('resetEmail').value.trim();
-      
-      // التحقق من إدخال البريد
-      if (!email) {
-        showNotification('الرجاء إدخال البريد الإلكتروني.', true);
-        return;
-      }
-      
-      // التحقق من صيغة البريد
+      if(!email){ showNotification('الرجاء إدخال البريد الإلكتروني.', true); return; }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        showNotification('صيغة البريد الإلكتروني غير صحيحة.', true);
-        return;
-      }
-      
-      try {
-        // استدعاء Firebase لإرسال رسالة إعادة التعيين
+      if(!emailRegex.test(email)){ showNotification('صيغة البريد الإلكتروني غير صحيحة.', true); return; }
+      try{
         await firebase.auth().sendPasswordResetEmail(email);
-        
-        // إغلاق النافذة وتفريغ الحقل
-        if (forgotModal) {
-          forgotModal.style.display = 'none';
-        }
+        if(forgotModal) forgotModal.classList.remove('show');
         document.getElementById('resetEmail').value = '';
-        
-        showNotification('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. تحقق من صندوق الوارد والبريد العشوائي.');
-      } catch (error) {
+        showNotification('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك.');
+      }catch(error){
         console.error('Error sending reset email:', error);
-        
-        if (error.code === 'auth/user-not-found') {
-          showNotification('لا يوجد حساب مرتبط بهذا البريد الإلكتروني.', true);
-        } else if (error.code === 'auth/invalid-email') {
-          showNotification('البريد الإلكتروني غير صالح.', true);
-        } else {
-          showNotification('حدث خطأ أثناء إرسال رابط إعادة التعيين: ' + (error.message || ''), true);
-        }
+        if(error.code === 'auth/user-not-found'){ showNotification('لا يوجد حساب مرتبط بهذا البريد.', true); }
+        else if(error.code === 'auth/invalid-email'){ showNotification('البريد الإلكتروني غير صالح.', true); }
+        else { showNotification('حدث خطأ: ' + (error.message || ''), true); }
       }
     };
   }
+});
 
-  // === لوحة تعديل التقرير النهائي للشهر ===
-  const editReportModal = document.getElementById('editReportModal');
-  const cancelEditReportBtn = document.getElementById('cancelEditReportBtn');
+function attachUIEvents(){
+  const addEmpBtn = document.getElementById('addEmpBtn');
+  if(addEmpBtn) addEmpBtn.onclick = addEmployee;
+
+  const addCriterionBtn = document.getElementById('addCriterionBtn');
+  if(addCriterionBtn) addCriterionBtn.onclick = addModalCriterion;
+
+  const saveEmpModalBtn = document.getElementById('saveEmpModalBtn');
+  if(saveEmpModalBtn) saveEmpModalBtn.onclick = saveEmployeeModal;
+
+  const cancelEmpModalBtn = document.getElementById('cancelEmpModalBtn');
+  if(cancelEmpModalBtn) cancelEmpModalBtn.onclick = () => toggleModal('employeeModal', false);
+
+  const importCriteriaBtn = document.getElementById('importCriteriaBtn');
+  if(importCriteriaBtn) importCriteriaBtn.onclick = openImportCriteriaModal;
+
+  const addSubCriterionBtn = document.getElementById('addSubCriterionBtn');
+  if(addSubCriterionBtn) addSubCriterionBtn.onclick = addModalSubCriterion;
+
+  const saveSubCriteriaBtn = document.getElementById('saveSubCriteriaBtn');
+  if(saveSubCriteriaBtn) saveSubCriteriaBtn.onclick = saveSubCriteriaChanges;
+
+  const cancelSubCriteriaBtn = document.getElementById('cancelSubCriteriaBtn');
+  if(cancelSubCriteriaBtn) cancelSubCriteriaBtn.onclick = () => toggleModal('subCriteriaModal', false);
+
+  const confirmImportBtn = document.getElementById('confirmImportBtn');
+  if(confirmImportBtn) confirmImportBtn.onclick = confirmImportCriteria;
+
+  const cancelImportBtn = document.getElementById('cancelImportBtn');
+  if(cancelImportBtn) cancelImportBtn.onclick = () => toggleModal('importCriteriaModal', false);
+
+  const assessImages = document.getElementById('assessImages');
+  if(assessImages) assessImages.addEventListener('change', e => previewImages(e.target));
+
+  const saveAssessmentBtn = document.getElementById('saveAssessmentBtn');
+  if(saveAssessmentBtn) saveAssessmentBtn.onclick = saveAssessment;
+
+  const cancelAssessmentBtn = document.getElementById('cancelAssessmentBtn');
+  if(cancelAssessmentBtn) cancelAssessmentBtn.onclick = () => toggleModal('assessmentModal', false);
+
+  const cancelViewAssessmentsBtn = document.getElementById('cancelViewAssessmentsBtn');
+  if(cancelViewAssessmentsBtn) cancelViewAssessmentsBtn.onclick = () => toggleModal('assessmentViewModal', false);
+
+  const evalEmpSelect = document.getElementById('evalEmpSelect');
+  const evalMonthSelect = document.getElementById('evalMonthSelect');
+  const evalYearSelect = document.getElementById('evalYearSelect');
+  if(evalEmpSelect) evalEmpSelect.addEventListener('change', onEvalEmployeeChange);
+  if(evalMonthSelect) evalMonthSelect.addEventListener('change', onEvalEmployeeChange);
+  if(evalYearSelect) evalYearSelect.addEventListener('change', onEvalEmployeeChange);
+
+  const showReportBtn = document.getElementById('showReportBtn');
+  if(showReportBtn) showReportBtn.onclick = generateReportPreview;
+
+  const editReportBtn = document.getElementById('editReportBtn');
+  if(editReportBtn) editReportBtn.onclick = editFinalReport;
+
+  const exportPdfBtn = document.getElementById('exportPdfBtn');
+  if(exportPdfBtn) exportPdfBtn.onclick = exportToPDF;
+
+  const shareWaBtn = document.getElementById('shareWaBtn');
+  if(shareWaBtn) shareWaBtn.onclick = shareToWhatsApp;
+
   const saveEditedReportBtn = document.getElementById('saveEditedReportBtn');
+  if(saveEditedReportBtn) saveEditedReportBtn.onclick = saveEditedReport;
 
-  // زر إلغاء: إخفاء اللوحة بدون حفظ
-  if (cancelEditReportBtn && editReportModal) {
-    cancelEditReportBtn.onclick = function () {
-      editReportModal.style.display = 'none';
-    };
+  const cancelEditReportBtn = document.getElementById('cancelEditReportBtn');
+  if(cancelEditReportBtn) cancelEditReportBtn.onclick = () => toggleModal('editReportModal', false);
+
+  const exportDataBtn = document.getElementById('exportDataBtn');
+  const importDataBtn = document.getElementById('importDataBtn');
+  const importFileInput = document.getElementById('importFileInput');
+  const clearAllDataBtn = document.getElementById('clearAllDataBtn');
+
+  if(exportDataBtn) exportDataBtn.onclick = exportDataToFile;
+  if(importDataBtn && importFileInput){
+    importDataBtn.onclick = () => importFileInput.click();
+    importFileInput.addEventListener('change', handleImportDataFile);
   }
+  if(clearAllDataBtn) clearAllDataBtn.onclick = clearAllDataConfirm;
 
-  // زر حفظ التقرير النهائي
-  if (saveEditedReportBtn && editReportModal) {
-    saveEditedReportBtn.onclick = function () {
-      // هنا منطق الحفظ
-      // مثال: قراءة النص من textarea وحفظه في التخزين أو قاعدة البيانات
+  document.querySelectorAll('.toggle-password').forEach(btn => {
+    btn.addEventListener('click', function(){
+      const targetId = this.getAttribute('data-target');
+      const input = document.getElementById(targetId);
+      if(!input) return;
+      if(input.type === 'password'){ input.type = 'text'; this.textContent = '🔒'; }
+      else { input.type = 'password'; this.textContent = '👁️'; }
+    });
+  });
 
-      // مثال إن كان عندك textarea للتقرير النهائي:
-      // const editlReportText = document.getElementById('editReportText').value.trim();
-      // saveeditReportToDb(editReportText); // دالة أنت تنفّذها بنفسك
-
-      // بعد الحفظ، يمكنك إخفاء اللوحة وإظهار رسالة نجاح
-      editReportModal.style.display = 'none';
-      if (typeof showNotification === 'function') {
-        showNotification('تم حفظ التقرير النهائي بنجاح.');
+  const changePasswordBtn = document.getElementById('changePasswordBtn');
+  if(changePasswordBtn){
+    changePasswordBtn.onclick = async function(){
+      const currentPassword = document.getElementById('currentPassword').value.trim();
+      const newPassword = document.getElementById('newPassword').value.trim();
+      const confirmPassword = document.getElementById('confirmPassword').value.trim();
+      if(!currentPassword || !newPassword || !confirmPassword){ showNotification('الرجاء ملء جميع الحقول.', true); return; }
+      if(newPassword !== confirmPassword){ showNotification('كلمتا المرور الجديدتان غير متطابقتين.', true); return; }
+      if(newPassword.length < 6){ showNotification('كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل.', true); return; }
+      try{
+        const user = firebase.auth().currentUser;
+        if(!user){ showNotification('يجب تسجيل الدخول أولاً.', true); return; }
+        const credential = firebase.auth().EmailAuthProvider.credential(user.email, currentPassword);
+        await user.reauthenticateWithCredential(credential);
+        await user.updatePassword(newPassword);
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        showNotification('تم تغيير كلمة المرور بنجاح.');
+      }catch(error){
+        console.error('Error changing password:', error);
+        if(error.code === 'auth/wrong-password'){ showNotification('كلمة المرور الحالية غير صحيحة.', true); }
+        else if(error.code === 'auth/requires-recent-login'){ showNotification('للأمان، يرجى تسجيل الدخول من جديد ثم إعادة المحاولة.', true); }
+        else { showNotification('حدث خطأ: ' + (error.message || ''), true); }
       }
     };
   }
-
-  // === نافذة تقييمات المعيار ===
-const assessmentModal = document.getElementById('assessmentModal');
-const saveAssessmentBtn = document.getElementById('saveAssessmentBtn');
-const cancelAssessmentBtn = document.getElementById('cancelAssessmentBtn');
-
-// زر الإلغاء: إخفاء النافذة
-if (cancelAssessmentBtn && assessmentModal) {
-  cancelAssessmentBtn.onclick = function () {
-    assessmentModal.style.display = 'none';
-  };
-}
-
-// زر الحفظ: (يمكنك إضافة منطق الحفظ) ثم إخفاء النافذة
-if (saveAssessmentBtn && assessmentModal) {
-  saveAssessmentBtn.onclick = function () {
-    // منطق الحفظ (قراءة الدرجة والملاحظة وحفظها في البيانات/Firebase) إن أحببت
-
-    assessmentModal.style.display = 'none';
-    if (typeof showNotification === 'function') {
-      showNotification('تم حفظ التقييم بنجاح.');
-    }
-  };
-}
-}
-
-/* ========== دوال المودالات ========== */
-function toggleModal(id,show){
-  document.getElementById(id).classList.toggle('show',show);
-  if(!show && id==='assessmentModal')tempImages=[];
 }
 
 /* ================= إدارة الموظفين ================= */
 function addEmployee(){
-  const name=document.getElementById('empName').value.trim();
-  const phone=document.getElementById('empPhone').value.trim();
-  if(!name||!phone){showNotification('أدخل الاسم ورقم الهاتف',true);return;}
-  const baseId=Date.now();
-  const emp={
-    id:baseId,
-    name,
-    phone,
-    criteria:[
-      {id:baseId+1,title:'الالتزام بالمواعيد',weight:25,subCriteria:[]},
-      {id:baseId+2,title:'جودة العمل',weight:35,subCriteria:[]},
-      {id:baseId+3,title:'التعاون مع الزملاء',weight:20,subCriteria:[]},
-      {id:baseId+4,title:'الانضباط',weight:20,subCriteria:[]}
+  const name = document.getElementById('empName').value.trim();
+  const phone = document.getElementById('empPhone').value.trim();
+  if(!name || !phone){ showNotification('أدخل الاسم ورقم الهاتف', true); return; }
+  const baseId = Date.now();
+  const emp = {
+    id: baseId, name, phone,
+    criteria: [
+      {id: baseId+1, title: 'الالتزام بالمواعيد', weight: 25, subCriteria: []},
+      {id: baseId+2, title: 'جودة العمل', weight: 35, subCriteria: []},
+      {id: baseId+3, title: 'التعاون مع الزملاء', weight: 20, subCriteria: []},
+      {id: baseId+4, title: 'الانضباط', weight: 20, subCriteria: []}
     ]
   };
   employees.push(emp);
   saveAll();
-  document.getElementById('empName').value='';
-  document.getElementById('empPhone').value='';
+  document.getElementById('empName').value = '';
+  document.getElementById('empPhone').value = '';
   renderEmployeeList();
   fillEmployeeSelects();
   showNotification('تمت إضافة الموظف');
 }
 
 function renderEmployeeList(){
-  const c=document.getElementById('employeeList');
-  if(!employees.length){c.innerHTML='<p>لا يوجد موظفين بعد</p>';return;}
-  c.innerHTML=employees.map(e=>{
-    const count=e.criteria?e.criteria.length:0;
-    const total=(e.criteria||[]).reduce((s,c)=>s+Number(c.weight||0),0);
-    return `
-      <div class="list-item">
-        <div><strong>${e.name}</strong></div>
-        <div>هاتف: ${e.phone}</div>
-        <div>عدد المعايير: ${count} | مجموع الأوزان: ${total}</div>
-        <div style="margin-top:5px;">
-          <button class="btn-primary btn-small" onclick="openEmployeeModal(${e.id})">تعديل الموظف/المعايير</button>
-          <button class="btn-info btn-small" onclick="duplicateEmployee(${e.id})">📋 نسخ الموظف</button>
-          <button class="btn-danger btn-small" onclick="deleteEmployee(${e.id})">حذف</button>
-        </div>
-      </div>`;
+  const c = document.getElementById('employeeList');
+  if(!c) return;
+  if(!employees.length){ c.innerHTML = '<p>لا يوجد موظفين بعد</p>'; return; }
+  c.innerHTML = employees.map(e => {
+    const count = e.criteria ? e.criteria.length : 0;
+    const total = (e.criteria || []).reduce((s, c) => s + Number(c.weight || 0), 0);
+    return `<div class="list-item">
+      <div><strong>${e.name}</strong></div>
+      <div>هاتف: ${e.phone}</div>
+      <div>عدد المعايير: ${count} | مجموع الأوزان: ${total}</div>
+      <div style="margin-top:5px;">
+        <button class="btn-primary btn-small" onclick="openEmployeeModal(${e.id})">تعديل الموظف/المعايير</button>
+        <button class="btn-info btn-small" onclick="duplicateEmployee(${e.id})">📋 نسخ الموظف</button>
+        <button class="btn-danger btn-small" onclick="deleteEmployee(${e.id})">حذف</button>
+      </div>
+    </div>`;
   }).join('');
 }
 
 function duplicateEmployee(id){
-  const emp=employees.find(e=>e.id===id);
-  if(!emp)return;
-  if(!confirm(`هل تريد نسخ الموظف "${emp.name}" بكل معاييره؟ (لن تُنسخ التقييمات)`))return;
-
-  const baseId=Date.now();
-  const newEmp={
-    id:baseId,
-    name:emp.name+' (نسخة)',
-    phone:emp.phone,
-    criteria:[]
-  };
-
-  emp.criteria.forEach(c=>{
-    const newCritId=baseId+Math.floor(Math.random()*100000);
-    const newCriterion={
-      id:newCritId,
-      title:c.title,
-      weight:c.weight,
-      subCriteria:[]
-    };
+  const emp = employees.find(e => e.id === id);
+  if(!emp) return;
+  if(!confirm(`هل تريد نسخ الموظف "${emp.name}" بكل معاييره؟ (لن تُنسخ التقييمات)`)) return;
+  const baseId = Date.now();
+  const newEmp = { id: baseId, name: emp.name + ' (نسخة)', phone: emp.phone, criteria: [] };
+  emp.criteria.forEach(c => {
+    const newCritId = baseId + Math.floor(Math.random() * 100000);
+    const newCriterion = { id: newCritId, title: c.title, weight: c.weight, subCriteria: [] };
     if(c.subCriteria && c.subCriteria.length){
-      c.subCriteria.forEach(sc=>{
-        newCriterion.subCriteria.push({
-          id:baseId+Math.floor(Math.random()*100000),
-          title:sc.title,
-          points:sc.points
-        });
-      });
+      c.subCriteria.forEach(sc => { newCriterion.subCriteria.push({ id: baseId + Math.floor(Math.random() * 100000), title: sc.title, points: sc.points }); });
     }
     newEmp.criteria.push(newCriterion);
   });
-
   employees.push(newEmp);
   saveAll();
   renderEmployeeList();
@@ -1204,10 +825,10 @@ function duplicateEmployee(id){
 }
 
 function deleteEmployee(id){
-  if(!confirm('هل تريد حذف هذا الموظف وكل تقييماته؟'))return;
-  employees=employees.filter(e=>e.id!==id);
-  partialAssessments=partialAssessments.filter(a=>a.employeeId!==id);
-  finalReports=finalReports.filter(r=>r.employeeId!==id);
+  if(!confirm('هل تريد حذف هذا الموظف وكل تقييماته؟')) return;
+  employees = employees.filter(e => e.id !== id);
+  partialAssessments = partialAssessments.filter(a => a.employeeId !== id);
+  finalReports = finalReports.filter(r => r.employeeId !== id);
   saveAll();
   renderEmployeeList();
   fillEmployeeSelects();
@@ -1215,251 +836,218 @@ function deleteEmployee(id){
 }
 
 function fillEmployeeSelects(){
-  const evalSel=document.getElementById('evalEmpSelect');
-  const repSel=document.getElementById('reportEmpSelect');
-  [evalSel,repSel].forEach(sel=>{
-    sel.innerHTML='<option value="">-- اختر موظف --</option>';
-    employees.forEach(e=>{
-      const o=document.createElement('option');
-      o.value=e.id;o.textContent=e.name;
-      sel.appendChild(o);
-    });
+  const evalSel = document.getElementById('evalEmpSelect');
+  const repSel = document.getElementById('reportEmpSelect');
+  [evalSel, repSel].forEach(sel => {
+    if(!sel) return;
+    sel.innerHTML = '<option value="">-- اختر موظف --</option>';
+    employees.forEach(e => { const o = document.createElement('option'); o.value = e.id; o.textContent = e.name; sel.appendChild(o); });
   });
 }
 
 function openEmployeeModal(id){
-  const emp=employees.find(e=>e.id===id);
-  if(!emp)return;
-  currentEditingEmployeeId=id;
-  document.getElementById('modalEmpName').value=emp.name;
-  document.getElementById('modalEmpPhone').value=emp.phone;
-  renderModalCriteria(emp.criteria||[]);
-  toggleModal('employeeModal',true);
+  const emp = employees.find(e => e.id === id);
+  if(!emp) return;
+  currentEditingEmployeeId = id;
+  document.getElementById('modalEmpName').value = emp.name;
+  document.getElementById('modalEmpPhone').value = emp.phone;
+  renderModalCriteria(emp.criteria || []);
+  toggleModal('employeeModal', true);
 }
 
-/* ================= المعايير الرئيسية + الاستيراد ================= */
+/* ================= المعايير ================= */
 function renderModalCriteria(criteria){
-  const ctn=document.getElementById('modalCriteriaList');
-  if(!criteria||!criteria.length){ctn.innerHTML='<p>لا توجد معايير. يمكنك استيرادها من موظف آخر أو إضافة معايير جديدة.</p>';return;}
-  const total=criteria.reduce((s,c)=>s+Number(c.weight||0),0);
-  let html=`<p>مجموع الأوزان الحالي: <strong>${total}</strong> (يُفضَّل أن يكون 100)</p>`;
-  html+=criteria.map((c,i)=>`
-    <div class="criteria-list-item">
-      <div class="criteria-item-info">
-        <label>اسم المعيار:</label>
-        <input type="text" data-crit-index="${i}" class="crit-title-input" value="${c.title}">
-        <label style="margin-top:5px;">الوزن (النقاط):</label>
-        <input type="number" min="0" step="0.5" data-crit-index="${i}" class="crit-weight-input" value="${c.weight}">
-        ${c.subCriteria && c.subCriteria.length?`<div style="margin-top:4px;font-size:.8rem;color:#666;">معايير فرعية: ${c.subCriteria.length}</div>`:''}
-      </div>
-      <div class="criteria-item-actions">
-        <button class="btn-primary btn-small" onclick="openSubCriteriaModal(${c.id})">معايير فرعية</button>
-        <button class="btn-danger btn-small" onclick="deleteModalCriterion(${i})">حذف</button>
-      </div>
-    </div>`).join('');
-  ctn.innerHTML=html;
+  const ctn = document.getElementById('modalCriteriaList');
+  if(!ctn) return;
+  if(!criteria || !criteria.length){ ctn.innerHTML = '<p>لا توجد معايير. يمكنك استيرادها من موظف آخر أو إضافة معايير جديدة.</p>'; return; }
+  const total = criteria.reduce((s, c) => s + Number(c.weight || 0), 0);
+  let html = `<p>مجموع الأوزان الحالي: <strong>${total}</strong> (يُفضَّل أن يكون 100)</p>`;
+  html += criteria.map((c, i) => `<div class="criteria-list-item">
+    <div class="criteria-item-info">
+      <label>اسم المعيار:</label>
+      <input type="text" data-crit-index="${i}" class="crit-title-input" value="${c.title}">
+      <label style="margin-top:5px;">الوزن (النقاط):</label>
+      <input type="number" min="0" step="0.5" data-crit-index="${i}" class="crit-weight-input" value="${c.weight}">
+      ${c.subCriteria && c.subCriteria.length ? `<div style="margin-top:4px;font-size:.8rem;color:#666;">معايير فرعية: ${c.subCriteria.length}</div>` : ''}
+    </div>
+    <div class="criteria-item-actions">
+      <button class="btn-primary btn-small" onclick="openSubCriteriaModal(${c.id})">معايير فرعية</button>
+      <button class="btn-danger btn-small" onclick="deleteModalCriterion(${i})">حذف</button>
+    </div>
+  </div>`).join('');
+  ctn.innerHTML = html;
 }
 
 function addModalCriterion(){
-  const title=document.getElementById('newCriterionTitle').value.trim();
-  const weight=parseFloat(document.getElementById('newCriterionWeight').value);
-  if(!title||!weight||weight<=0){showNotification('أدخل اسم ووزن صحيحين',true);return;}
-  const emp=employees.find(e=>e.id===currentEditingEmployeeId);
-  if(!emp)return;
-  const total=(emp.criteria||[]).reduce((s,c)=>s+Number(c.weight||0),0);
-  if(total+weight>100 && !confirm(`مجموع الأوزان سيصبح ${total+weight} (>100). هل تريد المتابعة؟`))return;
-  emp.criteria=emp.criteria||[];
-  emp.criteria.push({id:Date.now(),title,weight,subCriteria:[]});
-  document.getElementById('newCriterionTitle').value='';
-  document.getElementById('newCriterionWeight').value='';
+  const title = document.getElementById('newCriterionTitle').value.trim();
+  const weight = parseFloat(document.getElementById('newCriterionWeight').value);
+  if(!title || !weight || weight <= 0){ showNotification('أدخل اسم ووزن صحيحين', true); return; }
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp) return;
+  const total = (emp.criteria || []).reduce((s, c) => s + Number(c.weight || 0), 0);
+  if(total + weight > 100 && !confirm(`مجموع الأوزان سيصبح ${total + weight} (>100). هل تريد المتابعة؟`)) return;
+  emp.criteria = emp.criteria || [];
+  emp.criteria.push({id: Date.now(), title, weight, subCriteria: []});
+  document.getElementById('newCriterionTitle').value = '';
+  document.getElementById('newCriterionWeight').value = '';
   renderModalCriteria(emp.criteria);
 }
 
 function deleteModalCriterion(idx){
-  const emp=employees.find(e=>e.id===currentEditingEmployeeId);
-  if(!emp||!emp.criteria)return;
-  emp.criteria.splice(idx,1);
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp || !emp.criteria) return;
+  emp.criteria.splice(idx, 1);
   renderModalCriteria(emp.criteria);
 }
 
 function saveEmployeeModal(){
-  const emp=employees.find(e=>e.id===currentEditingEmployeeId);
-  if(!emp)return;
-  const name=document.getElementById('modalEmpName').value.trim();
-  const phone=document.getElementById('modalEmpPhone').value.trim();
-  if(!name||!phone){showNotification('أدخل الاسم ورقم الهاتف',true);return;}
-
-  const titleInputs=document.querySelectorAll('.crit-title-input');
-  const weightInputs=document.querySelectorAll('.crit-weight-input');
-  titleInputs.forEach(inp=>{
-    const idx=parseInt(inp.getAttribute('data-crit-index'));
-    if(emp.criteria[idx])emp.criteria[idx].title=inp.value.trim()||emp.criteria[idx].title;
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp) return;
+  const name = document.getElementById('modalEmpName').value.trim();
+  const phone = document.getElementById('modalEmpPhone').value.trim();
+  if(!name || !phone){ showNotification('أدخل الاسم ورقم الهاتف', true); return; }
+  const titleInputs = document.querySelectorAll('.crit-title-input');
+  const weightInputs = document.querySelectorAll('.crit-weight-input');
+  titleInputs.forEach(inp => {
+    const idx = parseInt(inp.getAttribute('data-crit-index'));
+    if(emp.criteria[idx]) emp.criteria[idx].title = inp.value.trim() || emp.criteria[idx].title;
   });
-  weightInputs.forEach(inp=>{
-    const idx=parseInt(inp.getAttribute('data-crit-index'));
-    let w=parseFloat(inp.value);if(isNaN(w)||w<0)w=0;
-    if(emp.criteria[idx])emp.criteria[idx].weight=w;
+  weightInputs.forEach(inp => {
+    const idx = parseInt(inp.getAttribute('data-crit-index'));
+    let w = parseFloat(inp.value); if(isNaN(w) || w < 0) w = 0;
+    if(emp.criteria[idx]) emp.criteria[idx].weight = w;
   });
-
-  const total=(emp.criteria||[]).reduce((s,c)=>s+Number(c.weight||0),0);
-  if(total!==100 && !confirm(`مجموع الأوزان = ${total} وليس 100. هل تريد المتابعة؟`))return;
-
-  emp.name=name;emp.phone=phone;
+  const total = (emp.criteria || []).reduce((s, c) => s + Number(c.weight || 0), 0);
+  if(total !== 100 && !confirm(`مجموع الأوزان = ${total} وليس 100. هل تريد المتابعة؟`)) return;
+  emp.name = name; emp.phone = phone;
   saveAll();
-  renderEmployeeList();fillEmployeeSelects();
-  toggleModal('employeeModal',false);
+  renderEmployeeList(); fillEmployeeSelects();
+  toggleModal('employeeModal', false);
   showNotification('تم حفظ بيانات الموظف والمعايير');
 }
 
-/* إعادة المعايير الافتراضية للموظف الحالي */
 function resetToDefaultCriteria(){
-  if(!confirm('هل تريد استبدال معايير هذا الموظف بالمعايير الافتراضية؟'))return;
-  const emp=employees.find(e=>e.id===currentEditingEmployeeId);
-  if(!emp)return;
-  const baseId=Date.now();
-  emp.criteria=[
-    {id:baseId+1,title:'الالتزام بالمواعيد',weight:25,subCriteria:[]},
-    {id:baseId+2,title:'جودة العمل',weight:35,subCriteria:[]},
-    {id:baseId+3,title:'التعاون مع الزملاء',weight:20,subCriteria:[]},
-    {id:baseId+4,title:'الانضباط',weight:20,subCriteria:[]}
+  if(!confirm('هل تريد استبدال معايير هذا الموظف بالمعايير الافتراضية؟')) return;
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp) return;
+  const baseId = Date.now();
+  emp.criteria = [
+    {id: baseId+1, title: 'الالتزام بالمواعيد', weight: 25, subCriteria: []},
+    {id: baseId+2, title: 'جودة العمل', weight: 35, subCriteria: []},
+    {id: baseId+3, title: 'التعاون مع الزملاء', weight: 20, subCriteria: []},
+    {id: baseId+4, title: 'الانضباط', weight: 20, subCriteria: []}
   ];
   renderModalCriteria(emp.criteria);
 }
 
-/* استيراد المعايير من موظف آخر */
 function openImportCriteriaModal(){
-  const emp=employees.find(e=>e.id===currentEditingEmployeeId);
-  if(!emp){showNotification('افتح موظفاً أولاً',true);return;}
-  const listEl=document.getElementById('importCriteriaList');
-  const others=employees.filter(e=>e.id!==currentEditingEmployeeId);
-  selectedImportEmployeeId=null;
-
-  if(!others.length){
-    listEl.innerHTML='<p>لا يوجد موظفون آخرون لاستيراد المعايير منهم.</p>';
-  }else{
-    listEl.innerHTML=others.map(e=>`
-      <div class="import-option" onclick="selectImportEmployee(${e.id}, this)">
-        <strong>${e.name}</strong><br>
-        <span style="font-size:0.8rem;color:#555;">عدد المعايير: ${(e.criteria||[]).length}</span>
-      </div>
-    `).join('');
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp){ showNotification('افتح موظفاً أولاً', true); return; }
+  const listEl = document.getElementById('importCriteriaList');
+  const others = employees.filter(e => e.id !== currentEditingEmployeeId);
+  selectedImportEmployeeId = null;
+  if(!others.length){ listEl.innerHTML = '<p>لا يوجد موظفون آخرون لاستيراد المعايير منهم.</p>'; }
+  else {
+    listEl.innerHTML = others.map(e => `<div class="import-option" onclick="selectImportEmployee(${e.id}, this)">
+      <strong>${e.name}</strong><br>
+      <span style="font-size:0.8rem;color:#555;">عدد المعايير: ${(e.criteria || []).length}</span>
+    </div>`).join('');
   }
-  toggleModal('importCriteriaModal',true);
+  toggleModal('importCriteriaModal', true);
 }
 
-function selectImportEmployee(empId,el){
-  selectedImportEmployeeId=empId;
-  document.querySelectorAll('.import-option').forEach(d=>d.classList.remove('selected'));
+function selectImportEmployee(empId, el){
+  selectedImportEmployeeId = empId;
+  document.querySelectorAll('.import-option').forEach(d => d.classList.remove('selected'));
   el.classList.add('selected');
 }
 
 function confirmImportCriteria(){
-  if(!selectedImportEmployeeId){
-    showNotification('اختر موظفاً أولاً لاستيراد معاييره',true);
-    return;
-  }
-  const source=employees.find(e=>e.id===selectedImportEmployeeId);
-  const target=employees.find(e=>e.id===currentEditingEmployeeId);
-  if(!source||!target)return;
-
-  if(!confirm(`سيتم استبدال معايير الموظف الحالي بمعايير الموظف "${source.name}". هل أنت متأكد؟`))return;
-
-  const baseId=Date.now();
-  target.criteria=[];
-  (source.criteria||[]).forEach(c=>{
-    const newCritId=baseId+Math.floor(Math.random()*100000);
-    const newCriterion={
-      id:newCritId,
-      title:c.title,
-      weight:c.weight,
-      subCriteria:[]
-    };
+  if(!selectedImportEmployeeId){ showNotification('اختر موظفاً أولاً لاستيراد معاييره', true); return; }
+  const source = employees.find(e => e.id === selectedImportEmployeeId);
+  const target = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!source || !target) return;
+  if(!confirm(`سيتم استبدال معايير الموظف الحالي بمعايير الموظف "${source.name}". هل أنت متأكد؟`)) return;
+  const baseId = Date.now();
+  target.criteria = [];
+  (source.criteria || []).forEach(c => {
+    const newCritId = baseId + Math.floor(Math.random() * 100000);
+    const newCriterion = { id: newCritId, title: c.title, weight: c.weight, subCriteria: [] };
     if(c.subCriteria && c.subCriteria.length){
-      c.subCriteria.forEach(sc=>{
-        newCriterion.subCriteria.push({
-          id:baseId+Math.floor(Math.random()*100000),
-          title:sc.title,
-          points:sc.points
-        });
-      });
+      c.subCriteria.forEach(sc => { newCriterion.subCriteria.push({ id: baseId + Math.floor(Math.random() * 100000), title: sc.title, points: sc.points }); });
     }
     target.criteria.push(newCriterion);
   });
-
   renderModalCriteria(target.criteria);
-  toggleModal('importCriteriaModal',false);
+  toggleModal('importCriteriaModal', false);
   showNotification('تم استيراد المعايير بنجاح - يمكنك الآن تعديلها كما تشاء');
 }
 
 /* ================= المعايير الفرعية ================= */
 function openSubCriteriaModal(mainId){
-  currentMainCriterionId=mainId;
-  const emp=employees.find(e=>e.id===currentEditingEmployeeId);
-  if(!emp)return;
-  const main=emp.criteria.find(c=>c.id===mainId);
-  if(!main)return;
-  document.getElementById('mainCriterionTitle').textContent=`المعيار الرئيسي: ${main.title} (الوزن: ${main.weight})`;
-  renderSubCriteriaList(main.subCriteria||[]);
-  toggleModal('subCriteriaModal',true);
+  currentMainCriterionId = mainId;
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp) return;
+  const main = emp.criteria.find(c => c.id === mainId);
+  if(!main) return;
+  document.getElementById('mainCriterionTitle').textContent = `المعيار الرئيسي: ${main.title} (الوزن: ${main.weight})`;
+  renderSubCriteriaList(main.subCriteria || []);
+  toggleModal('subCriteriaModal', true);
 }
 
 function renderSubCriteriaList(subs){
-  const ctn=document.getElementById('subCriteriaList');
-  if(!subs||!subs.length){ctn.innerHTML='<p>لا توجد معايير فرعية بعد.</p>';return;}
-  let total=subs.reduce((s,sc)=>s+Number(sc.points||0),0);
-  let html=`<p>مجموع النقاط القصوى للفرعيات: <strong>${total}</strong></p>`;
-  html+=subs.map((sc,i)=>`
-    <div class="sub-criteria-item">
-      <div style="flex:1;">
-        <input type="text" data-sub-index="${i}" class="sub-title-input" value="${sc.title}">
-      </div>
-      <div>
-        <input type="number" min="0" step="0.5" data-sub-index="${i}" class="sub-points-input" value="${sc.points}">
-      </div>
-      <button class="btn-danger btn-small" onclick="deleteSubCriterion(${i})">حذف</button>
-    </div>`).join('');
-  ctn.innerHTML=html;
+  const ctn = document.getElementById('subCriteriaList');
+  if(!ctn) return;
+  if(!subs || !subs.length){ ctn.innerHTML = '<p>لا توجد معايير فرعية بعد.</p>'; return; }
+  let total = subs.reduce((s, sc) => s + Number(sc.points || 0), 0);
+  let html = `<p>مجموع النقاط القصوى للفرعيات: <strong>${total}</strong></p>`;
+  html += subs.map((sc, i) => `<div class="sub-criteria-item">
+    <div style="flex:1;"><input type="text" data-sub-index="${i}" class="sub-title-input" value="${sc.title}"></div>
+    <div><input type="number" min="0" step="0.5" data-sub-index="${i}" class="sub-points-input" value="${sc.points}"></div>
+    <button class="btn-danger btn-small" onclick="deleteSubCriterion(${i})">حذف</button>
+  </div>`).join('');
+  ctn.innerHTML = html;
 }
 
 function addModalSubCriterion(){
-  const title=document.getElementById('newSubCriterionTitle').value.trim();
-  const points=parseFloat(document.getElementById('newSubCriterionPoints').value);
-  if(!title||!points||points<=0){showNotification('أدخل اسم ونقاط صحيحة',true);return;}
-  const emp=employees.find(e=>e.id===currentEditingEmployeeId);
-  if(!emp)return;
-  const main=emp.criteria.find(c=>c.id===currentMainCriterionId);
-  if(!main)return;
-  main.subCriteria=main.subCriteria||[];
-  main.subCriteria.push({id:Date.now(),title,points});
-  document.getElementById('newSubCriterionTitle').value='';
-  document.getElementById('newSubCriterionPoints').value='';
+  const title = document.getElementById('newSubCriterionTitle').value.trim();
+  const points = parseFloat(document.getElementById('newSubCriterionPoints').value);
+  if(!title || !points || points <= 0){ showNotification('أدخل اسم ونقاط صحيحة', true); return; }
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp) return;
+  const main = emp.criteria.find(c => c.id === currentMainCriterionId);
+  if(!main) return;
+  main.subCriteria = main.subCriteria || [];
+  main.subCriteria.push({id: Date.now(), title, points});
+  document.getElementById('newSubCriterionTitle').value = '';
+  document.getElementById('newSubCriterionPoints').value = '';
   renderSubCriteriaList(main.subCriteria);
 }
 
 function deleteSubCriterion(idx){
-  const emp=employees.find(e=>e.id===currentEditingEmployeeId);
-  if(!emp)return;
-  const main=emp.criteria.find(c=>c.id===currentMainCriterionId);
-  if(!main||!main.subCriteria)return;
-  main.subCriteria.splice(idx,1);
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp) return;
+  const main = emp.criteria.find(c => c.id === currentMainCriterionId);
+  if(!main || !main.subCriteria) return;
+  main.subCriteria.splice(idx, 1);
   renderSubCriteriaList(main.subCriteria);
 }
 
 function saveSubCriteriaChanges(){
-  const emp=employees.find(e=>e.id===currentEditingEmployeeId);
-  if(!emp)return;
-  const main=emp.criteria.find(c=>c.id===currentMainCriterionId);
-  if(!main)return;
-  const titleInputs=document.querySelectorAll('.sub-title-input');
-  const pointsInputs=document.querySelectorAll('.sub-points-input');
-  titleInputs.forEach(inp=>{
-    const idx=parseInt(inp.getAttribute('data-sub-index'));
-    if(main.subCriteria[idx])main.subCriteria[idx].title=inp.value.trim()||main.subCriteria[idx].title;
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp) return;
+  const main = emp.criteria.find(c => c.id === currentMainCriterionId);
+  if(!main) return;
+  const titleInputs = document.querySelectorAll('.sub-title-input');
+  const pointsInputs = document.querySelectorAll('.sub-points-input');
+  titleInputs.forEach(inp => {
+    const idx = parseInt(inp.getAttribute('data-sub-index'));
+    if(main.subCriteria[idx]) main.subCriteria[idx].title = inp.value.trim() || main.subCriteria[idx].title;
   });
-  pointsInputs.forEach(inp=>{
-    const idx=parseInt(inp.getAttribute('data-sub-index'));
-    let p=parseFloat(inp.value);if(isNaN(p)||p<0)p=0;
-    if(main.subCriteria[idx])main.subCriteria[idx].points=p;
+  pointsInputs.forEach(inp => {
+    const idx = parseInt(inp.getAttribute('data-sub-index'));
+    let p = parseFloat(inp.value); if(isNaN(p) || p < 0) p = 0;
+    if(main.subCriteria[idx]) main.subCriteria[idx].points = p;
   });
   saveAll();
   showNotification('تم حفظ المعايير الفرعية');
@@ -1467,591 +1055,501 @@ function saveSubCriteriaChanges(){
 
 /* ================= التقييم اليومي ================= */
 function onEvalEmployeeChange(){
-  const empId=parseInt(document.getElementById('evalEmpSelect').value);
-  const emp=employees.find(e=>e.id===empId);
-  const ctn=document.getElementById('criteriaScoresContainer');
-  if(!emp){ctn.innerHTML='<p>اختر موظفًا أولاً.</p>';return;}
-  const total=(emp.criteria||[]).reduce((s,c)=>s+Number(c.weight||0),0);
-  if(total!==100)alert(`تنبيه: مجموع أوزان معايير هذا الموظف = ${total} (يُفضَّل أن يكون 100).`);
-  const month=parseInt(document.getElementById('evalMonthSelect').value);
-  const year=parseInt(document.getElementById('evalYearSelect').value);
-  if(!emp.criteria||!emp.criteria.length){ctn.innerHTML='<p>لا توجد معايير لهذا الموظف.</p>';return;}
+  const empId = parseInt(document.getElementById('evalEmpSelect').value);
+  const emp = employees.find(e => e.id === empId);
+  const ctn = document.getElementById('criteriaScoresContainer');
+  if(!emp){ ctn.innerHTML = '<p>اختر موظفًا أولاً.</p>'; return; }
+  const total = (emp.criteria || []).reduce((s, c) => s + Number(c.weight || 0), 0);
+  if(total !== 100) alert(`تنبيه: مجموع أوزان معايير هذا الموظف = ${total} (يُفضَّل أن يكون 100).`);
+  const month = parseInt(document.getElementById('evalMonthSelect').value);
+  const year = parseInt(document.getElementById('evalYearSelect').value);
+  if(!emp.criteria || !emp.criteria.length){ ctn.innerHTML = '<p>لا توجد معايير لهذا الموظف.</p>'; return; }
 
-  let html='';
-  emp.criteria.forEach(main=>{
-    html+=`<div class="score-item">
-      <div class="score-header">
-        <span><strong>${main.title}</strong> (وزن رئيسي: ${main.weight})</span>
-      </div>`;
+  let html = '';
+  emp.criteria.forEach(main => {
+    html += `<div class="score-item">
+      <div class="score-header"><span><strong>${main.title}</strong> (وزن رئيسي: ${main.weight})</span></div>`;
     if(main.subCriteria && main.subCriteria.length){
-      main.subCriteria.forEach(sub=>{
-        const critAss=partialAssessments.filter(a=>a.employeeId===empId && a.criterionId===sub.id && a.month===month && a.year===year);
-        let info='لم يتم تقييم هذا المعيار الفرعي بعد';
+      main.subCriteria.forEach(sub => {
+        const critAss = partialAssessments.filter(a => a.employeeId === empId && a.criterionId === sub.id && a.month === month && a.year === year);
+        let info = 'لم يتم تقييم هذا المعيار الفرعي بعد';
         if(critAss.length){
-          const last=critAss[critAss.length-1];
-          const d=new Date(last.timestamp);
-          info=`آخر تقييم: ${d.getDate()} ${monthNames[d.getMonth()]} - درجة: ${last.score} من ${sub.points} - (${critAss.length} تقييم/ات هذا الشهر)`;
+          const last = critAss[critAss.length - 1];
+          const d = new Date(last.timestamp);
+          info = `آخر تقييم: ${d.getDate()} ${monthNames[d.getMonth()]} - درجة: ${last.score} من ${sub.points} - (${critAss.length} تقييم/ات هذا الشهر)`;
         }
-        html+=`
-          <div style="margin:6px 0 0 0;padding:6px 8px;border-radius:8px;background:#fdfdfd;border:1px solid #eee;">
-            <div class="score-header">
-              <span>${sub.title} (نقاط قصوى: ${sub.points})</span>
-              <span>
-                <button class="btn-primary btn-small"
-                  onclick="openAssessmentModal(${empId},${sub.id},'${(main.title+' - '+sub.title).replace(/'/g,"\\'")}',${sub.points})">
-                  + تقييم اليوم
-                </button>
-                <button class="btn-warning btn-small"
-                  onclick="openAssessmentViewModal(${empId},${sub.id},'${(main.title+' - '+sub.title).replace(/'/g,"\\'")}',${sub.points})">
-                  📂 عرض التقييمات
-                </button>
-              </span>
-            </div>
-            <div class="criteria-note">${info}</div>
-          </div>`;
-      });
-    }else{
-      const critAss=partialAssessments.filter(a=>a.employeeId===empId && a.criterionId===main.id && a.month===month && a.year===year);
-      let info='لم يتم تقييم هذا المعيار بعد';
-      if(critAss.length){
-        const last=critAss[critAss.length-1];
-        const d=new Date(last.timestamp);
-        info=`آخر تقييم: ${d.getDate()} ${monthNames[d.getMonth()]} - درجة: ${last.score} من ${main.weight} - (${critAss.length} تقييم/ات هذا الشهر)`;
-      }
-      html+=`
-        <div style="margin-top:6px;">
+        html += `<div style="margin:6px 0 0 0;padding:6px 8px;border-radius:8px;background:#fdfdfd;border:1px solid #eee;">
           <div class="score-header">
-            <span>لا توجد معايير فرعية، سيتم استخدام هذا المعيار مباشرة.</span>
+            <span>${sub.title} (نقاط قصوى: ${sub.points})</span>
             <span>
-              <button class="btn-primary btn-small"
-                onclick="openAssessmentModal(${empId},${main.id},'${main.title.replace(/'/g,"\\'")}',${main.weight})">
-                + تقييم اليوم
-              </button>
-              <button class="btn-warning btn-small"
-                onclick="openAssessmentViewModal(${empId},${main.id},'${main.title.replace(/'/g,"\\'")}',${main.weight})">
-                📂 عرض التقييمات
-              </button>
+              <button class="btn-primary btn-small" onclick="openAssessmentModal(${empId},${sub.id},'${(main.title+' - '+sub.title).replace(/'/g,"\'")}',${sub.points})">+ تقييم اليوم</button>
+              <button class="btn-warning btn-small" onclick="openAssessmentViewModal(${empId},${sub.id},'${(main.title+' - '+sub.title).replace(/'/g,"\'")}',${sub.points})">📂 عرض التقييمات</button>
             </span>
           </div>
           <div class="criteria-note">${info}</div>
         </div>`;
+      });
+    } else {
+      const critAss = partialAssessments.filter(a => a.employeeId === empId && a.criterionId === main.id && a.month === month && a.year === year);
+      let info = 'لم يتم تقييم هذا المعيار بعد';
+      if(critAss.length){
+        const last = critAss[critAss.length - 1];
+        const d = new Date(last.timestamp);
+        info = `آخر تقييم: ${d.getDate()} ${monthNames[d.getMonth()]} - درجة: ${last.score} من ${main.weight} - (${critAss.length} تقييم/ات هذا الشهر)`;
+      }
+      html += `<div style="margin-top:6px;">
+        <div class="score-header">
+          <span>لا توجد معايير فرعية، سيتم استخدام هذا المعيار مباشرة.</span>
+          <span>
+            <button class="btn-primary btn-small" onclick="openAssessmentModal(${empId},${main.id},'${main.title.replace(/'/g,"\'")}',${main.weight})">+ تقييم اليوم</button>
+            <button class="btn-warning btn-small" onclick="openAssessmentViewModal(${empId},${main.id},'${main.title.replace(/'/g,"\'")}',${main.weight})">📂 عرض التقييمات</button>
+          </span>
+        </div>
+        <div class="criteria-note">${info}</div>
+      </div>`;
     }
-    html+=`</div>`;
+    html += `</div>`;
   });
-  ctn.innerHTML=html;
+  ctn.innerHTML = html;
 }
 
-function openAssessmentModal(empId,critId,title,maxPoints){
-  currentAssessmentCriterionId=critId;
-  currentAssessmentMax=maxPoints;
-  tempImages=[];
-  document.getElementById('assessModalTitle').textContent='تقييم: '+title;
-  const scoreInput=document.getElementById('assessScore');
-  scoreInput.min='0';scoreInput.max=String(maxPoints);scoreInput.step='0.5';
-  scoreInput.value=(maxPoints/2).toFixed(1);
-  document.getElementById('assessScoreHint').textContent=`يمكنك إدخال درجة من 0 إلى ${maxPoints}.`;
-  document.getElementById('assessNote').value='';
-  document.getElementById('imagePreviewContainer').innerHTML='';
-  document.getElementById('assessImages').value='';
-  toggleModal('assessmentModal',true);
+function openAssessmentModal(empId, critId, title, maxPoints){
+  currentAssessmentCriterionId = critId;
+  currentAssessmentMax = maxPoints;
+  tempImages = [];
+  document.getElementById('assessModalTitle').textContent = 'تقييم: ' + title;
+  const scoreInput = document.getElementById('assessScore');
+  scoreInput.min = '0'; scoreInput.max = String(maxPoints); scoreInput.step = '0.5';
+  scoreInput.value = (maxPoints / 2).toFixed(1);
+  document.getElementById('assessScoreHint').textContent = `يمكنك إدخال درجة من 0 إلى ${maxPoints}.`;
+  document.getElementById('assessNote').value = '';
+  document.getElementById('imagePreviewContainer').innerHTML = '';
+  document.getElementById('assessImages').value = '';
+  toggleModal('assessmentModal', true);
 }
 
-/* ================= عرض / تعديل / حذف التقييمات ================= */
-function openAssessmentViewModal(empId,critId,title,maxPoints){
-  currentViewingEmployeeId=empId;
-  currentViewingCriterionId=critId;
-  currentViewingMaxPoints=maxPoints;
-
-  const month=parseInt(document.getElementById('evalMonthSelect').value);
-  const year=parseInt(document.getElementById('evalYearSelect').value);
-
-  document.getElementById('viewAssessmentsTitle').textContent='تقييمات: '+title;
-  document.getElementById('viewAssessmentsInfo').textContent=`الشهر: ${monthNames[month-1]} ${year} - نقاط قصوى: ${maxPoints}`;
-
-  const list=partialAssessments
-    .filter(a=>a.employeeId===empId && a.criterionId===critId && a.month===month && a.year===year)
-    .sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
-
-  const ctn=document.getElementById('viewAssessmentsList');
-  if(!list.length){
-    ctn.innerHTML='<p>لا توجد تقييمات مسجّلة لهذا المعيار في هذا الشهر.</p>';
-  }else{
-    ctn.innerHTML=list.map(a=>{
-      const d=new Date(a.timestamp);
-      const dateStr=`${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()} - ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-      return `
-        <div class="assessment-item" id="assessment-item-${a.id}">
-          <div style="font-size:0.85rem;color:#555;">التاريخ: ${dateStr}</div>
-          <div class="form-group" style="margin-top:6px;">
-            <label>الدرجة (من ${maxPoints}):</label>
-            <input type="number" step="0.5" min="0" max="${maxPoints}" value="${a.score}"
-                   data-assessment-id="${a.id}" class="view-score-input">
+function openAssessmentViewModal(empId, critId, title, maxPoints){
+  currentViewingEmployeeId = empId;
+  currentViewingCriterionId = critId;
+  currentViewingMaxPoints = maxPoints;
+  const month = parseInt(document.getElementById('evalMonthSelect').value);
+  const year = parseInt(document.getElementById('evalYearSelect').value);
+  document.getElementById('viewAssessmentsTitle').textContent = 'تقييمات: ' + title;
+  document.getElementById('viewAssessmentsInfo').textContent = `الشهر: ${monthNames[month-1]} ${year} - نقاط قصوى: ${maxPoints}`;
+  const list = partialAssessments
+    .filter(a => a.employeeId === empId && a.criterionId === critId && a.month === month && a.year === year)
+    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  const ctn = document.getElementById('viewAssessmentsList');
+  if(!list.length){ ctn.innerHTML = '<p>لا توجد تقييمات مسجّلة لهذا المعيار في هذا الشهر.</p>'; }
+  else {
+    ctn.innerHTML = list.map(a => {
+      const d = new Date(a.timestamp);
+      const dateStr = `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()} - ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+      return `<div class="assessment-item" id="assessment-item-${a.id}">
+        <div style="font-size:0.85rem;color:#555;">التاريخ: ${dateStr}</div>
+        <div class="form-group" style="margin-top:6px;">
+          <label>الدرجة (من ${maxPoints}):</label>
+          <input type="number" step="0.5" min="0" max="${maxPoints}" value="${a.score}" data-assessment-id="${a.id}" class="view-score-input">
+        </div>
+        <div class="form-group">
+          <label>الملاحظة:</label>
+          <textarea data-assessment-id="${a.id}" class="view-note-input">${a.note || ''}</textarea>
+        </div>
+        <div class="form-group">
+          <label>الصور الحالية:</label>
+          <div class="image-preview" id="view-images-${a.id}">
+            ${(a.images || []).map(img => `<img src="${img}">`).join('') || '<span style="font-size:0.8rem;color:#777;">لا توجد صور</span>'}
           </div>
-          <div class="form-group">
-            <label>الملاحظة:</label>
-            <textarea data-assessment-id="${a.id}" class="view-note-input">${a.note||''}</textarea>
-          </div>
-          <div class="form-group">
-            <label>الصور الحالية:</label>
-            <div class="image-preview" id="view-images-${a.id}">
-              ${(a.images||[]).map(img=>`<img src="${img}">`).join('') || '<span style="font-size:0.8rem;color:#777;">لا توجد صور</span>'}
-            </div>
-          </div>
-          <div class="form-group">
-            <label>تحديث الصور (اختياري - سيستبدل الصور القديمة):</label>
-            <input type="file" accept="image/*" multiple
-                   onchange="handleUpdateAssessmentImages(event, ${a.id})">
-          </div>
-          <div style="text-align:left;margin-top:5px;">
-            <button class="btn-success btn-small" onclick="saveSingleAssessment(${a.id})">💾 حفظ التعديل</button>
-            <button class="btn-danger btn-small" onclick="deleteSingleAssessment(${a.id})">🗑️ حذف هذا التقييم</button>
-          </div>
-        </div>`;
+        </div>
+        <div class="form-group">
+          <label>تحديث الصور (اختياري - سيستبدل الصور القديمة):</label>
+          <input type="file" accept="image/*" multiple onchange="handleUpdateAssessmentImages(event, ${a.id})">
+        </div>
+        <div style="text-align:left;margin-top:5px;">
+          <button class="btn-success btn-small" onclick="saveSingleAssessment(${a.id})">💾 حفظ التعديل</button>
+          <button class="btn-danger btn-small" onclick="deleteSingleAssessment(${a.id})">🗑️ حذف هذا التقييم</button>
+        </div>
+      </div>`;
     }).join('');
   }
-
-  toggleModal('assessmentViewModal',true);
+  toggleModal('assessmentViewModal', true);
 }
 
-/* تحديث الصور في تقييم واحد */
-async function handleUpdateAssessmentImages(event,id){
-  const files=event.target.files;
-  if(!files || !files.length)return;
-  const maxSize=600;
-  const newImages=[];
+async function handleUpdateAssessmentImages(event, id){
+  const files = event.target.files;
+  if(!files || !files.length) return;
+  const maxSize = 600;
+  const newImages = [];
   for(const file of files){
-    try{
-      const resized=await resizeImage(file,maxSize);
-      newImages.push(resized);
-    }catch(e){console.error('Image resize error',e);}
+    try{ const resized = await resizeImage(file, maxSize); newImages.push(resized); }
+    catch(e){ console.error('Image resize error', e); }
   }
-  const idx=partialAssessments.findIndex(a=>a.id===id);
-  if(idx===-1)return;
-  partialAssessments[idx].images=newImages;
+  const idx = partialAssessments.findIndex(a => a.id === id);
+  if(idx === -1) return;
+  partialAssessments[idx].images = newImages;
   saveAll();
-  const cont=document.getElementById('view-images-'+id);
-  cont.innerHTML=newImages.length
-    ? newImages.map(img=>`<img src="${img}">`).join('')
-    : '<span style="font-size:0.8rem;color:#777;">لا توجد صور</span>';
+  const cont = document.getElementById('view-images-' + id);
+  cont.innerHTML = newImages.length ? newImages.map(img => `<img src="${img}">`).join('') : '<span style="font-size:0.8rem;color:#777;">لا توجد صور</span>';
   showNotification('تم تحديث صور التقييم');
 }
 
-/* حفظ تعديل تقييم واحد */
 function saveSingleAssessment(id){
-  const idx=partialAssessments.findIndex(a=>a.id===id);
-  if(idx===-1)return;
-  const scoreInput=document.querySelector(`.view-score-input[data-assessment-id="${id}"]`);
-  const noteInput=document.querySelector(`.view-note-input[data-assessment-id="${id}"]`);
-  if(!scoreInput || !noteInput)return;
-
-  let val=parseFloat(scoreInput.value)||0;
-  if(val<0)val=0;
-  if(val>currentViewingMaxPoints)val=currentViewingMaxPoints;
-
-  partialAssessments[idx].score=val;
-  partialAssessments[idx].note=noteInput.value.trim();
+  const idx = partialAssessments.findIndex(a => a.id === id);
+  if(idx === -1) return;
+  const scoreInput = document.querySelector(`.view-score-input[data-assessment-id="${id}"]`);
+  const noteInput = document.querySelector(`.view-note-input[data-assessment-id="${id}"]`);
+  if(!scoreInput || !noteInput) return;
+  let val = parseFloat(scoreInput.value) || 0;
+  if(val < 0) val = 0;
+  if(val > currentViewingMaxPoints) val = currentViewingMaxPoints;
+  partialAssessments[idx].score = val;
+  partialAssessments[idx].note = noteInput.value.trim();
   saveAll();
   showNotification('تم تحديث التقييم');
   onEvalEmployeeChange();
 }
 
-/* حذف تقييم واحد */
 function deleteSingleAssessment(id){
-  if(!confirm('هل تريد حذف هذا التقييم؟'))return;
-  partialAssessments=partialAssessments.filter(a=>a.id!==id);
+  if(!confirm('هل تريد حذف هذا التقييم؟')) return;
+  partialAssessments = partialAssessments.filter(a => a.id !== id);
   saveAll();
-  const el=document.getElementById('assessment-item-'+id);
-  if(el)el.remove();
+  const el = document.getElementById('assessment-item-' + id);
+  if(el) el.remove();
   showNotification('تم حذف التقييم');
   onEvalEmployeeChange();
 }
 
-/* ================= تصغير الصور ================= */
-function resizeImage(file,maxSize=600){
-  return new Promise((resolve,reject)=>{
-    const img=new Image();
-    const reader=new FileReader();
-    reader.onload=e=>{
-      img.onload=()=>{
-        const canvas=document.createElement('canvas');
-        let w=img.width,h=img.height;
-        if(w>h){
-          if(w>maxSize){h*=maxSize/w;w=maxSize;}
-        }else{
-          if(h>maxSize){w*=maxSize/h;h=maxSize;}
-        }
-        canvas.width=w;canvas.height=h;
-        const ctx=canvas.getContext('2d');
-        ctx.drawImage(img,0,0,w,h);
-        resolve(canvas.toDataURL('image/jpeg',0.7));
+function resizeImage(file, maxSize){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = e => {
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if(w > h){ if(w > maxSize){ h *= maxSize / w; w = maxSize; } }
+        else { if(h > maxSize){ w *= maxSize / h; h = maxSize; } }
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
       };
-      img.onerror=reject;
-      img.src=e.target.result;
+      img.onerror = reject;
+      img.src = e.target.result;
     };
-    reader.onerror=reject;
+    reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 }
 
 async function previewImages(input){
-  const ctn=document.getElementById('imagePreviewContainer');
-  ctn.innerHTML='';
-  tempImages=[];
+  const ctn = document.getElementById('imagePreviewContainer');
+  ctn.innerHTML = '';
+  tempImages = [];
   if(input.files && input.files.length){
     for(const file of input.files){
       try{
-        const resized=await resizeImage(file,600);
+        const resized = await resizeImage(file, 600);
         tempImages.push(resized);
-        const img=document.createElement('img');
-        img.src=resized;
+        const img = document.createElement('img');
+        img.src = resized;
         ctn.appendChild(img);
-      }catch(e){console.error('Image resize error',e);}
+      }catch(e){ console.error('Image resize error', e); }
     }
   }
 }
 
-/* حفظ تقييم جديد */
 function saveAssessment(){
-  const empId=parseInt(document.getElementById('evalEmpSelect').value);
-  if(!empId){showNotification('اختر الموظف أولاً من قائمة التقييم اليومي',true);return;}
-  if(!currentAssessmentCriterionId){showNotification('افتح نافذة التقييم من زر "+ تقييم اليوم" أولاً',true);return;}
-
-  let score=parseFloat(document.getElementById('assessScore').value)||0;
-  if(score<0)score=0;
-  if(score>currentAssessmentMax)score=currentAssessmentMax;
-  const note=document.getElementById('assessNote').value.trim();
-  const month=parseInt(document.getElementById('evalMonthSelect').value);
-  const year=parseInt(document.getElementById('evalYearSelect').value);
-
-  const entry={
-    id:Date.now(),
-    employeeId:empId,
-    criterionId:currentAssessmentCriterionId,
-    month,year,
-    score,
-    note,
-    images:[...tempImages],
-    timestamp:new Date().toISOString()
+  const empId = parseInt(document.getElementById('evalEmpSelect').value);
+  if(!empId){ showNotification('اختر الموظف أولاً من قائمة التقييم اليومي', true); return; }
+  if(!currentAssessmentCriterionId){ showNotification('افتح نافذة التقييم من زر "+ تقييم اليوم" أولاً', true); return; }
+  let score = parseFloat(document.getElementById('assessScore').value) || 0;
+  if(score < 0) score = 0;
+  if(score > currentAssessmentMax) score = currentAssessmentMax;
+  const note = document.getElementById('assessNote').value.trim();
+  const month = parseInt(document.getElementById('evalMonthSelect').value);
+  const year = parseInt(document.getElementById('evalYearSelect').value);
+  const entry = {
+    id: Date.now(), employeeId: empId, criterionId: currentAssessmentCriterionId,
+    month, year, score, note, images: [...tempImages], timestamp: new Date().toISOString()
   };
   partialAssessments.push(entry);
   saveAll();
-  toggleModal('assessmentModal',false);
+  toggleModal('assessmentModal', false);
   onEvalEmployeeChange();
   showNotification('تم حفظ تقييم المعيار');
 }
 
-/* ================= التقرير الشهري (متوسط التقييمات) ================= */
-function calculateMonthlyReport(employeeId,month,year){
-  const emp=employees.find(e=>e.id===employeeId);
-  if(!emp)return null;
-  const allAss=partialAssessments.filter(a=>a.employeeId===employeeId && a.month===month && a.year===year);
-  if(!allAss.length)return null;
+/* ================= التقرير الشهري ================= */
+function calculateMonthlyReport(employeeId, month, year){
+  const emp = employees.find(e => e.id === employeeId);
+  if(!emp) return null;
+  const allAss = partialAssessments.filter(a => a.employeeId === employeeId && a.month === month && a.year === year);
+  if(!allAss.length) return null;
 
-  const criteriaResults={};
-
-  (emp.criteria||[]).forEach(main=>{
-    let mainFinalScore=0;
-    let mainNote='';
-    let mainImages=[];
-    let daysSet=new Set();
+  const criteriaResults = {};
+  (emp.criteria || []).forEach(main => {
+    let mainFinalScore = 0;
+    let mainNote = '';
+    let mainImages = [];
+    let daysSet = new Set();
 
     if(main.subCriteria && main.subCriteria.length){
-      let subFinals=[];
-      main.subCriteria.forEach(sub=>{
-        const list=allAss.filter(a=>a.criterionId===sub.id);
+      let subFinals = [];
+      main.subCriteria.forEach(sub => {
+        const list = allAss.filter(a => a.criterionId === sub.id);
         if(list.length){
-          const avgScore=list.reduce((s,a)=>s+a.score,0)/list.length;
-          let finalScore=Math.min(avgScore,sub.points);
+          const avgScore = list.reduce((s, a) => s + a.score, 0) / list.length;
+          let finalScore = Math.min(avgScore, sub.points);
           subFinals.push(finalScore);
-          list.forEach(a=>{
-            if(a.note)mainNote+=a.note+'\n\n';
-            if(a.images&&a.images.length)mainImages.push(...a.images);
-            const d=new Date(a.timestamp);
+          list.forEach(a => {
+            if(a.note) mainNote += a.note + '\n\n';
+            if(a.images && a.images.length) mainImages.push(...a.images);
+            const d = new Date(a.timestamp);
             daysSet.add(`${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`);
           });
         }
       });
       if(subFinals.length){
-        let sumSub=subFinals.reduce((s,v)=>s+v,0);
-        mainFinalScore=sumSub/subFinals.length;
-        if(mainFinalScore>main.weight)mainFinalScore=main.weight;
-      }else{
-        mainFinalScore=main.weight;
-        mainNote+='لم تُسجَّل أي تقييمات على المعايير الفرعية، اعتُبر المعيار كاملاً.\n';
+        let sumSub = subFinals.reduce((s, v) => s + v, 0);
+        // FIX: Calculate proportionally based on sub-criteria points vs main weight
+        let totalSubPoints = main.subCriteria.reduce((s, sc) => s + Number(sc.points || 0), 0);
+        if(totalSubPoints > 0){
+          mainFinalScore = (sumSub / totalSubPoints) * main.weight;
+        } else {
+          mainFinalScore = sumSub / subFinals.length;
+        }
+        if(mainFinalScore > main.weight) mainFinalScore = main.weight;
+      } else {
+        mainFinalScore = main.weight;
+        mainNote += 'لم تُسجَّل أي تقييمات على المعايير الفرعية، اعتُبر المعيار كاملاً.\n';
       }
-    }else{
-      const list=allAss.filter(a=>a.criterionId===main.id);
+    } else {
+      const list = allAss.filter(a => a.criterionId === main.id);
       if(list.length){
-        const avgScore=list.reduce((s,a)=>s+a.score,0)/list.length;
-        mainFinalScore=Math.min(avgScore,main.weight);
-        list.forEach(a=>{
-          if(a.note)mainNote+=a.note+'\n\n';
-          if(a.images&&a.images.length)mainImages.push(...a.images);
-          const d=new Date(a.timestamp);
+        const avgScore = list.reduce((s, a) => s + a.score, 0) / list.length;
+        mainFinalScore = Math.min(avgScore, main.weight);
+        list.forEach(a => {
+          if(a.note) mainNote += a.note + '\n\n';
+          if(a.images && a.images.length) mainImages.push(...a.images);
+          const d = new Date(a.timestamp);
           daysSet.add(`${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`);
         });
-      }else{
-        mainFinalScore=main.weight;
-        mainNote+='لم تُسجَّل أي تقييمات لهذا المعيار خلال الشهر، اعتُبر الأداء كاملاً (حصل على كامل وزنه).\n';
+      } else {
+        mainFinalScore = main.weight;
+        mainNote += 'لم تُسجَّل أي تقييمات لهذا المعيار خلال الشهر، اعتُبر الأداء كاملاً (حصل على كامل وزنه).\n';
       }
     }
 
-    criteriaResults[main.id]={
-      finalScore:mainFinalScore,
-      maxWeight:main.weight,
-      note:(mainNote.trim()||'لا توجد ملاحظات خاصة بهذا المعيار.'),
-      images:mainImages,
-      days:Array.from(daysSet)
+    criteriaResults[main.id] = {
+      finalScore: mainFinalScore, maxWeight: main.weight,
+      note: (mainNote.trim() || 'لا توجد ملاحظات خاصة بهذا المعيار.'),
+      images: mainImages, days: Array.from(daysSet)
     };
   });
 
-  const totalPoints=Object.values(criteriaResults).reduce((s,r)=>s+r.finalScore,0);
-  return{
-    id:Date.now(),
-    employeeId,
-    month,year,
-    criteriaResults,
-    finalTotalPoints:totalPoints,
-    editedAt:null
-  };
+  const totalPoints = Object.values(criteriaResults).reduce((s, r) => s + r.finalScore, 0);
+  return { id: Date.now(), employeeId, month, year, criteriaResults, finalTotalPoints: totalPoints, editedAt: null };
 }
 
 function generateReportPreview(){
-  const employeeId=parseInt(document.getElementById('reportEmpSelect').value);
-  const month=parseInt(document.getElementById('reportMonthSelect').value);
-  const year=parseInt(document.getElementById('reportYearSelect').value);
-  if(!employeeId){showNotification('اختر الموظف أولاً',true);return;}
-
-  let report=calculateMonthlyReport(employeeId,month,year);
-  if(!report){showNotification('لا يوجد بيانات تقييم لهذا الشهر',true);return;}
-
-  currentReportForEdit=JSON.parse(JSON.stringify(report));
-  displayReport(report,false);
+  const employeeId = parseInt(document.getElementById('reportEmpSelect').value);
+  const month = parseInt(document.getElementById('reportMonthSelect').value);
+  const year = parseInt(document.getElementById('reportYearSelect').value);
+  if(!employeeId){ showNotification('اختر الموظف أولاً', true); return; }
+  let report = calculateMonthlyReport(employeeId, month, year);
+  if(!report){ showNotification('لا يوجد بيانات تقييم لهذا الشهر', true); return; }
+  currentReportForEdit = JSON.parse(JSON.stringify(report));
+  displayReport(report, false);
   document.getElementById('reportContainer').classList.remove('hidden');
   document.getElementById('editReportBtn').classList.remove('hidden');
   document.getElementById('exportPdfBtn').classList.remove('hidden');
   document.getElementById('shareWaBtn').classList.remove('hidden');
 }
 
-/* ================= عرض التقرير ================= */
-function displayReport(report,fromSaved){
-  const emp=employees.find(e=>e.id===report.employeeId);
-  const ctn=document.getElementById('reportContainer');
-  const monthName=monthNames[report.month-1];
-  const sumWeights=(emp.criteria||[]).reduce((s,c)=>s+Number(c.weight||0),0);
-  let html=`<div class="report-summary">
-    <strong>الموظف:</strong> ${emp?emp.name:''}<br>
+function displayReport(report, fromSaved){
+  const emp = employees.find(e => e.id === report.employeeId);
+  const ctn = document.getElementById('reportContainer');
+  const monthName = monthNames[report.month - 1];
+  const sumWeights = (emp.criteria || []).reduce((s, c) => s + Number(c.weight || 0), 0);
+  let html = `<div class="report-summary">
+    <strong>الموظف:</strong> ${emp ? emp.name : ''}<br>
     <strong>الشهر:</strong> ${monthName} ${report.year}<br>
     <strong>مجموع أوزان المعايير الرئيسية:</strong> ${sumWeights} (يُفضَّل أن يكون 100)<br>
-    <strong>حالة التقرير:</strong> ${fromSaved?'نهائي (معدَّل يدويًا ومحفوظ)':'تقرير مبدئي محسوب آليًا من التقييمات'}
+    <strong>حالة التقرير:</strong> ${fromSaved ? 'نهائي (معدَّل يدويًا ومحفوظ)' : 'تقرير مبدئي محسوب آليًا من التقييمات'}
   </div>`;
-  html+=`<div class="total-score">النتيجة الكلية: ${report.finalTotalPoints.toFixed(1)} / ${sumWeights}</div>`;
-  html+='<h3>تفاصيل كل معيار رئيسي</h3>';
-
-  (emp.criteria||[]).forEach(main=>{
-    const r=report.criteriaResults[main.id];
-    if(!r)return;
-    const daysText=r.days && r.days.length?('أيام التقييم: '+r.days.join(' ، ')):'لم تُسجّل أيام تقييم (حصل على كامل وزنه).';
-    html+=`
-      <div class="score-item">
-        <div class="score-header">
-          <span><strong>${main.title}</strong> (وزن: ${main.weight})</span>
-          <span>الدرجة النهائية (بعد المتوسط): ${r.finalScore.toFixed(2)} / ${main.weight}</span>
-        </div>
-        <div class="criteria-note">${daysText}</div>
-        <div style="margin-top:5px;white-space:pre-line;">ملاحظات: ${r.note||'لا توجد'}</div>
-        ${r.images && r.images.length?`<div class="image-preview" style="margin-top:4px;">${r.images.map(img=>`<img src="${img}">`).join('')}</div>`:''}
-      </div>`;
+  html += `<div class="total-score">النتيجة الكلية: ${report.finalTotalPoints.toFixed(1)} / ${sumWeights}</div>`;
+  html += '<h3>تفاصيل كل معيار رئيسي</h3>';
+  (emp.criteria || []).forEach(main => {
+    const r = report.criteriaResults[main.id];
+    if(!r) return;
+    const daysText = r.days && r.days.length ? ('أيام التقييم: ' + r.days.join(' ، ')) : 'لم تُسجّل أيام تقييم (حصل على كامل وزنه).';
+    html += `<div class="score-item">
+      <div class="score-header">
+        <span><strong>${main.title}</strong> (وزن: ${main.weight})</span>
+        <span>الدرجة النهائية (بعد المتوسط): ${r.finalScore.toFixed(2)} / ${main.weight}</span>
+      </div>
+      <div class="criteria-note">${daysText}</div>
+      <div style="margin-top:5px;white-space:pre-line;">ملاحظات: ${r.note || 'لا توجد'}</div>
+      ${r.images && r.images.length ? `<div class="image-preview" style="margin-top:4px;">${r.images.map(img => `<img src="${img}">`).join('')}</div>` : ''}
+    </div>`;
   });
-  ctn.innerHTML=html;
+  ctn.innerHTML = html;
 }
 
-/* ================= تعديل التقرير النهائي ================= */
 function editFinalReport(){
-  if(!currentReportForEdit){showNotification('أنشئ التقرير أولاً',true);return;}
-  const emp=employees.find(e=>e.id===currentReportForEdit.employeeId);
-  const ctn=document.getElementById('editReportContent');
-  ctn.innerHTML='';
-  (emp.criteria||[]).forEach(main=>{
-    const r=currentReportForEdit.criteriaResults[main.id];
-    if(!r)return;
-    const days=r.days && r.days.length?r.days.join(' ، '):'لا توجد أيام تقييم (ربما اعتُبر كاملاً)';
-    ctn.innerHTML+=`
-      <div class="score-item">
-        <div class="score-header">
-          <span><strong>${main.title}</strong> (وزن: ${main.weight})</span>
-        </div>
-        <div class="form-group">
-          <label>الدرجة النهائية (من ${main.weight}):</label>
-          <input type="number" step="0.5" min="0" max="${main.weight}"
-                 data-crit-id="${main.id}"
-                 class="edit-score-input"
-                 value="${r.finalScore.toFixed(2)}">
-        </div>
-        <div class="form-group">
-          <label>ملاحظة نهائية لهذا المعيار:</label>
-          <textarea class="edit-note-input" data-crit-id="${main.id}">${r.note||''}</textarea>
-        </div>
-        <div class="criteria-note">أيام التقييم المسجّلة: ${days}</div>
-      </div>`;
+  if(!currentReportForEdit){ showNotification('أنشئ التقرير أولاً', true); return; }
+  const emp = employees.find(e => e.id === currentReportForEdit.employeeId);
+  const ctn = document.getElementById('editReportContent');
+  ctn.innerHTML = '';
+  (emp.criteria || []).forEach(main => {
+    const r = currentReportForEdit.criteriaResults[main.id];
+    if(!r) return;
+    const days = r.days && r.days.length ? r.days.join(' ، ') : 'لا توجد أيام تقييم (ربما اعتُبر كاملاً)';
+    ctn.innerHTML += `<div class="score-item">
+      <div class="score-header"><span><strong>${main.title}</strong> (وزن: ${main.weight})</span></div>
+      <div class="form-group">
+        <label>الدرجة النهائية (من ${main.weight}):</label>
+        <input type="number" step="0.5" min="0" max="${main.weight}" data-crit-id="${main.id}" class="edit-score-input" value="${r.finalScore.toFixed(2)}">
+      </div>
+      <div class="form-group">
+        <label>ملاحظة نهائية لهذا المعيار:</label>
+        <textarea class="edit-note-input" data-crit-id="${main.id}">${r.note || ''}</textarea>
+      </div>
+      <div class="criteria-note">أيام التقييم المسجّلة: ${days}</div>
+    </div>`;
   });
   recalcEditTotal();
-  toggleModal('editReportModal',true);
-  document.querySelectorAll('.edit-score-input').forEach(inp=>{
-    inp.addEventListener('input',recalcEditTotal);
-  });
+  toggleModal('editReportModal', true);
+  document.querySelectorAll('.edit-score-input').forEach(inp => { inp.addEventListener('input', recalcEditTotal); });
 }
 
 function recalcEditTotal(){
-  if(!currentReportForEdit)return;
-  const emp=employees.find(e=>e.id===currentReportForEdit.employeeId);
-  let total=0;
-  (emp.criteria||[]).forEach(main=>{
-    const inp=document.querySelector(`.edit-score-input[data-crit-id="${main.id}"]`);
-    if(!inp)return;
-    let val=parseFloat(inp.value)||0;
-    if(val<0)val=0;
-    if(val>main.weight)val=main.weight;
-    total+=val;
+  if(!currentReportForEdit) return;
+  const emp = employees.find(e => e.id === currentReportForEdit.employeeId);
+  let total = 0;
+  (emp.criteria || []).forEach(main => {
+    const inp = document.querySelector(`.edit-score-input[data-crit-id="${main.id}"]`);
+    if(!inp) return;
+    let val = parseFloat(inp.value) || 0;
+    if(val < 0) val = 0;
+    if(val > main.weight) val = main.weight;
+    total += val;
   });
-  const sumWeights=(emp.criteria||[]).reduce((s,c)=>s+Number(c.weight||0),0);
-  document.getElementById('editTotalScore').textContent='النتيجة النهائية بعد التعديل: '+total.toFixed(1)+' / '+sumWeights;
+  const sumWeights = (emp.criteria || []).reduce((s, c) => s + Number(c.weight || 0), 0);
+  document.getElementById('editTotalScore').textContent = 'النتيجة النهائية بعد التعديل: ' + total.toFixed(1) + ' / ' + sumWeights;
 }
 
 function saveEditedReport(){
-  if(!currentReportForEdit)return;
-  const emp=employees.find(e=>e.id===currentReportForEdit.employeeId);
-  (emp.criteria||[]).forEach(main=>{
-    const scoreInp=document.querySelector(`.edit-score-input[data-crit-id="${main.id}"]`);
-    const noteInp=document.querySelector(`.edit-note-input[data-crit-id="${main.id}"]`);
-    if(!scoreInp||!noteInp)return;
-    let scoreVal=parseFloat(scoreInp.value)||0;
-    if(scoreVal<0)scoreVal=0;
-    if(scoreVal>main.weight)scoreVal=main.weight;
-    currentReportForEdit.criteriaResults[main.id].finalScore=scoreVal;
-    currentReportForEdit.criteriaResults[main.id].note=(noteInp.value||'').trim();
+  if(!currentReportForEdit) return;
+  const emp = employees.find(e => e.id === currentReportForEdit.employeeId);
+  (emp.criteria || []).forEach(main => {
+    const scoreInp = document.querySelector(`.edit-score-input[data-crit-id="${main.id}"]`);
+    const noteInp = document.querySelector(`.edit-note-input[data-crit-id="${main.id}"]`);
+    if(!scoreInp || !noteInp) return;
+    let scoreVal = parseFloat(scoreInp.value) || 0;
+    if(scoreVal < 0) scoreVal = 0;
+    if(scoreVal > main.weight) scoreVal = main.weight;
+    currentReportForEdit.criteriaResults[main.id].finalScore = scoreVal;
+    currentReportForEdit.criteriaResults[main.id].note = (noteInp.value || '').trim();
   });
-  currentReportForEdit.finalTotalPoints=
-    Object.values(currentReportForEdit.criteriaResults).reduce((s,r)=>s+r.finalScore,0);
-  currentReportForEdit.editedAt=new Date().toISOString();
-
-  const idx=finalReports.findIndex(r=>r.employeeId===currentReportForEdit.employeeId &&
-                                      r.month===currentReportForEdit.month &&
-                                      r.year===currentReportForEdit.year);
-  if(idx>=0)finalReports[idx]=currentReportForEdit;
+  currentReportForEdit.finalTotalPoints = Object.values(currentReportForEdit.criteriaResults).reduce((s, r) => s + r.finalScore, 0);
+  currentReportForEdit.editedAt = new Date().toISOString();
+  const idx = finalReports.findIndex(r => r.employeeId === currentReportForEdit.employeeId && r.month === currentReportForEdit.month && r.year === currentReportForEdit.year);
+  if(idx >= 0) finalReports[idx] = currentReportForEdit;
   else finalReports.push(currentReportForEdit);
   saveAll();
-  toggleModal('editReportModal',false);
-  displayReport(currentReportForEdit,true);
+  toggleModal('editReportModal', false);
+  displayReport(currentReportForEdit, true);
   showNotification('تم حفظ التقرير النهائي');
 }
 
-/* ================= تصدير PDF ================= */
 function exportToPDF(){
-  if(!currentReportForEdit){showNotification('أنشئ/اعرض التقرير أولاً',true);return;}
+  if(!currentReportForEdit){ showNotification('أنشئ/اعرض التقرير أولاً', true); return; }
   showNotification('سيتم فتح نافذة الطباعة، اختر "حفظ كـ PDF".');
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.querySelector('.tab-btn[data-tab="reports"]').classList.add('active');
   document.getElementById('reports').classList.add('active');
   document.getElementById('reportContainer').classList.remove('hidden');
-  setTimeout(()=>{window.print();},500);
+  setTimeout(() => { window.print(); }, 500);
 }
 
-/* ================= مشاركة واتساب ================= */
 function shareToWhatsApp(){
-  if(!currentReportForEdit){showNotification('أنشئ/احفظ التقرير أولاً',true);return;}
-  const r=currentReportForEdit;
-  const emp=employees.find(e=>e.id===r.employeeId);
-  const monthName=monthNames[r.month-1];
-  const sumWeights=(emp.criteria||[]).reduce((s,c)=>s+Number(c.weight||0),0);
-  let txt=`السلام عليكم ${emp?emp.name:''}\n`;
-  txt+=`هذا ملخص تقييمك لشهر ${monthName} ${r.year}:\n\n`;
-  (emp.criteria||[]).forEach(main=>{
-    const cr=r.criteriaResults[main.id];
-    if(!cr)return;
-    txt+=`- ${main.title}: ${cr.finalScore.toFixed(1)} من ${main.weight}\n`;
-    if(cr.note && cr.note.trim()!=='' && cr.note.trim()!=='لا توجد ملاحظات خاصة بهذا المعيار.'){
-      txt+=`ملاحظات: ${cr.note.trim()}\n`;
+  if(!currentReportForEdit){ showNotification('أنشئ/احفظ التقرير أولاً', true); return; }
+  const r = currentReportForEdit;
+  const emp = employees.find(e => e.id === r.employeeId);
+  const monthName = monthNames[r.month - 1];
+  const sumWeights = (emp.criteria || []).reduce((s, c) => s + Number(c.weight || 0), 0);
+  let txt = `السلام عليكم ${emp ? emp.name : ''}\n`;
+  txt += `هذا ملخص تقييمك لشهر ${monthName} ${r.year}:\n\n`;
+  (emp.criteria || []).forEach(main => {
+    const cr = r.criteriaResults[main.id];
+    if(!cr) return;
+    txt += `- ${main.title}: ${cr.finalScore.toFixed(1)} من ${main.weight}\n`;
+    if(cr.note && cr.note.trim() !== '' && cr.note.trim() !== 'لا توجد ملاحظات خاصة بهذا المعيار.'){
+      txt += `ملاحظات: ${cr.note.trim()}\n`;
     }
-    txt+=`------------------------------\n`;
+    txt += `------------------------------\n`;
   });
-  txt+=`\nالنتيجة الكلية: ${r.finalTotalPoints.toFixed(1)} من ${sumWeights}\n`;
-  txt+=`\nشكرًا لجهودك.\n`;
-  const encoded=encodeURIComponent(txt);
-  const phone=emp && emp.phone?emp.phone:'';
-  const url=`https://wa.me/${phone}?text=${encoded}`;
-  window.open(url,'_blank');
+  txt += `\nالنتيجة الكلية: ${r.finalTotalPoints.toFixed(1)} من ${sumWeights}\n`;
+  txt += `\nشكرًا لجهودك.\n`;
+  const encoded = encodeURIComponent(txt);
+  const phone = emp && emp.phone ? emp.phone : '';
+  const url = `https://wa.me/${phone}?text=${encoded}`;
+  window.open(url, '_blank');
 }
 
-/* ============== النسخ الاحتياطي: تصدير ============= */
+/* ================= النسخ الاحتياطي ================= */
 function exportDataToFile(){
   try{
-    const data={
-      employees,
-      partialAssessments,
-      finalReports,
-      exportedAt:new Date().toISOString()
-    };
-    const json=JSON.stringify(data,null,2);
-    const blob=new Blob([json],{type:'application/json'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    const dateStr=new Date().toISOString().slice(0,10);
-    a.href=url;
-    a.download=`evaluation_backup_${dateStr}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const data = { employees, partialAssessments, finalReports, exportedAt: new Date().toISOString() };
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.href = url; a.download = `evaluation_backup_${dateStr}.json`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
     showNotification('تم تصدير البيانات بنجاح إلى ملف JSON. احتفظ به في مكان آمن.');
   }catch(e){
     console.error(e);
-    showNotification('حدث خطأ أثناء تصدير البيانات.',true);
+    showNotification('حدث خطأ أثناء تصدير البيانات.', true);
   }
 }
 
-/* ============== النسخ الاحتياطي: استيراد ============= */
 function handleImportDataFile(e){
-  const file=e.target.files[0];
-  if(!file){
-    showNotification('لم يتم اختيار أي ملف.',true);
-    return;
-  }
-  const reader=new FileReader();
-  reader.onload=function(ev){
+  const file = e.target.files[0];
+  if(!file){ showNotification('لم يتم اختيار أي ملف.', true); return; }
+  const reader = new FileReader();
+  reader.onload = function(ev){
     try{
-      const text=ev.target.result;
-      const data=JSON.parse(text);
-      if(!data || typeof data!=='object'){
-        showNotification('ملف غير صالح.',true);
-        return;
-      }
-      if(!confirm('سيتم استبدال البيانات الحالية بالبيانات الموجودة في الملف. هل تريد المتابعة؟'))return;
-      employees=data.employees||[];
-      partialAssessments=data.partialAssessments||[];
-      finalReports=data.finalReports||[];
+      const text = ev.target.result;
+      const data = JSON.parse(text);
+      if(!data || typeof data !== 'object'){ showNotification('ملف غير صالح.', true); return; }
+      if(!confirm('سيتم استبدال البيانات الحالية بالبيانات الموجودة في الملف. هل تريد المتابعة؟')) return;
+      employees = data.employees || [];
+      partialAssessments = data.partialAssessments || [];
+      finalReports = data.finalReports || [];
       saveAll();
       renderEmployeeList();
       fillEmployeeSelects();
       showNotification('تم استيراد البيانات بنجاح.');
     }catch(err){
       console.error(err);
-      showNotification('فشل استيراد البيانات. تأكد من أن الملف هو ملف النسخة الاحتياطية الصحيح.',true);
+      showNotification('فشل استيراد البيانات. تأكد من أن الملف هو ملف النسخة الاحتياطية الصحيح.', true);
     }
   };
-  reader.onerror=function(){
-    showNotification('فشل قراءة الملف.',true);
-  };
-  reader.readAsText(file,'utf-8');
+  reader.onerror = function(){ showNotification('فشل قراءة الملف.', true); };
+  reader.readAsText(file, 'utf-8');
 }
 
-/* ============== مسح جميع البيانات ============= */
 function clearAllDataConfirm(){
-  if(!confirm('تحذير: هذا سيمسح جميع الموظفين والتقييمات والتقارير من هذا المتصفح فقط. هل أنت متأكد؟'))return;
-  employees=[];partialAssessments=[];finalReports=[];
+  if(!confirm('تحذير: هذا سيمسح جميع الموظفين والتقييمات والتقارير من هذا المتصفح فقط. هل أنت متأكد؟')) return;
+  employees = []; partialAssessments = []; finalReports = [];
   saveAll();
-  renderEmployeeList();fillEmployeeSelects();
+  renderEmployeeList(); fillEmployeeSelects();
   showNotification('تم مسح جميع البيانات من هذا المتصفح. ما زال بإمكانك استيراد نسخة احتياطية لاحقًا.');
 }
 </script>
