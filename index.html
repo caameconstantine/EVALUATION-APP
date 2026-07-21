@@ -92,6 +92,10 @@
     .forgot-link:hover{text-decoration:underline}
     .password-reset-success{background:#d4edda;color:#155724;padding:10px;border-radius:8px;margin-top:10px;font-size:.85rem;display:none}
     .password-reset-success.show{display:block}
+    
+    .login-screen .modal{z-index:10000}
+    .login-screen .modal-content{position:relative;z-index:10001}
+
     @media(max-width:600px){
       .container{padding:15px 10px}
       h1{font-size:1.3rem}
@@ -111,6 +115,7 @@
       .image-preview img{width:50px;height:50px}
     }
   </style>
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -149,7 +154,22 @@
     </div>
     <div id="authLoading" class="auth-loading hidden">جاري المعالجة... ⏳</div>
     <div id="userInfoDisplay" class="user-info hidden"></div>
+  
+<div id="forgotPasswordModal" class="modal" style="z-index:10000;">
+  <div class="modal-content" style="max-width:400px;">
+    <h3>إعادة تعيين كلمة المرور</h3>
+    <p>أدخل بريدك الإلكتروني وسنرسل لك رابطًا لتغيير كلمة المرور.</p>
+    <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="resetEmail" placeholder="example@email.com"></div>
+    <div id="resetSuccessMsg" class="password-reset-success">
+      ✅ تم إرسال رابط إعادة التعيين! تحقق من بريدك الإلكتروني (وصندوق البريد العشوائي).
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:15px;">
+      <button id="cancelResetBtn" class="btn-warning">إلغاء</button>
+      <button id="sendResetBtn" class="btn-primary">إرسال الرابط</button>
+    </div>
   </div>
+</div>
+</div>
 </div>
 
 <div class="container">
@@ -327,20 +347,7 @@
   </div>
 </div>
 
-<div id="forgotPasswordModal" class="modal">
-  <div class="modal-content" style="max-width:400px;">
-    <h3>إعادة تعيين كلمة المرور</h3>
-    <p>أدخل بريدك الإلكتروني وسنرسل لك رابطًا لتغيير كلمة المرور.</p>
-    <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="resetEmail" placeholder="example@email.com"></div>
-    <div id="resetSuccessMsg" class="password-reset-success">
-      ✅ تم إرسال رابط إعادة التعيين! تحقق من بريدك الإلكتروني (وصندوق البريد العشوائي).
-    </div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:15px;">
-      <button id="cancelResetBtn" class="btn-warning">إلغاء</button>
-      <button id="sendResetBtn" class="btn-primary">إرسال الرابط</button>
-    </div>
-  </div>
-</div>
+
 
 <div id="notification" class="notification"></div>
 
@@ -614,6 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
     forgotLink.addEventListener('click', function(e){
       e.preventDefault();
       e.stopPropagation();
+      e.stopImmediatePropagation();
       // Reset modal state
       if(resetSuccessMsg) resetSuccessMsg.classList.remove('show');
       document.getElementById('resetEmail').value = '';
