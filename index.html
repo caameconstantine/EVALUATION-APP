@@ -90,7 +90,8 @@
     .password-change-form label{font-weight:bold;color:#333}
     .forgot-link{display:block;margin-top:12px;color:#0066cc;text-decoration:none;font-size:14px;background:none;border:none;cursor:pointer;width:100%}
     .forgot-link:hover{text-decoration:underline}
-    .password-reset-success{background:#d4edda;color:#155724;padding:10px;border-radius:8px;margin-top:10px;font-size:.85rem}
+    .password-reset-success{background:#d4edda;color:#155724;padding:10px;border-radius:8px;margin-top:10px;font-size:.85rem;display:none}
+    .password-reset-success.show{display:block}
     @media(max-width:600px){
       .container{padding:15px 10px}
       h1{font-size:1.3rem}
@@ -331,7 +332,7 @@
     <h3>إعادة تعيين كلمة المرور</h3>
     <p>أدخل بريدك الإلكتروني وسنرسل لك رابطًا لتغيير كلمة المرور.</p>
     <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="resetEmail" placeholder="example@email.com"></div>
-    <div id="resetSuccessMsg" class="password-reset-success hidden" style="display:none;">
+    <div id="resetSuccessMsg" class="password-reset-success">
       ✅ تم إرسال رابط إعادة التعيين! تحقق من بريدك الإلكتروني (وصندوق البريد العشوائي).
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:15px;">
@@ -353,7 +354,11 @@ const firebaseConfig = {
   messagingSenderId: "126360689450",
   appId: "1:126360689450:web:a9a71bc10214d5846b9c53"
 };
+
+// Initialize Firebase immediately
 firebase.initializeApp(firebaseConfig);
+
+// Get auth and db references
 const auth = firebase.auth();
 const db = firebase.firestore();
 
@@ -597,7 +602,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ====== FORGOT PASSWORD - FIXED (works without login) ======
+  // ====== FORGOT PASSWORD - WORKS WITHOUT LOGIN ======
+  // Using the globally initialized 'auth' object which is ready immediately
   const forgotLink = document.getElementById('forgotPasswordLink');
   const forgotModal = document.getElementById('forgotPasswordModal');
   const cancelResetBtn = document.getElementById('cancelResetBtn');
@@ -609,7 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       e.stopPropagation();
       // Reset modal state
-      if(resetSuccessMsg) resetSuccessMsg.style.display = 'none';
+      if(resetSuccessMsg) resetSuccessMsg.classList.remove('show');
       document.getElementById('resetEmail').value = '';
       // Pre-fill email if available in login form
       const loginEmailInput = document.getElementById('loginEmail');
@@ -638,9 +644,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if(!emailRegex.test(email)){ showNotification('صيغة البريد الإلكتروني غير صحيحة.', true); return; }
       showNotification('⌛ جاري إرسال رابط إعادة التعيين...');
       try{
+        // Use the global auth object directly - works without being logged in
         await auth.sendPasswordResetEmail(email);
         document.getElementById('resetEmail').value = '';
-        if(resetSuccessMsg) resetSuccessMsg.style.display = 'block';
+        if(resetSuccessMsg) resetSuccessMsg.classList.add('show');
         showNotification('✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك.');
       }catch(error){
         console.error('Reset error:', error.code, error.message);
@@ -1118,8 +1125,8 @@ function onEvalEmployeeChange(){
           <div class="score-header">
             <span>${sub.title} (نقاط قصوى: ${sub.points})</span>
             <span>
-              <button class="btn-primary btn-small" onclick="openAssessmentModal(${empId},${sub.id},'${(main.title+' - '+sub.title).replace(/'/g,"\'")}',${sub.points})">+ تقييم اليوم</button>
-              <button class="btn-warning btn-small" onclick="openAssessmentViewModal(${empId},${sub.id},'${(main.title+' - '+sub.title).replace(/'/g,"\'")}',${sub.points})">📂 عرض التقييمات</button>
+              <button class="btn-primary btn-small" onclick="openAssessmentModal(${empId},${sub.id},'${(main.title+' - '+sub.title).replace(/'/g,"\\'")}',${sub.points})">+ تقييم اليوم</button>
+              <button class="btn-warning btn-small" onclick="openAssessmentViewModal(${empId},${sub.id},'${(main.title+' - '+sub.title).replace(/'/g,"\\'")}',${sub.points})">📂 عرض التقييمات</button>
             </span>
           </div>
           <div class="criteria-note">${info}</div>
@@ -1137,8 +1144,8 @@ function onEvalEmployeeChange(){
         <div class="score-header">
           <span>لا توجد معايير فرعية، سيتم استخدام هذا المعيار مباشرة.</span>
           <span>
-            <button class="btn-primary btn-small" onclick="openAssessmentModal(${empId},${main.id},'${main.title.replace(/'/g,"\'")}',${main.weight})">+ تقييم اليوم</button>
-            <button class="btn-warning btn-small" onclick="openAssessmentViewModal(${empId},${main.id},'${main.title.replace(/'/g,"\'")}',${main.weight})">📂 عرض التقييمات</button>
+            <button class="btn-primary btn-small" onclick="openAssessmentModal(${empId},${main.id},'${main.title.replace(/'/g,"\\'")}',${main.weight})">+ تقييم اليوم</button>
+            <button class="btn-warning btn-small" onclick="openAssessmentViewModal(${empId},${main.id},'${main.title.replace(/'/g,"\\'")}',${main.weight})">📂 عرض التقييمات</button>
           </span>
         </div>
         <div class="criteria-note">${info}</div>
@@ -1176,7 +1183,7 @@ function openAssessmentViewModal(empId, critId, title, maxPoints){
     .filter(a => a.employeeId === empId && a.criterionId === critId && a.month === month && a.year === year)
     .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   const ctn = document.getElementById('viewAssessmentsList');
-  if(!list.length){ ctn.innerHTML = '<p>لا توجد تقييمات مسجَّلة لهذا المعيار في هذا الشهر.</p>'; }
+  if(!list.length){ ctn.innerHTML = '<p>لا توجد تقييمات مسجَّلة لهذا المعيار في هذا الشهر.</p>'; }
   else {
     ctn.innerHTML = list.map(a => {
       const d = new Date(a.timestamp);
@@ -1352,7 +1359,7 @@ function calculateMonthlyReport(employeeId, month, year){
         if(mainFinalScore > main.weight) mainFinalScore = main.weight;
       } else {
         mainFinalScore = main.weight;
-        mainNote += 'لم تُسجَّل أي تقييمات على المعايير الفرعية، اعتُبر المعيار كاملاً.\n';
+        mainNote += 'لم تُسجَّل أي تقييمات على المعايير الفرعية، اعتُبر المعيار كاملاً.\n';
       }
     } else {
       const list = allAss.filter(a => a.criterionId === main.id);
@@ -1367,7 +1374,7 @@ function calculateMonthlyReport(employeeId, month, year){
         });
       } else {
         mainFinalScore = main.weight;
-        mainNote += 'لم تُسجَّل أي تقييمات لهذا المعيار خلال الشهر، اعتُبر الأداء كاملاً (حصل على كامل وزنه).\n';
+        mainNote += 'لم تُسجَّل أي تقييمات لهذا المعيار خلال الشهر، اعتُبر الأداء كاملاً (حصل على كامل وزنه).\n';
       }
     }
     criteriaResults[main.id] = {
@@ -1404,7 +1411,7 @@ function displayReport(report, fromSaved){
     <strong>الموظف:</strong> ${emp ? emp.name : ''}<br>
     <strong>الشهر:</strong> ${monthName} ${report.year}<br>
     <strong>مجموع أوزان المعايير الرئيسية:</strong> ${sumWeights} (يُفضَّل أن يكون 100)<br>
-    <strong>حالة التقرير:</strong> ${fromSaved ? 'نهائي (معدَّل يدويًا ومحفوظ)' : 'تقرير مبدئي محسوب آليًا من التقييمات'}
+    <strong>حالة التقرير:</strong> ${fromSaved ? 'نهائي (معدَّل يدويًا ومحفوظ)' : 'تقرير مبدئي محسوب آليًا من التقييمات'}
   </div>`;
   html += `<div class="total-score">النتيجة الكلية: ${report.finalTotalPoints.toFixed(1)} / ${sumWeights}</div>`;
   html += '<h3>تفاصيل كل معيار رئيسي</h3>';
@@ -1444,7 +1451,7 @@ function editFinalReport(){
         <label>ملاحظة نهائية لهذا المعيار:</label>
         <textarea class="edit-note-input" data-crit-id="${main.id}">${r.note || ''}</textarea>
       </div>
-      <div class="criteria-note">أيام التقييم المسجَّلة: ${days}</div>
+      <div class="criteria-note">أيام التقييم المسجَّلة: ${days}</div>
     </div>`;
   });
   recalcEditTotal();
