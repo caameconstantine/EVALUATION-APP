@@ -123,6 +123,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="app_icon_v2_192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="app_icon_v2_512.png">
 
+<base target="_blank">
 </head>
 <body>
 
@@ -146,6 +147,7 @@
       </div>
       <button class="btn-primary" id="btnLogin" style="width:100%;margin-top:8px;">🔒 تسجيل الدخول</button>
       <button class="forgot-link" id="forgotPasswordLink" type="button">نسيت كلمة المرور؟</button>
+      <button class="forgot-link" id="installAppBtn" type="button" style="display:none; margin-top:8px; color:#27ae60; font-weight:bold;">📲 تثبيت التطبيق</button>
     </div>
     <div id="signupForm" class="auth-form">
       <div class="form-group">
@@ -1620,6 +1622,30 @@ window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
   console.log('📱 PWA install prompt ready');
+
+  // إظهار زر التثبيت على شاشة الدخول
+  const installBtn = document.getElementById('installAppBtn');
+  if(installBtn){
+    installBtn.style.display = 'block';
+    installBtn.addEventListener('click', async () => {
+      if(!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if(outcome === 'accepted'){
+        showNotification('✅ تم تثبيت التطبيق بنجاح!');
+        installBtn.style.display = 'none';
+      }
+      deferredPrompt = null;
+    });
+  }
+});
+
+// إخفاء الزر إذا كان التطبيق مثبتاً
+window.addEventListener('appinstalled', () => {
+  const installBtn = document.getElementById('installAppBtn');
+  if(installBtn) installBtn.style.display = 'none';
+  deferredPrompt = null;
+  showNotification('🎉 التطبيق مثبت على جهازك!');
 });
 
 // Detect if running as installed PWA
