@@ -92,10 +92,6 @@
     .forgot-link:hover{text-decoration:underline}
     .password-reset-success{background:#d4edda;color:#155724;padding:10px;border-radius:8px;margin-top:10px;font-size:.85rem;display:none}
     .password-reset-success.show{display:block}
-    
-    .login-screen .modal{z-index:10000}
-    .login-screen .modal-content{position:relative;z-index:10001}
-
     @media(max-width:600px){
       .container{padding:15px 10px}
       h1{font-size:1.3rem}
@@ -116,7 +112,17 @@
     }
   </style>
 <base target="_blank">
-<base target="_blank">
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#764ba2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="تقييم الموظفين">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="app_icon_v2_192.png">
+  <link rel="icon" type="image/png" sizes="72x72" href="app_icon_v2_72.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="app_icon_v2_192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="app_icon_v2_512.png">
+
 </head>
 <body>
 
@@ -154,22 +160,7 @@
     </div>
     <div id="authLoading" class="auth-loading hidden">جاري المعالجة... ⏳</div>
     <div id="userInfoDisplay" class="user-info hidden"></div>
-  
-<div id="forgotPasswordModal" class="modal" style="z-index:10000;">
-  <div class="modal-content" style="max-width:400px;">
-    <h3>إعادة تعيين كلمة المرور</h3>
-    <p>أدخل بريدك الإلكتروني وسنرسل لك رابطًا لتغيير كلمة المرور.</p>
-    <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="resetEmail" placeholder="example@email.com"></div>
-    <div id="resetSuccessMsg" class="password-reset-success">
-      ✅ تم إرسال رابط إعادة التعيين! تحقق من بريدك الإلكتروني (وصندوق البريد العشوائي).
-    </div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:15px;">
-      <button id="cancelResetBtn" class="btn-warning">إلغاء</button>
-      <button id="sendResetBtn" class="btn-primary">إرسال الرابط</button>
-    </div>
   </div>
-</div>
-</div>
 </div>
 
 <div class="container">
@@ -347,7 +338,20 @@
   </div>
 </div>
 
-
+<div id="forgotPasswordModal" class="modal">
+  <div class="modal-content" style="max-width:400px;">
+    <h3>إعادة تعيين كلمة المرور</h3>
+    <p>أدخل بريدك الإلكتروني وسنرسل لك رابطًا لتغيير كلمة المرور.</p>
+    <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="resetEmail" placeholder="example@email.com"></div>
+    <div id="resetSuccessMsg" class="password-reset-success">
+      ✅ تم إرسال رابط إعادة التعيين! تحقق من بريدك الإلكتروني (وصندوق البريد العشوائي).
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:15px;">
+      <button id="cancelResetBtn" class="btn-warning">إلغاء</button>
+      <button id="sendResetBtn" class="btn-primary">إرسال الرابط</button>
+    </div>
+  </div>
+</div>
 
 <div id="notification" class="notification"></div>
 
@@ -621,7 +625,6 @@ document.addEventListener('DOMContentLoaded', () => {
     forgotLink.addEventListener('click', function(e){
       e.preventDefault();
       e.stopPropagation();
-      e.stopImmediatePropagation();
       // Reset modal state
       if(resetSuccessMsg) resetSuccessMsg.classList.remove('show');
       document.getElementById('resetEmail').value = '';
@@ -1596,5 +1599,35 @@ function clearAllDataConfirm(){
   showNotification('تم مسح جميع البيانات من هذا المتصفح. ما زال بإمكانك استيراد نسخة احتياطية لاحقًا.');
 }
 </script>
+
+<!-- PWA Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then((registration) => {
+        console.log('✅ Service Worker registered:', registration.scope);
+      })
+      .catch((error) => {
+        console.log('❌ Service Worker registration failed:', error);
+      });
+  });
+}
+
+// Handle PWA install prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  console.log('📱 PWA install prompt ready');
+});
+
+// Detect if running as installed PWA
+if (window.matchMedia('(display-mode: standalone)').matches || 
+    window.navigator.standalone === true) {
+  console.log('🎉 Running as installed PWA');
+}
+</script>
+
 </body>
 </html>
