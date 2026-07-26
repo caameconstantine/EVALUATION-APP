@@ -11,17 +11,44 @@
     .icon{font-size:80px;margin-bottom:20px}
     h1{color:#2c3e50;margin-bottom:15px;font-size:1.5rem}
     p{color:#666;margin-bottom:25px;line-height:1.6}
-    .btn{background:#3498db;color:#fff;padding:12px 30px;border:none;border-radius:10px;font-size:1rem;font-weight:bold;cursor:pointer;text-decoration:none;display:inline-block}
+    .btn{background:#3498db;color:#fff;padding:12px 30px;border:none;border-radius:10px;font-size:1rem;font-weight:bold;cursor:pointer;text-decoration:none;display:inline-block;margin:5px}
     .btn:hover{background:#2980b9}
+    .btn-secondary{background:#27ae60}
+    .btn-secondary:hover{background:#229954}
+    .status{background:#fff3cd;color:#856404;padding:10px;border-radius:8px;margin-bottom:15px;font-size:.9rem}
   </style>
 </head>
 <body>
   <div class="container">
     <div class="icon">📡</div>
+    <div class="status" id="statusMsg">جاري التحقق من الاتصال...</div>
     <h1>لا يوجد اتصال بالإنترنت</h1>
-    <p>يبدو أنك غير متصل بالإنترنت حالياً. بعض الميزات قد لا تعمل بدون اتصال.</p>
-    <p style="font-size:0.85rem;color:#999;margin-bottom:20px">البيانات المحلية متاحة للقراءة فقط</p>
+    <p>يمكنك استخدام التطبيق بالوضع المحلي. البيانات ستُحفظ على جهازك فقط.</p>
     <a href="/EVALUATION-APP/" class="btn">🔄 إعادة المحاولة</a>
+    <a href="/EVALUATION-APP/" class="btn btn-secondary" onclick="enterLocalMode(); return false;">📴 الدخول بالوضع المحلي</a>
   </div>
+
+  <script>
+    // التحقق من الاتصال
+    function checkOnline(){
+      const status = document.getElementById('statusMsg');
+      if(navigator.onLine){
+        status.textContent = '✅ يوجد اتصال! جاري التوجيه...';
+        status.style.background = '#d4edda';
+        status.style.color = '#155724';
+        setTimeout(() => { window.location.href = '/EVALUATION-APP/'; }, 1500);
+      } else {
+        status.textContent = '⚠️ لا يوجد اتصال بالإنترنت';
+      }
+    }
+
+    function enterLocalMode(){
+      localStorage.setItem('force_local_mode', 'true');
+      window.location.href = '/EVALUATION-APP/';
+    }
+
+    window.addEventListener('online', checkOnline);
+    checkOnline();
+  </script>
 </body>
 </html>
