@@ -1802,21 +1802,13 @@ function showAbsenceReport(){
 
   currentAbsenceReportData = { type: 'single', empId, year, empName: emp.name };
 
-  let html = `<div class="absence-report-print" id="absenceReportPrintArea">
-    <div style="text-align:center;margin-bottom:20px;">
-      <h2 style="color:#2c3e50;">تقرير الغيابات والإجازات</h2>
-      <p style="color:#666;">الموظف: <strong>${escapeHtml(emp.name)}</strong> | السنة: <strong>${year}</strong></p>
-    </div>
-    <div class="stats-grid">
-      <div class="stat-box"><div class="number">${totalEntitled}</div><div class="label">الأيام المستحقة</div></div>
-      <div class="stat-box"><div class="number">${totalTaken}</div><div class="label">الأيام المأخوذة</div></div>
-      <div class="stat-box"><div class="number" style="color:${remaining>=0?'#27ae60':'#e74c3c'}">${remaining}</div><div class="label">المتبقي</div></div>
-      <div class="stat-box"><div class="number">${empAbsences.length}</div><div class="label">عدد السجلات</div></div>
-    </div>`;
+  let html = `<div class="absence-report-print" id="absenceReportPrintArea" style="padding:20px;">
+    <h2 style="text-align:center;color:#2c3e50;margin-bottom:5px;">${escapeHtml(emp.name)}</h2>
+    <p style="text-align:center;color:#666;margin-bottom:20px;font-size:.9rem;">تقرير الغيابات والإجازات - ${year}</p>`;
 
   if(empAbsences.length){
-    html += `<table class="absence-table" style="margin-top:15px;">
-      <thead><tr><th>#</th><th>من</th><th>إلى</th><th>عدد الأيام</th><th>سبب الغياب</th></tr></thead>
+    html += `<table class="absence-table">
+      <thead><tr><th style="width:40px">#</th><th>من</th><th>إلى</th><th style="width:80px">عدد الأيام</th><th>سبب الغياب</th></tr></thead>
       <tbody>`;
     empAbsences.forEach((a, i) => {
       html += `<tr>
@@ -1829,37 +1821,32 @@ function showAbsenceReport(){
     });
     html += `</tbody></table>`;
   } else {
-    html += `<p style="text-align:center;color:#666;margin-top:20px;">لا توجد غيابات مسجَّلة لهذه السنة.</p>`;
+    html += `<p style="text-align:center;color:#666;">لا توجد غيابات مسجَّلة لهذه السنة.</p>`;
   }
 
-  html += `<div style="margin-top:20px;padding:15px;background:#f8f9fa;border-radius:10px;">
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;text-align:center;">
-      <div><div style="font-size:1.3rem;font-weight:bold;color:#e74c3c;">${totalTaken}</div><div style="font-size:.85rem;color:#666;">مجموع الأيام التي أخذها</div></div>
-      <div><div style="font-size:1.3rem;font-weight:bold;color:#3498db;">${totalEntitled}</div><div style="font-size:.85rem;color:#666;">عدد الأيام المستحقة</div></div>
-      <div><div style="font-size:1.3rem;font-weight:bold;color:${remaining>=0?'#27ae60':'#e74c3c'};">${remaining}</div><div style="font-size:.85rem;color:#666;">صافي الأيام المتبقية</div></div>
-    </div>
-  </div>
-  <div style="margin-top:15px;text-align:center;font-size:.8rem;color:#999;">
-    تم إنشاء التقرير بتاريخ: ${new Date().toLocaleDateString('ar-SA')}
-  </div>
+  html += `<table class="absence-table" style="margin-top:15px;width:auto;min-width:400px;">
+    <tbody>
+      <tr><td style="text-align:right;font-weight:bold;background:#fff7f7;">مجموع الأيام التي أخذها</td><td style="text-align:center;font-weight:bold;color:#e74c3c;width:80px;">${totalTaken}</td></tr>
+      <tr><td style="text-align:right;font-weight:bold;background:#f7fbff;">عدد الأيام المستحقة</td><td style="text-align:center;font-weight:bold;color:#3498db;width:80px;">${totalEntitled}</td></tr>
+      <tr><td style="text-align:right;font-weight:bold;background:#f7fff7;">صافي الأيام المتبقية</td><td style="text-align:center;font-weight:bold;color:${remaining>=0?'#27ae60':'#e74c3c'};width:80px;">${remaining}</td></tr>
+    </tbody>
+  </table>
+  <p style="text-align:center;font-size:.75rem;color:#999;margin-top:20px;">تم إنشاء التقرير بتاريخ: ${new Date().toLocaleDateString('ar-SA')}</p>
   </div>`;
 
   document.getElementById('absenceReportModalTitle').textContent = `تقرير الغيابات - ${escapeHtml(emp.name)}`;
   document.getElementById('absenceReportModalContent').innerHTML = html;
   toggleModal('absenceReportModal', true);
 }
-
 function showAllAbsencesReport(){
   if(!employees.length){ showNotification('لا يوجد موظفين', true); return; }
   const year = parseInt(document.getElementById('absenceYearSelect').value);
 
   currentAbsenceReportData = { type: 'all', year };
 
-  let html = `<div class="absence-report-print" id="allAbsencesReportPrintArea">
-    <div style="text-align:center;margin-bottom:20px;">
-      <h2 style="color:#2c3e50;">📑 التقرير الشامل للغيابات</h2>
-      <p style="color:#666;">السنة: <strong>${year}</strong> | جميع الموظفين</p>
-    </div>`;
+  let html = `<div class="absence-report-print" id="allAbsencesReportPrintArea" style="padding:20px;">
+    <h2 style="text-align:center;color:#2c3e50;margin-bottom:5px;">📑 التقرير الشامل للغيابات</h2>
+    <p style="text-align:center;color:#666;margin-bottom:25px;font-size:.9rem;">السنة: ${year} | جميع الموظفين</p>`;
 
   employees.forEach(emp => {
     const balance = leaveBalances.find(l => l.employeeId === emp.id && l.year === year);
@@ -1868,17 +1855,12 @@ function showAllAbsencesReport(){
     const totalTaken = empAbsences.reduce((s, a) => s + Number(a.days || 0), 0);
     const remaining = totalEntitled - totalTaken;
 
-    html += `<div style="margin-bottom:30px;border:2px solid #e0e0e0;border-radius:12px;padding:15px;">
-      <h3 style="color:#3498db;border-bottom:2px solid #3498db;padding-bottom:8px;margin-bottom:12px;">${escapeHtml(emp.name)}</h3>
-      <div class="stats-grid" style="margin-bottom:12px;">
-        <div class="stat-box"><div class="number">${totalEntitled}</div><div class="label">المستحقة</div></div>
-        <div class="stat-box"><div class="number">${totalTaken}</div><div class="label">المأخوذة</div></div>
-        <div class="stat-box"><div class="number" style="color:${remaining>=0?'#27ae60':'#e74c3c'}">${remaining}</div><div class="label">المتبقي</div></div>
-      </div>`;
+    html += `<div style="margin-bottom:25px;border:1px solid #ddd;border-radius:8px;overflow:hidden;">
+      <div style="background:#3498db;color:#fff;padding:10px 15px;font-weight:bold;font-size:1.05rem;">${escapeHtml(emp.name)}</div>`;
 
     if(empAbsences.length){
-      html += `<table class="absence-table">
-        <thead><tr><th>#</th><th>من</th><th>إلى</th><th>عدد الأيام</th><th>سبب الغياب</th></tr></thead>
+      html += `<table class="absence-table" style="margin:0;border:none;">
+        <thead><tr><th style="width:40px">#</th><th>من</th><th>إلى</th><th style="width:80px">عدد الأيام</th><th>سبب الغياب</th></tr></thead>
         <tbody>`;
       empAbsences.forEach((a, i) => {
         html += `<tr>
@@ -1891,25 +1873,24 @@ function showAllAbsencesReport(){
       });
       html += `</tbody></table>`;
     } else {
-      html += `<p style="text-align:center;color:#666;">لا توجد غيابات مسجَّلة.</p>`;
+      html += `<p style="text-align:center;color:#666;padding:15px;">لا توجد غيابات مسجَّلة.</p>`;
     }
-    html += `<div style="margin-top:12px;padding:10px;background:#f8f9fa;border-radius:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;font-size:.85rem;">
-      <div><strong style="color:#e74c3c">${totalTaken}</strong><br>مجموع الأيام المأخوذة</div>
-      <div><strong style="color:#3498db">${totalEntitled}</strong><br>الأيام المستحقة</div>
-      <div><strong style="color:${remaining>=0?'#27ae60':'#e74c3c'}">${remaining}</strong><br>الصافي المتبقي</div>
-    </div>`;
-    html += `</div>`;
+
+    html += `<table class="absence-table" style="margin:0;border:none;border-top:2px solid #ddd;width:100%;">
+      <tbody>
+        <tr><td style="text-align:right;font-weight:bold;background:#fff7f7;width:70%;">مجموع الأيام التي أخذها</td><td style="text-align:center;font-weight:bold;color:#e74c3c;">${totalTaken}</td></tr>
+        <tr><td style="text-align:right;font-weight:bold;background:#f7fbff;">عدد الأيام المستحقة</td><td style="text-align:center;font-weight:bold;color:#3498db;">${totalEntitled}</td></tr>
+        <tr><td style="text-align:right;font-weight:bold;background:#f7fff7;">صافي الأيام المتبقية</td><td style="text-align:center;font-weight:bold;color:${remaining>=0?'#27ae60':'#e74c3c'};">${remaining}</td></tr>
+      </tbody>
+    </table></div>`;
   });
 
-  html += `<div style="text-align:center;font-size:.8rem;color:#999;margin-top:20px;">
-    تم إنشاء التقرير بتاريخ: ${new Date().toLocaleDateString('ar-SA')}
-  </div></div>`;
+  html += `<p style="text-align:center;font-size:.75rem;color:#999;margin-top:20px;">تم إنشاء التقرير بتاريخ: ${new Date().toLocaleDateString('ar-SA')}</p></div>`;
 
   document.getElementById('allAbsencesReportContent').innerHTML = html;
   toggleModal('allAbsencesReportModal', true);
 }
-
-async function exportAbsenceReport(format){
+function exportAbsenceReport(format){
   const area = document.getElementById('absenceReportPrintArea');
   if(!area){ showNotification('لا يوجد تقرير للتصدير', true); return; }
 
@@ -1933,13 +1914,15 @@ async function exportAbsenceReport(format){
     const totalEntitled = balance ? balance.days : 0;
     const totalTaken = empAbsences.reduce((s, a) => s + Number(a.days || 0), 0);
     const remaining = totalEntitled - totalTaken;
-    let csv = '\uFEFFالرقم,من,إلى,عدد الأيام,سبب الغياب\n';
+    let csv = 'sep=,\n';
+    csv += 'الرقم,من,الى,عدد الايام,سبب الغياب\n';
     empAbsences.forEach((a, i) => {
       csv += `${i+1},${a.startDate},${a.endDate},${a.days},"${a.note || ''}"\n`;
     });
-    csv += `\nمجموع الأيام التي أخذها,${totalTaken}\n`;
-    csv += `عدد الأيام المستحقة,${totalEntitled}\n`;
-    csv += `صافي الأيام المتبقية,${remaining}\n`;
+    csv += `\n`;
+    csv += `,مجموع الايام التى اخذها,${totalTaken}\n`;
+    csv += `,عدد الايام المستحقة,${totalEntitled}\n`;
+    csv += `,صافى الايام المتبقية,${remaining}\n`;
     const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1948,7 +1931,7 @@ async function exportAbsenceReport(format){
     URL.revokeObjectURL(url);
     showNotification('تم تصدير Excel (CSV)');
   } else if(format === 'image'){
-    showNotification('جاري إنشاء الصورة...');
+    showNotification('جاري انشاء الصورة...');
     try{
       const canvas = await html2canvas(area, {scale:2, backgroundColor:'#fff'});
       const link = document.createElement('a');
@@ -1974,8 +1957,2015 @@ async function exportAbsenceReport(format){
     window.open(url, '_blank');
   }
 }
+function exportAllAbsencesReport(format){
+  const area = document.getElementById('allAbsencesReportPrintArea');
+  if(!area){ showNotification('لا يوجد تقرير للتصدير', true); return; }
 
-async function exportAllAbsencesReport(format){
+  if(format === 'pdf'){
+    showNotification('جاري فتح نافذة الطباعة...');
+    toggleModal('allAbsencesReportModal', false);
+    document.body.appendChild(area);
+    area.style.position = 'fixed';
+    area.style.top = '0';
+    area.style.left = '0';
+    area.style.width = '100%';
+    area.style.zIndex = '9999';
+    area.style.background = '#fff';
+    setTimeout(() => { window.print(); area.remove(); toggleModal('allAbsencesReportModal', true); }, 500);
+  } else if(format === 'excel'){
+    const year = currentAbsenceReportData.year;
+    let csv = 'sep=,\n';
+    csv += 'اسم الموظف,من,الى,عدد الايام,سبب الغياب\n';
+    employees.forEach(emp => {
+      const empAbsences = absences.filter(a => a.employeeId === emp.id && a.year === year).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+      const balance = leaveBalances.find(l => l.employeeId === emp.id && l.year === year);
+      const totalEntitled = balance ? balance.days : 0;
+      const totalTaken = empAbsences.reduce((s, a) => s + Number(a.days || 0), 0);
+      const remaining = totalEntitled - totalTaken;
+      empAbsences.forEach(a => {
+        csv += `"${emp.name}",${a.startDate},${a.endDate},${a.days},"${a.note || ''}"\n`;
+      });
+      if(empAbsences.length){
+        csv += `\n`;
+        csv += `"${emp.name} - ملخص",مجموع الايام التى اخذها,${totalTaken}\n`;
+        csv += `"${emp.name} - ملخص",عدد الايام المستحقة,${totalEntitled}\n`;
+        csv += `"${emp.name} - ملخص",صافى الايام المتبقية,${remaining}\n`;
+        csv += `\n`;
+      }
+    });
+    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `تقرير_شامل_الغيابات_${year}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showNotification('تم تصدير Excel (CSV) الشامل');
+  } else if(format === 'image'){
+    showNotification('جاري انشاء الصورة... قد يستغرق بعض الوقت');
+    try{
+      const canvas = await html2canvas(area, {scale:2, backgroundColor:'#fff'});
+      const link = document.createElement('a');
+      link.download = `تقرير_شامل_الغيابات_${currentAbsenceReportData.year}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showNotification('تم حفظ الصورة');
+    }catch(e){ console.error(e); showNotification('فشل تصدير الصورة', true); }
+  }
+}
+</script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{box-sizing:border-box;font-family:"Segoe UI",Tahoma,sans-serif;margin:0;padding:0}
+body{background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:15px;direction:rtl}
+.container{max-width:1000px;margin:0 auto;background:#fff;border-radius:20px;padding:20px 15px 30px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+h1{text-align:center;color:#2c3e50;margin:10px 0 25px;font-size:1.5rem}
+h2{color:#3498db;margin:15px 0 15px;padding-bottom:8px;border-bottom:2px solid #3498db;font-size:1.2rem}
+h3{margin:15px 0 10px;font-size:1rem;color:#34495e}
+.tabs{display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap}
+.tab-btn{flex:1;min-width:100px;padding:10px;border:none;border-radius:10px;background:#ecf0f1;font-weight:bold;font-size:.85rem;cursor:pointer;transition:.2s}
+.tab-btn.active{background:#3498db;color:#fff;box-shadow:0 4px 10px rgba(52,152,219,.4);transform:translateY(-1px)}
+.tab-content{display:none;font-size:.9rem}
+.tab-content.active{display:block}
+.form-group{margin-bottom:12px}
+label{display:block;margin-bottom:5px;font-weight:bold;color:#2c3e50;font-size:.85rem}
+input[type=text],input[type=tel],input[type=number],input[type=email],input[type=password],input[type=date],textarea,select{width:100%;padding:8px 10px;border-radius:8px;border:1px solid #ddd;font-size:.85rem}
+input:focus,textarea:focus,select:focus{outline:none;border-color:#3498db}
+textarea{resize:vertical;min-height:60px}
+button{padding:8px 14px;border:none;border-radius:8px;font-size:.85rem;font-weight:bold;cursor:pointer;margin:3px}
+.btn-primary{background:#3498db;color:#fff}
+.btn-primary:hover{background:#2980b9}
+.btn-success{background:#27ae60;color:#fff}
+.btn-success:hover{background:#229954}
+.btn-warning{background:#f39c12;color:#fff}
+.btn-warning:hover{background:#e67e22}
+.btn-danger{background:#e74c3c;color:#fff}
+.btn-danger:hover{background:#c0392b}
+.btn-info{background:#17a2b8;color:#fff}
+.btn-info:hover{background:#138496}
+.btn-purple{background:#9b59b6;color:#fff}
+.btn-purple:hover{background:#8e44ad}
+.btn-small{padding:4px 8px;font-size:.8rem}
+.list-item{background:#f8f9fa;padding:10px;border-radius:10px;margin-bottom:8px;border-right:4px solid #3498db}
+.score-item{background:#ffffff;border-radius:10px;padding:10px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.score-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px;flex-wrap:wrap}
+.criteria-note{font-size:.8rem;color:#666;margin-top:3px}
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:none;justify-content:center;align-items:center;z-index:1000}
+.modal.show{display:flex}
+.modal-content{background:#fff;border-radius:15px;max-width:650px;width:92%;max-height:90vh;overflow-y:auto;padding:15px 15px 20px;animation:fadeIn .25s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.image-preview{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.image-preview img{width:70px;height:70px;object-fit:cover;border-radius:6px;border:1px solid #ccc}
+.report-summary{background:#f5f7fa;padding:10px;border-radius:10px;margin-top:10px}
+.total-score{font-size:1.4rem;font-weight:bold;color:#27ae60;text-align:center;margin:10px 0}
+.hidden{display:none!important}
+.notification{position:fixed;top:15px;left:50%;transform:translateX(-50%);background:#27ae60;color:#fff;padding:10px 22px;border-radius:10px;font-size:.9rem;box-shadow:0 4px 10px rgba(0,0,0,.3);z-index:2000;display:none;min-width:280px;text-align:center}
+.notification.error{background:#e74c3c}
+.login-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);z-index:9999;justify-content:center;align-items:center;display:flex}
+.login-screen.hidden{display:none}
+.login-box{background:#fff;padding:30px;border-radius:20px;max-width:400px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.login-box h2{color:#2c3e50;margin-bottom:25px;font-size:1.5rem}
+.login-tabs{display:flex;gap:10px;margin-bottom:20px}
+.login-tab{flex:1;padding:10px;border:none;border-radius:8px;background:#ecf0f1;font-weight:bold;cursor:pointer}
+.login-tab.active{background:#3498db;color:#fff}
+.auth-form{display:none}
+.auth-form.active{display:block}
+.login-icon{font-size:3rem;margin-bottom:15px}
+.auth-loading{text-align:center;margin-top:15px;color:#666;font-size:.85rem}
+.user-info{background:#f0f8ff;padding:10px;border-radius:8px;margin-top:10px;font-size:.85rem;text-align:center}
+.criteria-list-item{background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px;margin-bottom:8px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center}
+.criteria-item-info{flex:1;min-width:200px}
+.criteria-item-actions{display:flex;gap:5px;flex-wrap:wrap}
+.sub-criteria-item{background:#f8f9fa;padding:6px 8px;border-radius:6px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:5px}
+.sub-criteria-item input{width:110px;padding:4px 6px;font-size:.8rem}
+.assessment-item{background:#fff;border:1px solid #eee;border-radius:8px;padding:10px;margin-bottom:8px}
+.assessment-item:hover{box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.import-option{background:#f8f9fa;padding:10px;border-radius:8px;margin-bottom:8px;cursor:pointer;border:2px solid transparent;transition:.2s}
+.import-option:hover{border-color:#3498db;background:#e8f4fc}
+.import-option.selected{border-color:#27ae60;background:#d5f4e6}
+.settings-section{background:#f8f9fa;padding:15px;border-radius:10px;margin-top:20px;border:1px solid #e0e0e0}
+.settings-section h3{color:#2c3e50;margin-bottom:12px;font-size:1rem}
+.backup-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.backup-buttons button{flex:1;min-width:140px}
+.backup-buttons .primary{background:#3498db;color:#fff}
+.backup-buttons .secondary{background:#95a5a6;color:#fff}
+.backup-buttons .danger{background:#e74c3c;color:#fff}
+.password-input-wrapper{display:flex;align-items:center;gap:8px}
+.password-input-wrapper input{flex:1;padding:8px 10px;border:1px solid #ddd;border-radius:4px;font-size:14px}
+.toggle-password{background:#f0f0f0;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:16px}
+.toggle-password:hover{background:#e0e0e0}
+.password-change-form{display:flex;flex-direction:column;gap:12px;max-width:400px}
+.password-change-form .form-group{display:flex;flex-direction:column;gap:5px}
+.password-change-form label{font-weight:bold;color:#333}
+.forgot-link{display:block;margin-top:12px;color:#0066cc;text-decoration:none;font-size:14px;background:none;border:none;cursor:pointer;width:100%}
+.forgot-link:hover{text-decoration:underline}
+.password-reset-success{background:#d4edda;color:#155724;padding:10px;border-radius:8px;margin-top:10px;font-size:.85rem;display:none}
+.password-reset-success.show{display:block}
+.absence-card{background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:15px;margin-bottom:12px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.absence-card h4{color:#2c3e50;margin-bottom:10px;font-size:1rem;border-bottom:1px solid #eee;padding-bottom:6px}
+.absence-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.85rem}
+.absence-table th,.absence-table td{border:1px solid #ddd;padding:8px;text-align:center}
+.absence-table th{background:#3498db;color:#fff}
+.absence-table tr:nth-child(even){background:#f8f9fa}
+.absence-table tr:hover{background:#e8f4fc}
+.balance-box{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:15px;border-radius:12px;text-align:center;margin-bottom:15px}
+.balance-box .big-number{font-size:2.5rem;font-weight:bold}
+.balance-box .label{font-size:.9rem;opacity:.9}
+.report-actions{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0;justify-content:center}
+.report-actions button{min-width:120px}
+.export-section{background:#f0f8ff;padding:15px;border-radius:10px;margin-top:15px;border:1px solid #dbeafe}
+.export-section h4{color:#1e40af;margin-bottom:10px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0}
+.stat-box{background:#fff;border-radius:10px;padding:12px;text-align:center;border:1px solid #e0e0e0}
+.stat-box .number{font-size:1.5rem;font-weight:bold;color:#3498db}
+.stat-box .label{font-size:.8rem;color:#666;margin-top:4px}
+@media(max-width:600px){
+.container{padding:15px 10px}
+h1{font-size:1.3rem}
+.tab-btn{font-size:.75rem;min-width:80px;padding:8px}
+.criteria-item-info{min-width:100%;margin-bottom:8px}
+.criteria-item-actions{width:100%;justify-content:flex-start}
+.score-header{flex-direction:column;align-items:flex-start}
+.backup-buttons button{min-width:100%}
+.absence-table{font-size:.75rem}
+.absence-table th,.absence-table td{padding:4px}
+}
+@media print{
+body{background:#fff;padding:0;margin:0}
+.container{box-shadow:none;border-radius:0;max-width:100%;padding:10px}
+.tabs,.notification,.modal,.login-screen,.user-info,#logoutContainer{display:none!important}
+.tab-content{display:none!important}
+.tab-content.active{display:block!important}
+#reports,.absence-report-print{display:block!important}
+.score-item{break-inside:avoid;margin-bottom:12px}
+.image-preview img{width:50px;height:50px}
+.absence-table{break-inside:avoid}
+.no-print{display:none!important}
+}
+</style>
+<meta name="theme-color" content="#764ba2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="تقييم الموظفين">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="app_icon_v2_192.png">
+<link rel="icon" type="image/png" sizes="72x72" href="app_icon_v2_72.png">
+<link rel="icon" type="image/png" sizes="192x192" href="app_icon_v2_192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="app_icon_v2_512.png">
+</head>
+<body>
+
+<!-- شاشة تسجيل الدخول -->
+<div id="loginScreen" class="login-screen">
+<div class="login-box">
+<div class="login-icon">👤</div>
+<h2>نظام تقييم الموظفين</h2>
+<div class="login-tabs">
+<button class="login-tab active" data-auth="login">تسجيل الدخول</button>
+<button class="login-tab" data-auth="signup">إنشاء حساب جديد</button>
+</div>
+<div id="loginForm" class="auth-form active">
+<div class="form-group"><label>البريد الإلكتروني:</label><input type="email" id="loginEmail" placeholder="example@email.com" autocomplete="email"></div>
+<div class="form-group"><label>كلمة المرور:</label><div class="password-input-wrapper"><input type="password" id="loginPassword" placeholder="********" autocomplete="current-password"><button type="button" class="toggle-password" data-target="loginPassword">👁️</button></div></div>
+<button class="btn-primary" id="btnLogin" style="width:100%;margin-top:8px;font-size:1rem;padding:12px;">🔒 تسجيل الدخول</button>
+<button class="forgot-link" id="forgotPasswordLink" type="button">نسيت كلمة المرور؟</button>
+</div>
+<div id="signupForm" class="auth-form">
+<div class="form-group"><label>البريد الإلكتروني:</label><input type="email" id="signupEmail" placeholder="example@email.com" autocomplete="email"></div>
+<div class="form-group"><label>كلمة المرور (6 أحرف على الأقل):</label><div class="password-input-wrapper"><input type="password" id="signupPassword" placeholder="********" autocomplete="new-password"><button type="button" class="toggle-password" data-target="signupPassword">👁️</button></div></div>
+<button class="btn-success" id="btnSignup" style="width:100%;margin-top:8px;font-size:1rem;padding:12px;">📝 إنشاء حساب</button>
+</div>
+<div id="authLoading" class="auth-loading hidden">جاري المعالجة... ⏳</div>
+<div id="userInfoDisplay" class="user-info hidden"></div>
+</div>
+</div>
+
+<div class="container">
+<h1>📋 نظام تقييم الموظفين الشهري</h1>
+<div style="text-align:left;margin-bottom:10px;" id="logoutContainer" class="hidden">
+<button class="btn-small btn-danger" id="logoutBtn">🚪 تسجيل خروج</button>
+</div>
+<div class="tabs">
+<button class="tab-btn active" data-tab="employees">الموظفين</button>
+<button class="tab-btn" data-tab="evaluate">التقييم اليومي</button>
+<button class="tab-btn" data-tab="absences">الغيابات</button>
+<button class="tab-btn" data-tab="reports">التقارير النهائية</button>
+</div>
+
+<div id="employees" class="tab-content active">
+<h2>إدارة الموظفين</h2>
+<div class="form-group"><label>اسم الموظف:</label><input type="text" id="empName" placeholder="أدخل اسم الموظف"></div>
+<div class="form-group"><label>رقم الهاتف (مع رمز الدولة):</label><input type="tel" id="empPhone" placeholder="مثال: 9665xxxxxxxx"></div>
+<button class="btn-primary" id="addEmpBtn">➕ إضافة موظف جديد</button>
+<h3>قائمة الموظفين</h3>
+<div id="employeeList"></div>
+<div class="settings-section">
+<h3>النسخ الاحتياطي للبيانات</h3>
+<div class="backup-buttons">
+<button id="exportDataBtn" class="primary">📥 تصدير البيانات (JSON)</button>
+<button id="importDataBtn" class="secondary">📤 استيراد نسخة</button>
+<input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
+<button id="clearAllDataBtn" class="danger">🗑️ مسح جميع البيانات</button>
+</div>
+</div>
+<div class="settings-section">
+<h3>🔐 أمان الحساب - تغيير كلمة المرور</h3>
+<div class="password-change-form">
+<div class="form-group"><label>كلمة المرور الحالية</label><div class="password-input-wrapper"><input type="password" id="currentPassword" placeholder="أدخل كلمة المرور الحالية"><button type="button" class="toggle-password" data-target="currentPassword">👁️</button></div></div>
+<div class="form-group"><label>كلمة المرور الجديدة</label><div class="password-input-wrapper"><input type="password" id="newPassword" placeholder="أدخل كلمة المرور الجديدة"><button type="button" class="toggle-password" data-target="newPassword">👁️</button></div></div>
+<div class="form-group"><label>تأكيد كلمة المرور الجديدة</label><div class="password-input-wrapper"><input type="password" id="confirmPassword" placeholder="أكّد كلمة المرور الجديدة"><button type="button" class="toggle-password" data-target="confirmPassword">👁️</button></div></div>
+<button id="changePasswordBtn" class="btn-primary" style="width:100%;padding:10px;">تغيير كلمة المرور</button>
+</div>
+</div>
+</div>
+
+<div id="evaluate" class="tab-content">
+<h2>تقييم يومي لكل معيار</h2>
+<div class="form-group"><label>اختر الموظف:</label><select id="evalEmpSelect"><option value="">-- اختر موظف --</option></select></div>
+<div class="form-group"><label>الشهر:</label><select id="evalMonthSelect"></select></div>
+<div class="form-group"><label>السنة:</label><select id="evalYearSelect"></select></div>
+<div id="criteriaScoresContainer"></div>
+</div>
+
+<div id="absences" class="tab-content">
+<h2>📅 متابعة الغيابات والإجازات</h2>
+<div class="absence-card">
+<h4>⚙️ إدارة الرصيد السنوي</h4>
+<div class="form-group"><label>اختر الموظف:</label><select id="absenceEmpSelect"><option value="">-- اختر موظف --</option></select></div>
+<div class="form-group"><label>السنة:</label><select id="absenceYearSelect"></select></div>
+<div class="form-group"><label>عدد أيام الإجازة المستحقة للسنة:</label><input type="number" id="annualLeaveDays" placeholder="مثال: 30" min="0" step="1"></div>
+<button class="btn-primary" id="saveLeaveBalanceBtn">💾 حفظ الرصيد السنوي</button>
+<div id="leaveBalanceDisplay" style="margin-top:15px;"></div>
+</div>
+<div class="absence-card">
+<h4>➕ تسجيل غياب / إجازة جديدة</h4>
+<div class="form-group"><label>نوع الغياب:</label>
+<select id="absenceType">
+<option value="annual">إجازة سنوية</option>
+<option value="sick">إجازة مرضية</option>
+<option value="unpaid">إجازة بدون راتب</option>
+<option value="other">أخرى</option>
+</select>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+<div class="form-group"><label>تاريخ الخروج:</label><input type="date" id="absenceStartDate"></div>
+<div class="form-group"><label>تاريخ العودة:</label><input type="date" id="absenceEndDate"></div>
+</div>
+<div class="form-group"><label>عدد الأيام:</label><input type="number" id="absenceDays" placeholder="يُحسب تلقائياً" min="0.5" step="0.5"></div>
+<div class="form-group"><label>ملاحظة (اختياري):</label><input type="text" id="absenceNote" placeholder="مثال: زيارة عائلية"></div>
+<button class="btn-success" id="addAbsenceBtn">➕ تسجيل الغياب</button>
+</div>
+<div class="absence-card">
+<h4>📋 سجل الغيابات</h4>
+<div id="absenceListContainer"><p>اختر موظفاً أولاً لعرض سجل غياباته.</p></div>
+</div>
+<div class="absence-card">
+<h4>📊 تقرير الغيابات</h4>
+<button class="btn-info" id="showAbsenceReportBtn">📄 عرض تقرير الغيابات</button>
+<button class="btn-purple" id="showAllAbsencesReportBtn">📑 تقرير شامل (جميع الموظفين)</button>
+<div id="absenceReportContainer" style="margin-top:15px;"></div>
+</div>
+</div>
+
+<div id="reports" class="tab-content">
+<h2>تقرير شهري نهائي</h2>
+<div class="form-group"><label>اختر الموظف:</label><select id="reportEmpSelect"><option value="">-- اختر موظف --</option></select></div>
+<div class="form-group"><label>الشهر:</label><select id="reportMonthSelect"></select></div>
+<div class="form-group"><label>السنة:</label><select id="reportYearSelect"></select></div>
+<button class="btn-primary" id="showReportBtn">إنشاء / عرض التقرير</button>
+<button class="btn-success hidden" id="editReportBtn">تعديل التقرير النهائي</button>
+<button class="btn-warning hidden" id="exportPdfBtn">🖨️ تصدير PDF</button>
+<button class="btn-info hidden" id="shareWaBtn">📱 مشاركة واتساب</button>
+<div id="reportContainer" class="hidden"></div>
+</div>
+</div>
+
+<!-- Modals -->
+<div id="employeeModal" class="modal"><div class="modal-content">
+<h2>تعديل بيانات الموظف ومعاييره</h2>
+<div class="form-group"><label>اسم الموظف:</label><input type="text" id="modalEmpName"></div>
+<div class="form-group"><label>رقم الهاتف:</label><input type="tel" id="modalEmpPhone"></div>
+<div style="display:flex;gap:8px;margin:15px 0;">
+<button class="btn-info btn-small" id="importCriteriaBtn" style="flex:1;">📥 استيراد معايير</button>
+<button class="btn-warning btn-small" onclick="resetToDefaultCriteria()" style="flex:1;">🔄 افتراضيات</button>
+</div>
+<h3>معايير التقييم (مجموع الأوزان = 100 يفضّل)</h3>
+<div id="modalCriteriaList"></div>
+<div class="form-group" style="margin-top:15px;">
+<label>إضافة معيار رئيسي جديد:</label>
+<input type="text" id="newCriterionTitle" placeholder="اسم المعيار">
+<input type="number" id="newCriterionWeight" placeholder="الوزن" min="1" max="100" step="0.5" style="margin-top:5px;">
+<button class="btn-primary btn-small" id="addCriterionBtn">إضافة</button>
+</div>
+<div style="display:flex;gap:8px;margin-top:10px;">
+<button class="btn-primary" id="saveEmpModalBtn" style="flex:1;">حفظ</button>
+<button class="btn-danger" id="cancelEmpModalBtn" style="flex:1;">إلغاء</button>
+</div>
+</div></div>
+
+<div id="importCriteriaModal" class="modal"><div class="modal-content">
+<h2>استيراد معايير من موظف آخر</h2>
+<p style="margin-bottom:15px;color:#666;">اختر موظفًا لاستيراد معاييره:</p>
+<div id="importCriteriaList"></div>
+<div style="display:flex;gap:8px;margin-top:15px;">
+<button class="btn-primary" id="confirmImportBtn" style="flex:1;">✅ تأكيد</button>
+<button class="btn-danger" id="cancelImportBtn" style="flex:1;">إلغاء</button>
+</div>
+</div></div>
+
+<div id="subCriteriaModal" class="modal"><div class="modal-content">
+<h3>المعايير الفرعية</h3>
+<p id="mainCriterionTitle" style="margin-bottom:15px;color:#3498db;font-weight:bold;"></p>
+<div id="subCriteriaList"></div>
+<div class="form-group" style="margin-top:15px;">
+<label>إضافة معيار فرعي جديد:</label>
+<input type="text" id="newSubCriterionTitle" placeholder="اسم المعيار الفرعي">
+<input type="number" id="newSubCriterionPoints" placeholder="النقاط القصوى" min="1" step="0.5" style="margin-top:5px;">
+<button class="btn-primary btn-small" id="addSubCriterionBtn" style="margin-top:5px;">إضافة</button>
+</div>
+<div style="display:flex;gap:8px;margin-top:15px;">
+<button class="btn-primary" id="saveSubCriteriaBtn" style="flex:1;">حفظ</button>
+<button class="btn-danger" id="cancelSubCriteriaBtn" style="flex:1;">إلغاء</button>
+</div>
+</div></div>
+
+<div id="assessmentModal" class="modal"><div class="modal-content">
+<h2 id="assessModalTitle">تقييم المعيار</h2>
+<div class="form-group">
+<label>الدرجة (من وزن هذا المعيار):</label>
+<input type="number" id="assessScore" min="0" step="0.5" value="0">
+<small style="font-size:0.75rem;color:#555" id="assessScoreHint"></small>
+</div>
+<div class="form-group"><label>ملاحظة (اختياري):</label><textarea id="assessNote" placeholder="اكتب ملاحظتك هنا"></textarea></div>
+<div class="form-group">
+<label>صور (اختياري - تُصغَّر تلقائيًا):</label>
+<input type="file" id="assessImages" accept="image/*" multiple>
+<div id="imagePreviewContainer" class="image-preview"></div>
+</div>
+<div style="display:flex;gap:8px;margin-top:10px;">
+<button class="btn-primary" id="saveAssessmentBtn" style="flex:1;">حفظ التقييم</button>
+<button class="btn-danger" id="cancelAssessmentBtn" style="flex:1;">إلغاء</button>
+</div>
+</div></div>
+
+<div id="assessmentViewModal" class="modal"><div class="modal-content">
+<h2 id="viewAssessmentsTitle">تقييمات المعيار</h2>
+<p id="viewAssessmentsInfo" style="margin-bottom:15px;color:#3498db;font-weight:bold;"></p>
+<div id="viewAssessmentsList"></div>
+<div style="display:flex;gap:8px;margin-top:15px;">
+<button class="btn-primary" id="cancelViewAssessmentsBtn" style="flex:1;">إغلاق</button>
+</div>
+</div></div>
+
+<div id="editReportModal" class="modal"><div class="modal-content">
+<h2>تعديل التقرير النهائي للشهر</h2>
+<div id="editReportContent"></div>
+<div class="total-score" id="editTotalScore"></div>
+<div style="display:flex;gap:8px;margin-top:10px;">
+<button class="btn-primary" id="saveEditedReportBtn" style="flex:1;">حفظ التقرير النهائي</button>
+<button class="btn-danger" id="cancelEditReportBtn" style="flex:1;">إلغاء</button>
+</div>
+</div></div>
+
+<div id="forgotPasswordModal" class="modal"><div class="modal-content" style="max-width:400px;">
+<h3>إعادة تعيين كلمة المرور</h3>
+<p>أدخل بريدك الإلكتروني وسنرسل لك رابطًا لتغيير كلمة المرور.</p>
+<div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="resetEmail" placeholder="example@email.com"></div>
+<div id="resetSuccessMsg" class="password-reset-success">✅ تم إرسال رابط إعادة التعيين! تحقق من بريدك الإلكتروني (وصندوق البريد العشوائي).</div>
+<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:15px;">
+<button id="cancelResetBtn" class="btn-warning">إلغاء</button>
+<button id="sendResetBtn" class="btn-primary">إرسال الرابط</button>
+</div>
+</div></div>
+
+<div id="absenceReportModal" class="modal"><div class="modal-content" style="max-width:800px;">
+<h2 id="absenceReportModalTitle">تقرير الغيابات</h2>
+<div id="absenceReportModalContent"></div>
+<div class="report-actions no-print">
+<button class="btn-primary" onclick="exportAbsenceReport('pdf')">🖨️ PDF</button>
+<button class="btn-success" onclick="exportAbsenceReport('excel')">📊 Excel</button>
+<button class="btn-info" onclick="exportAbsenceReport('image')">🖼️ صورة</button>
+<button class="btn-warning" onclick="exportAbsenceReport('whatsapp')">📱 واتساب</button>
+<button class="btn-danger" id="closeAbsenceReportModal">إغلاق</button>
+</div>
+</div></div>
+
+<div id="allAbsencesReportModal" class="modal"><div class="modal-content" style="max-width:900px;">
+<h2>📑 التقرير الشامل - جميع الموظفين</h2>
+<div id="allAbsencesReportContent"></div>
+<div class="report-actions no-print">
+<button class="btn-primary" onclick="exportAllAbsencesReport('pdf')">🖨️ PDF</button>
+<button class="btn-success" onclick="exportAllAbsencesReport('excel')">📊 Excel</button>
+<button class="btn-info" onclick="exportAllAbsencesReport('image')">🖼️ صورة</button>
+<button class="btn-danger" id="closeAllAbsencesReportModal">إلغاء</button>
+</div>
+</div></div>
+
+<div id="notification" class="notification"></div>
+
+<script>
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBYPXJRC9GfWwPf5bw6LrIFAeMN9g_wqqQ",
+  authDomain: "evaluation-employer.firebaseapp.com",
+  projectId: "evaluation-employer",
+  storageBucket: "evaluation-employer.firebasestorage.app",
+  messagingSenderId: "126360689450",
+  appId: "1:126360689450:web:a9a71bc10214d5846b9c53"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+try{
+  db.enablePersistence({synchronizeTabs:true}).catch(err=>{
+    if(err.code==='failed-precondition') console.warn('Persistence failed: multiple tabs');
+    else if(err.code==='unimplemented') console.warn('Persistence not supported');
+  });
+} catch(e) { console.warn('Persistence init error', e); }
+
+const monthNames = ['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const absenceTypeNames = {annual:'إجازة سنوية', sick:'إجازة مرضية', unpaid:'بدون راتب', other:'أخرى'};
+
+let currentUser = null;
+let employees = [];
+let partialAssessments = [];
+let finalReports = [];
+let absences = [];
+let leaveBalances = [];
+let currentEditingEmployeeId = null;
+let currentAssessmentCriterionId = null;
+let currentAssessmentMax = 0;
+let currentMainCriterionId = null;
+let tempImages = [];
+let currentReportForEdit = null;
+let currentViewingEmployeeId = null;
+let currentViewingCriterionId = null;
+let currentViewingMaxPoints = 0;
+let selectedImportEmployeeId = null;
+let uiEventsAttached = false;
+let currentAbsenceReportData = null;
+
+const Storage = {
+  get(key){ try{ return JSON.parse(localStorage.getItem(key)||'null'); }catch(e){return null;} },
+  set(key,val){ try{ localStorage.setItem(key,JSON.stringify(val)); }catch(e){ console.warn('Storage set failed',e); } }
+};
+
+function showNotification(msg,isError){
+  const n=document.getElementById('notification');
+  if(!n) return;
+  n.textContent=msg;
+  n.classList.toggle('error',!!isError);
+  n.style.display='block';
+  setTimeout(()=>{ n.style.display='none'; },3500);
+}
+
+function toggleAuthTab(tab){
+  document.querySelectorAll('.login-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+  const btn=document.querySelector(`.login-tab[data-auth="${tab}"]`);
+  if(btn) btn.classList.add('active');
+  const form=document.getElementById(tab==='login'?'loginForm':'signupForm');
+  if(form) form.classList.add('active');
+}
+
+function hideLoginScreen(){
+  const screen=document.getElementById('loginScreen');
+  if(screen) screen.classList.add('hidden');
+  const logout=document.getElementById('logoutContainer');
+  if(logout) logout.classList.remove('hidden');
+}
+
+function showLoginScreen(){
+  const screen=document.getElementById('loginScreen');
+  if(screen) screen.classList.remove('hidden');
+  const logout=document.getElementById('logoutContainer');
+  if(logout) logout.classList.add('hidden');
+}
+
+function initTabs(){
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const tab=btn.getAttribute('data-tab');
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+      btn.classList.add('active');
+      const content=document.getElementById(tab);
+      if(content) content.classList.add('active');
+      if(tab==='absences') renderAbsenceTab();
+    });
+  });
+}
+
+function initDates(){
+  const curYear=(new Date()).getFullYear();
+  const monthSelects=[document.getElementById('evalMonthSelect'),document.getElementById('reportMonthSelect')];
+  const yearSelects=[document.getElementById('evalYearSelect'),document.getElementById('reportYearSelect')];
+  monthSelects.forEach(sel=>{
+    if(!sel) return;
+    sel.innerHTML='';
+    monthNames.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i+1; o.textContent=m; sel.appendChild(o); });
+    sel.value=(new Date().getMonth()+1);
+  });
+  yearSelects.forEach(sel=>{
+    if(!sel) return;
+    sel.innerHTML='';
+    for(let y=curYear-1; y<=curYear+1; y++){ const o=document.createElement('option'); o.value=y; o.textContent=y; sel.appendChild(o); }
+    sel.value=curYear;
+  });
+  const absYear=document.getElementById('absenceYearSelect');
+  if(absYear){
+    absYear.innerHTML='';
+    for(let y=curYear-2; y<=curYear+2; y++){ const o=document.createElement('option'); o.value=y; o.textContent=y; absYear.appendChild(o); }
+    absYear.value=curYear;
+  }
+}
+
+async function loadAllDataFromCloud(){
+  if(!currentUser) return;
+  try{
+    const docRef=db.collection('users').doc(currentUser.uid);
+    const snap=await docRef.get();
+    if(snap.exists){
+      const data=snap.data();
+      employees=data.employees||[];
+      partialAssessments=data.partialAssessments||[];
+      finalReports=data.finalReports||[];
+      absences=data.absences||[];
+      leaveBalances=data.leaveBalances||[];
+    } else {
+      employees=[]; partialAssessments=[]; finalReports=[]; absences=[]; leaveBalances=[];
+    }
+    saveLocalOnly();
+    renderEmployeeList();
+    fillEmployeeSelects();
+    renderAbsenceTab();
+  }catch(e){
+    console.error(e);
+    showNotification('تعذّر تحميل البيانات من السحابة، تم استخدام النسخة المحلية.',true);
+    loadAllData();
+  }
+}
+
+function loadAllData(){
+  employees=Storage.get('app_employees')||[];
+  partialAssessments=Storage.get('app_partial_assessments')||[];
+  finalReports=Storage.get('app_final_reports')||[];
+  absences=Storage.get('app_absences')||[];
+  leaveBalances=Storage.get('app_leaveBalances')||[];
+  renderEmployeeList();
+  fillEmployeeSelects();
+  renderAbsenceTab();
+}
+
+function saveLocalOnly(){
+  Storage.set('app_employees',employees);
+  Storage.set('app_partial_assessments',partialAssessments);
+  Storage.set('app_final_reports',finalReports);
+  Storage.set('app_absences',absences);
+  Storage.set('app_leaveBalances',leaveBalances);
+}
+
+async function saveAllToCloud(){
+  if(!currentUser) return;
+  try{
+    const docRef=db.collection('users').doc(currentUser.uid);
+    await docRef.set({employees,partialAssessments,finalReports,absences,leaveBalances,lastUpdated:new Date().toISOString()},{merge:true});
+  }catch(e){
+    console.error(e);
+    showNotification('تعذّر مزامنة البيانات مع السحابة، ستُحفظ محليًا فقط.',true);
+  }
+}
+
+function saveAll(){
+  saveLocalOnly();
+  saveAllToCloud();
+}
+
+function checkLoginStatusOnLoad(){
+  let raw=null;
+  try{ raw=localStorage.getItem('app_logged_user'); }catch(e){ raw=null; }
+  if(raw){
+    try{
+      const u=JSON.parse(raw);
+      currentUser=u;
+      const ui=document.getElementById('userInfoDisplay');
+      if(ui){
+        ui.classList.remove('hidden');
+        if(u.type==='firebase'&&u.email){ ui.innerHTML=`<strong>مرحبًا:</strong> ${u.email}`; }
+        else { ui.innerHTML=`<strong>وضع الضيف:</strong> البيانات محلية`; }
+      }
+      hideLoginScreen();
+      loadAllData();
+    }catch(e){ try{ localStorage.removeItem('app_logged_user'); }catch(_){} }
+  }
+}
+
+function toggleModal(id,show){
+  const el=document.getElementById(id);
+  if(!el) return;
+  if(show){ el.classList.add('show'); }
+  else { el.classList.remove('show'); }
+  if(!show&&id==='assessmentModal') tempImages=[];
+}
+
+function switchToTab(tabName){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  const btn=document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+  const content=document.getElementById(tabName);
+  if(btn) btn.classList.add('active');
+  if(content) content.classList.add('active');
+  if(tabName==='absences') renderAbsenceTab();
+}
+
+function handleUrlParams(){
+  const params=new URLSearchParams(window.location.search);
+  const tab=params.get('tab');
+  if(tab&&['employees','evaluate','absences','reports'].includes(tab)){
+    switchToTab(tab);
+  }
+}
+
+/* ========== DOMContentLoaded ========== */
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.modal').forEach(m => m.classList.remove('show'));
+  checkLoginStatusOnLoad();
+  handleUrlParams();
+
+  document.querySelectorAll('.login-tab').forEach(btn => {
+    btn.addEventListener('click', () => toggleAuthTab(btn.getAttribute('data-auth')));
+  });
+
+  const authLoading = document.getElementById('authLoading');
+
+  const btnLogin = document.getElementById('btnLogin');
+  if(btnLogin){
+    btnLogin.addEventListener('click', async () => {
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass = document.getElementById('loginPassword').value.trim();
+      if(!email || !pass){ showNotification('أدخل البريد وكلمة المرور', true); return; }
+      try{
+        if(authLoading) authLoading.classList.remove('hidden');
+        const result = await auth.signInWithEmailAndPassword(email, pass);
+        currentUser = { type: 'firebase', uid: result.user.uid, email: result.user.email };
+        try{ localStorage.setItem('app_logged_user', JSON.stringify(currentUser)); }catch(e){}
+        showNotification('تم تسجيل الدخول بنجاح!');
+      }catch(e){ 
+        console.error(e); 
+        showNotification('خطأ في تسجيل الدخول: ' + (e.message || ''), true); 
+      }
+      finally{ if(authLoading) authLoading.classList.add('hidden'); }
+    });
+  }
+
+  const btnSignup = document.getElementById('btnSignup');
+  if(btnSignup){
+    btnSignup.addEventListener('click', async () => {
+      const email = document.getElementById('signupEmail').value.trim();
+      const pass = document.getElementById('signupPassword').value.trim();
+      if(!email || !pass){ showNotification('أدخل البريد وكلمة المرور', true); return; }
+      if(pass.length < 6){ showNotification('كلمة المرور يجب أن تكون 6 أحرف على الأقل', true); return; }
+      try{
+        if(authLoading) authLoading.classList.remove('hidden');
+        const result = await auth.createUserWithEmailAndPassword(email, pass);
+        showNotification('تم إنشاء الحساب وتسجيل الدخول');
+        currentUser = { type: 'firebase', uid: result.user.uid, email: result.user.email };
+        try{ localStorage.setItem('app_logged_user', JSON.stringify(currentUser)); }catch(e){}
+      }catch(e){ 
+        console.error(e); 
+        showNotification('خطأ في إنشاء الحساب: ' + (e.message || ''), true); 
+      }
+      finally{ if(authLoading) authLoading.classList.add('hidden'); }
+    });
+  }
+
+  const logoutBtn = document.getElementById('logoutBtn');
+  if(logoutBtn){
+    logoutBtn.addEventListener('click', async () => {
+      try{ 
+        await auth.signOut(); 
+        currentUser = null;
+        employees = []; partialAssessments = []; finalReports = []; absences = []; leaveBalances = [];
+        try{ localStorage.removeItem('app_logged_user'); }catch(e){}
+        uiEventsAttached = false;
+        showLoginScreen();
+        showNotification('تم تسجيل الخروج');
+      }
+      catch(e){ console.error(e); showNotification('حدث خطأ أثناء تسجيل الخروج', true); }
+    });
+  }
+
+  const forgotLink = document.getElementById('forgotPasswordLink');
+  const forgotModal = document.getElementById('forgotPasswordModal');
+  const cancelResetBtn = document.getElementById('cancelResetBtn');
+  const sendResetBtn = document.getElementById('sendResetBtn');
+  const resetSuccessMsg = document.getElementById('resetSuccessMsg');
+
+  if(forgotLink && forgotModal){
+    forgotLink.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      if(resetSuccessMsg) resetSuccessMsg.classList.remove('show');
+      document.getElementById('resetEmail').value = '';
+      const loginEmailInput = document.getElementById('loginEmail');
+      const resetEmailInput = document.getElementById('resetEmail');
+      if(loginEmailInput && resetEmailInput && loginEmailInput.value.trim()){ 
+        resetEmailInput.value = loginEmailInput.value.trim(); 
+      }
+      forgotModal.classList.add('show');
+    });
+  }
+
+  if(cancelResetBtn && forgotModal){
+    cancelResetBtn.addEventListener('click', function(e){
+      e.preventDefault();
+      forgotModal.classList.remove('show');
+    });
+  }
+
+  if(sendResetBtn){
+    sendResetBtn.addEventListener('click', async function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      const email = document.getElementById('resetEmail').value.trim();
+      if(!email){ showNotification('الرجاء إدخال البريد الإلكتروني.', true); return; }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if(!emailRegex.test(email)){ showNotification('صيغة البريد الإلكتروني غير صحيحة.', true); return; }
+      showNotification('⌛ جاري إرسال رابط إعادة التعيين...');
+      try{
+        await auth.sendPasswordResetEmail(email);
+        document.getElementById('resetEmail').value = '';
+        if(resetSuccessMsg) resetSuccessMsg.classList.add('show');
+        showNotification('✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك.');
+      }catch(error){
+        console.error('Reset error:', error.code, error.message);
+        if(error.code === 'auth/user-not-found'){ showNotification('لا يوجد حساب مرتبط بهذا البريد.', true); }
+        else if(error.code === 'auth/invalid-email'){ showNotification('البريد الإلكتروني غير صالح.', true); }
+        else if(error.code === 'auth/too-many-requests'){ showNotification('عدد محاولات كثير. يرجى المحاولة لاحقًا.', true); }
+        else { showNotification('حدث خطأ: ' + (error.message || ''), true); }
+      }
+    });
+  }
+
+  if(forgotModal){
+    forgotModal.addEventListener('click', function(e){
+      if(e.target === forgotModal){ forgotModal.classList.remove('show'); }
+    });
+  }
+
+  auth.onAuthStateChanged(async (user) => {
+    if(user){
+      currentUser = { type: 'firebase', uid: user.uid, email: user.email };
+      const ui = document.getElementById('userInfoDisplay');
+      if(ui){ ui.classList.remove('hidden'); ui.innerHTML = `<strong>مسجّل الدخول:</strong> ${user.email}`; }
+      hideLoginScreen();
+      initTabs();
+      initDates();
+      await loadAllDataFromCloud();
+      if(!uiEventsAttached){
+        attachUIEvents();
+        uiEventsAttached = true;
+      }
+    } else {
+      currentUser = null;
+      employees = []; partialAssessments = []; finalReports = []; absences = []; leaveBalances = [];
+      if(!document.getElementById('loginScreen').classList.contains('hidden')){
+      } else {
+        showLoginScreen();
+      }
+    }
+  });
+
+  document.querySelectorAll('.toggle-password').forEach(btn => {
+    btn.addEventListener('click', function(){
+      const targetId = this.getAttribute('data-target');
+      const input = document.getElementById(targetId);
+      if(!input) return;
+      if(input.type === 'password'){ input.type = 'text'; this.textContent = '🔒'; }
+      else { input.type = 'password'; this.textContent = '👁️'; }
+    });
+  });
+});
+
+function attachUIEvents(){
+  if(uiEventsAttached) return;
+  uiEventsAttached = true;
+
+  const addEmpBtn = document.getElementById('addEmpBtn');
+  if(addEmpBtn) addEmpBtn.addEventListener('click', addEmployee);
+
+  const addCriterionBtn = document.getElementById('addCriterionBtn');
+  if(addCriterionBtn) addCriterionBtn.addEventListener('click', addModalCriterion);
+
+  const saveEmpModalBtn = document.getElementById('saveEmpModalBtn');
+  if(saveEmpModalBtn) saveEmpModalBtn.addEventListener('click', saveEmployeeModal);
+
+  const cancelEmpModalBtn = document.getElementById('cancelEmpModalBtn');
+  if(cancelEmpModalBtn) cancelEmpModalBtn.addEventListener('click', () => toggleModal('employeeModal', false));
+
+  const importCriteriaBtn = document.getElementById('importCriteriaBtn');
+  if(importCriteriaBtn) importCriteriaBtn.addEventListener('click', openImportCriteriaModal);
+
+  const addSubCriterionBtn = document.getElementById('addSubCriterionBtn');
+  if(addSubCriterionBtn) addSubCriterionBtn.addEventListener('click', addModalSubCriterion);
+
+  const saveSubCriteriaBtn = document.getElementById('saveSubCriteriaBtn');
+  if(saveSubCriteriaBtn) saveSubCriteriaBtn.addEventListener('click', saveSubCriteriaChanges);
+
+  const cancelSubCriteriaBtn = document.getElementById('cancelSubCriteriaBtn');
+  if(cancelSubCriteriaBtn) cancelSubCriteriaBtn.addEventListener('click', () => toggleModal('subCriteriaModal', false));
+
+  const confirmImportBtn = document.getElementById('confirmImportBtn');
+  if(confirmImportBtn) confirmImportBtn.addEventListener('click', confirmImportCriteria);
+
+  const cancelImportBtn = document.getElementById('cancelImportBtn');
+  if(cancelImportBtn) cancelImportBtn.addEventListener('click', () => toggleModal('importCriteriaModal', false));
+
+  const assessImages = document.getElementById('assessImages');
+  if(assessImages) assessImages.addEventListener('change', e => previewImages(e.target));
+
+  const saveAssessmentBtn = document.getElementById('saveAssessmentBtn');
+  if(saveAssessmentBtn) saveAssessmentBtn.addEventListener('click', saveAssessment);
+
+  const cancelAssessmentBtn = document.getElementById('cancelAssessmentBtn');
+  if(cancelAssessmentBtn) cancelAssessmentBtn.addEventListener('click', () => toggleModal('assessmentModal', false));
+
+  const cancelViewAssessmentsBtn = document.getElementById('cancelViewAssessmentsBtn');
+  if(cancelViewAssessmentsBtn) cancelViewAssessmentsBtn.addEventListener('click', () => toggleModal('assessmentViewModal', false));
+
+  const evalEmpSelect = document.getElementById('evalEmpSelect');
+  const evalMonthSelect = document.getElementById('evalMonthSelect');
+  const evalYearSelect = document.getElementById('evalYearSelect');
+  if(evalEmpSelect) evalEmpSelect.addEventListener('change', onEvalEmployeeChange);
+  if(evalMonthSelect) evalMonthSelect.addEventListener('change', onEvalEmployeeChange);
+  if(evalYearSelect) evalYearSelect.addEventListener('change', onEvalEmployeeChange);
+
+  const showReportBtn = document.getElementById('showReportBtn');
+  if(showReportBtn) showReportBtn.addEventListener('click', generateReportPreview);
+
+  const editReportBtn = document.getElementById('editReportBtn');
+  if(editReportBtn) editReportBtn.addEventListener('click', editFinalReport);
+
+  const exportPdfBtn = document.getElementById('exportPdfBtn');
+  if(exportPdfBtn) exportPdfBtn.addEventListener('click', exportToPDF);
+
+  const shareWaBtn = document.getElementById('shareWaBtn');
+  if(shareWaBtn) shareWaBtn.addEventListener('click', shareToWhatsApp);
+
+  const saveEditedReportBtn = document.getElementById('saveEditedReportBtn');
+  if(saveEditedReportBtn) saveEditedReportBtn.addEventListener('click', saveEditedReport);
+
+  const cancelEditReportBtn = document.getElementById('cancelEditReportBtn');
+  if(cancelEditReportBtn) cancelEditReportBtn.addEventListener('click', () => toggleModal('editReportModal', false));
+
+  const exportDataBtn = document.getElementById('exportDataBtn');
+  const importDataBtn = document.getElementById('importDataBtn');
+  const importFileInput = document.getElementById('importFileInput');
+  const clearAllDataBtn = document.getElementById('clearAllDataBtn');
+
+  if(exportDataBtn) exportDataBtn.addEventListener('click', exportDataToFile);
+  if(importDataBtn && importFileInput){
+    importDataBtn.addEventListener('click', () => importFileInput.click());
+    importFileInput.addEventListener('change', handleImportDataFile);
+  }
+  if(clearAllDataBtn) clearAllDataBtn.addEventListener('click', clearAllDataConfirm);
+
+  const changePasswordBtn = document.getElementById('changePasswordBtn');
+  if(changePasswordBtn){
+    changePasswordBtn.addEventListener('click', async function(){
+      const currentPassword = document.getElementById('currentPassword').value.trim();
+      const newPassword = document.getElementById('newPassword').value.trim();
+      const confirmPassword = document.getElementById('confirmPassword').value.trim();
+      if(!currentPassword || !newPassword || !confirmPassword){ showNotification('الرجاء ملء جميع الحقول.', true); return; }
+      if(newPassword !== confirmPassword){ showNotification('كلمتا المرور الجديدتان غير متطابقتين.', true); return; }
+      if(newPassword.length < 6){ showNotification('كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل.', true); return; }
+      try{
+        const user = firebase.auth().currentUser;
+        if(!user){ showNotification('يجب تسجيل الدخول أولاً.', true); return; }
+        const credential = firebase.auth().EmailAuthProvider.credential(user.email, currentPassword);
+        await user.reauthenticateWithCredential(credential);
+        await user.updatePassword(newPassword);
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        showNotification('تم تغيير كلمة المرور بنجاح.');
+      }catch(error){
+        console.error('Error changing password:', error);
+        if(error.code === 'auth/wrong-password'){ showNotification('كلمة المرور الحالية غير صحيحة.', true); }
+        else if(error.code === 'auth/requires-recent-login'){ showNotification('للأمان، يرجى تسجيل الدخول من جديد ثم إعادة المحاولة.', true); }
+        else { showNotification('حدث خطأ: ' + (error.message || ''), true); }
+      }
+    });
+  }
+
+  const absenceEmpSelect = document.getElementById('absenceEmpSelect');
+  const absenceYearSelect = document.getElementById('absenceYearSelect');
+  const saveLeaveBalanceBtn = document.getElementById('saveLeaveBalanceBtn');
+  const addAbsenceBtn = document.getElementById('addAbsenceBtn');
+  const showAbsenceReportBtn = document.getElementById('showAbsenceReportBtn');
+  const showAllAbsencesReportBtn = document.getElementById('showAllAbsencesReportBtn');
+  const closeAbsenceReportModal = document.getElementById('closeAbsenceReportModal');
+  const closeAllAbsencesReportModal = document.getElementById('closeAllAbsencesReportModal');
+
+  if(absenceEmpSelect) absenceEmpSelect.addEventListener('change', onAbsenceEmployeeChange);
+  if(absenceYearSelect) absenceYearSelect.addEventListener('change', onAbsenceEmployeeChange);
+  if(saveLeaveBalanceBtn) saveLeaveBalanceBtn.addEventListener('click', saveLeaveBalance);
+  if(addAbsenceBtn) addAbsenceBtn.addEventListener('click', addAbsence);
+  if(showAbsenceReportBtn) showAbsenceReportBtn.addEventListener('click', showAbsenceReport);
+  if(showAllAbsencesReportBtn) showAllAbsencesReportBtn.addEventListener('click', showAllAbsencesReport);
+  if(closeAbsenceReportModal) closeAbsenceReportModal.addEventListener('click', () => toggleModal('absenceReportModal', false));
+  if(closeAllAbsencesReportModal) closeAllAbsencesReportModal.addEventListener('click', () => toggleModal('allAbsencesReportModal', false));
+
+  const absenceStartDate = document.getElementById('absenceStartDate');
+  const absenceEndDate = document.getElementById('absenceEndDate');
+  if(absenceStartDate) absenceStartDate.addEventListener('change', calculateAbsenceDays);
+  if(absenceEndDate) absenceEndDate.addEventListener('change', calculateAbsenceDays);
+
+  ['employeeModal','importCriteriaModal','subCriteriaModal','assessmentModal',
+   'assessmentViewModal','editReportModal','absenceReportModal','allAbsencesReportModal'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('click', e=>{ if(e.target===el) toggleModal(id,false); });
+  });
+}
+
+/* ================= إدارة الموظفين ================= */
+function addEmployee(){
+  const name = document.getElementById('empName').value.trim();
+  const phone = document.getElementById('empPhone').value.trim();
+  if(!name || !phone){ showNotification('أدخل الاسم ورقم الهاتف', true); return; }
+  const baseId = Date.now();
+  const emp = {
+    id: baseId, name, phone,
+    criteria: [
+      {id: baseId+1, title: 'الالتزام بالمواعيد', weight: 25, subCriteria: []},
+      {id: baseId+2, title: 'جودة العمل', weight: 35, subCriteria: []},
+      {id: baseId+3, title: 'التعاون مع الزملاء', weight: 20, subCriteria: []},
+      {id: baseId+4, title: 'الانضباط', weight: 20, subCriteria: []}
+    ]
+  };
+  employees.push(emp);
+  saveAll();
+  document.getElementById('empName').value = '';
+  document.getElementById('empPhone').value = '';
+  renderEmployeeList();
+  fillEmployeeSelects();
+  showNotification('تمت إضافة الموظف');
+}
+
+function renderEmployeeList(){
+  const c = document.getElementById('employeeList');
+  if(!c) return;
+  if(!employees.length){ c.innerHTML = '<p>لا يوجد موظفين بعد</p>'; return; }
+  c.innerHTML = employees.map(e => {
+    const count = e.criteria ? e.criteria.length : 0;
+    const total = (e.criteria || []).reduce((s, c) => s + Number(c.weight || 0), 0);
+    return `<div class="list-item">
+      <div><strong>${escapeHtml(e.name)}</strong></div>
+      <div>هاتف: ${escapeHtml(e.phone)}</div>
+      <div>عدد المعايير: ${count} | مجموع الأوزان: ${total}</div>
+      <div style="margin-top:5px;">
+        <button class="btn-primary btn-small" onclick="openEmployeeModal(${e.id})">تعديل الموظف/المعايير</button>
+        <button class="btn-info btn-small" onclick="duplicateEmployee(${e.id})">📋 نسخ</button>
+        <button class="btn-danger btn-small" onclick="deleteEmployee(${e.id})">حذف</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(text){
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function duplicateEmployee(id){
+  const emp = employees.find(e => e.id === id);
+  if(!emp) return;
+  if(!confirm(`هل تريد نسخ الموظف "${emp.name}" بكل معاييره؟ (لن تُنسخ التقييمات)`)) return;
+  const baseId = Date.now();
+  const newEmp = { id: baseId, name: emp.name + ' (نسخة)', phone: emp.phone, criteria: [] };
+  emp.criteria.forEach(c => {
+    const newCritId = baseId + Math.floor(Math.random() * 100000);
+    const newCriterion = { id: newCritId, title: c.title, weight: c.weight, subCriteria: [] };
+    if(c.subCriteria && c.subCriteria.length){
+      c.subCriteria.forEach(sc => { newCriterion.subCriteria.push({ id: baseId + Math.floor(Math.random() * 100000), title: sc.title, points: sc.points }); });
+    }
+    newEmp.criteria.push(newCriterion);
+  });
+  employees.push(newEmp);
+  saveAll();
+  renderEmployeeList();
+  fillEmployeeSelects();
+  showNotification('تم نسخ الموظف بنجاح - يمكنك الآن تعديل الاسم والمعايير');
+}
+
+function deleteEmployee(id){
+  if(!confirm('هل تريد حذف هذا الموظف وكل تقييماته وغياباته؟')) return;
+  employees = employees.filter(e => e.id !== id);
+  partialAssessments = partialAssessments.filter(a => a.employeeId !== id);
+  finalReports = finalReports.filter(r => r.employeeId !== id);
+  absences = absences.filter(a => a.employeeId !== id);
+  leaveBalances = leaveBalances.filter(l => l.employeeId !== id);
+  saveAll();
+  renderEmployeeList();
+  fillEmployeeSelects();
+  showNotification('تم حذف الموظف');
+}
+
+function fillEmployeeSelects(){
+  const evalSel = document.getElementById('evalEmpSelect');
+  const repSel = document.getElementById('reportEmpSelect');
+  const absSel = document.getElementById('absenceEmpSelect');
+  [evalSel, repSel, absSel].forEach(sel => {
+    if(!sel) return;
+    const currentVal = sel.value;
+    sel.innerHTML = '<option value="">-- اختر موظف --</option>';
+    employees.forEach(e => { const o = document.createElement('option'); o.value = e.id; o.textContent = e.name; sel.appendChild(o); });
+    if(currentVal) sel.value = currentVal;
+  });
+}
+
+function openEmployeeModal(id){
+  const emp = employees.find(e => e.id === id);
+  if(!emp) return;
+  currentEditingEmployeeId = id;
+  document.getElementById('modalEmpName').value = emp.name;
+  document.getElementById('modalEmpPhone').value = emp.phone;
+  renderModalCriteria(emp.criteria || []);
+  toggleModal('employeeModal', true);
+}
+
+/* ================= المعايير ================= */
+function renderModalCriteria(criteria){
+  const ctn = document.getElementById('modalCriteriaList');
+  if(!ctn) return;
+  if(!criteria || !criteria.length){ ctn.innerHTML = '<p>لا توجد معايير. يمكنك استيرادها من موظف آخر أو إضافة معايير جديدة.</p>'; return; }
+  const total = criteria.reduce((s, c) => s + Number(c.weight || 0), 0);
+  let html = `<p>مجموع الأوزان الحالي: <strong>${total}</strong> (يُفضَّل أن يكون 100)</p>`;
+  html += criteria.map((c, i) => `<div class="criteria-list-item">
+    <div class="criteria-item-info">
+      <label>اسم المعيار:</label>
+      <input type="text" data-crit-index="${i}" class="crit-title-input" value="${escapeHtml(c.title)}">
+      <label style="margin-top:5px;">الوزن (النقاط):</label>
+      <input type="number" min="0" step="0.5" data-crit-index="${i}" class="crit-weight-input" value="${c.weight}">
+      ${c.subCriteria && c.subCriteria.length ? `<div style="margin-top:4px;font-size:.8rem;color:#666;">معايير فرعية: ${c.subCriteria.length}</div>` : ''}
+    </div>
+    <div class="criteria-item-actions">
+      <button class="btn-primary btn-small" onclick="openSubCriteriaModal(${c.id})">معايير فرعية</button>
+      <button class="btn-danger btn-small" onclick="deleteModalCriterion(${i})">حذف</button>
+    </div>
+  </div>`).join('');
+  ctn.innerHTML = html;
+}
+
+function addModalCriterion(){
+  const title = document.getElementById('newCriterionTitle').value.trim();
+  const weight = parseFloat(document.getElementById('newCriterionWeight').value);
+  if(!title || !weight || weight <= 0){ showNotification('أدخل اسم ووزن صحيحين', true); return; }
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp) return;
+  const total = (emp.criteria || []).reduce((s, c) => s + Number(c.weight || 0), 0);
+  if(total + weight > 100 && !confirm(`مجموع الأوزان سيصبح ${total + weight} (>100). هل تريد المتابعة؟`)) return;
+  emp.criteria = emp.criteria || [];
+  emp.criteria.push({id: Date.now(), title, weight, subCriteria: []});
+  document.getElementById('newCriterionTitle').value = '';
+  document.getElementById('newCriterionWeight').value = '';
+  renderModalCriteria(emp.criteria);
+}
+
+function deleteModalCriterion(idx){
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp || !emp.criteria) return;
+  emp.criteria.splice(idx, 1);
+  renderModalCriteria(emp.criteria);
+}
+
+function saveEmployeeModal(){
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp) return;
+  const name = document.getElementById('modalEmpName').value.trim();
+  const phone = document.getElementById('modalEmpPhone').value.trim();
+  if(!name || !phone){ showNotification('أدخل الاسم ورقم الهاتف', true); return; }
+  const titleInputs = document.querySelectorAll('.crit-title-input');
+  const weightInputs = document.querySelectorAll('.crit-weight-input');
+  titleInputs.forEach(inp => {
+    const idx = parseInt(inp.getAttribute('data-crit-index'));
+    if(emp.criteria[idx]) emp.criteria[idx].title = inp.value.trim() || emp.criteria[idx].title;
+  });
+  weightInputs.forEach(inp => {
+    const idx = parseInt(inp.getAttribute('data-crit-index'));
+    let w = parseFloat(inp.value); if(isNaN(w) || w < 0) w = 0;
+    if(emp.criteria[idx]) emp.criteria[idx].weight = w;
+  });
+  const total = (emp.criteria || []).reduce((s, c) => s + Number(c.weight || 0), 0);
+  if(total !== 100 && !confirm(`مجموع الأوزان = ${total} وليس 100. هل تريد المتابعة؟`)) return;
+  emp.name = name; emp.phone = phone;
+  saveAll();
+  renderEmployeeList(); fillEmployeeSelects();
+  toggleModal('employeeModal', false);
+  showNotification('تم حفظ بيانات الموظف والمعايير');
+}
+
+function resetToDefaultCriteria(){
+  if(!confirm('هل تريد استبدال معايير هذا الموظف بالمعايير الافتراضية؟')) return;
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp) return;
+  const baseId = Date.now();
+  emp.criteria = [
+    {id: baseId+1, title: 'الالتزام بالمواعيد', weight: 25, subCriteria: []},
+    {id: baseId+2, title: 'جودة العمل', weight: 35, subCriteria: []},
+    {id: baseId+3, title: 'التعاون مع الزملاء', weight: 20, subCriteria: []},
+    {id: baseId+4, title: 'الانضباط', weight: 20, subCriteria: []}
+  ];
+  renderModalCriteria(emp.criteria);
+}
+
+function openImportCriteriaModal(){
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp){ showNotification('افتح موظفاً أولاً', true); return; }
+  const listEl = document.getElementById('importCriteriaList');
+  const others = employees.filter(e => e.id !== currentEditingEmployeeId);
+  selectedImportEmployeeId = null;
+  if(!others.length){ listEl.innerHTML = '<p>لا يوجد موظفون آخرون لاستيراد المعايير منهم.</p>'; }
+  else {
+    listEl.innerHTML = others.map(e => `<div class="import-option" onclick="selectImportEmployee(${e.id}, this)">
+      <strong>${escapeHtml(e.name)}</strong><br>
+      <span style="font-size:0.8rem;color:#555;">عدد المعايير: ${(e.criteria || []).length}</span>
+    </div>`).join('');
+  }
+  toggleModal('importCriteriaModal', true);
+}
+
+function selectImportEmployee(empId, el){
+  selectedImportEmployeeId = empId;
+  document.querySelectorAll('.import-option').forEach(d => d.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function confirmImportCriteria(){
+  if(!selectedImportEmployeeId){ showNotification('اختر موظفاً أولاً لاستيراد معاييره', true); return; }
+  const source = employees.find(e => e.id === selectedImportEmployeeId);
+  const target = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!source || !target) return;
+  if(!confirm(`سيتم استبدال معايير الموظف الحالي بمعايير الموظف "${source.name}". هل أنت متأكد؟`)) return;
+  const baseId = Date.now();
+  target.criteria = [];
+  (source.criteria || []).forEach(c => {
+    const newCritId = baseId + Math.floor(Math.random() * 100000);
+    const newCriterion = { id: newCritId, title: c.title, weight: c.weight, subCriteria: [] };
+    if(c.subCriteria && c.subCriteria.length){
+      c.subCriteria.forEach(sc => { newCriterion.subCriteria.push({ id: baseId + Math.floor(Math.random() * 100000), title: sc.title, points: sc.points }); });
+    }
+    target.criteria.push(newCriterion);
+  });
+  renderModalCriteria(target.criteria);
+  toggleModal('importCriteriaModal', false);
+  showNotification('تم استيراد المعايير بنجاح - يمكنك الآن تعديلها كما تشاء');
+}
+
+/* ================= المعايير الفرعية ================= */
+function openSubCriteriaModal(mainId){
+  currentMainCriterionId = mainId;
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp) return;
+  const main = emp.criteria.find(c => c.id === mainId);
+  if(!main) return;
+  document.getElementById('mainCriterionTitle').textContent = `المعيار الرئيسي: ${main.title} (الوزن: ${main.weight})`;
+  renderSubCriteriaList(main.subCriteria || []);
+  toggleModal('subCriteriaModal', true);
+}
+
+function renderSubCriteriaList(subs){
+  const ctn = document.getElementById('subCriteriaList');
+  if(!ctn) return;
+  if(!subs || !subs.length){ ctn.innerHTML = '<p>لا توجد معايير فرعية بعد.</p>'; return; }
+  let total = subs.reduce((s, sc) => s + Number(sc.points || 0), 0);
+  let html = `<p>مجموع النقاط القصوى للفرعيات: <strong>${total}</strong></p>`;
+  html += subs.map((sc, i) => `<div class="sub-criteria-item">
+    <div style="flex:1;"><input type="text" data-sub-index="${i}" class="sub-title-input" value="${escapeHtml(sc.title)}"></div>
+    <div><input type="number" min="0" step="0.5" data-sub-index="${i}" class="sub-points-input" value="${sc.points}"></div>
+    <button class="btn-danger btn-small" onclick="deleteSubCriterion(${i})">حذف</button>
+  </div>`).join('');
+  ctn.innerHTML = html;
+}
+
+function addModalSubCriterion(){
+  const title = document.getElementById('newSubCriterionTitle').value.trim();
+  const points = parseFloat(document.getElementById('newSubCriterionPoints').value);
+  if(!title || !points || points <= 0){ showNotification('أدخل اسم ونقاط صحيحة', true); return; }
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp) return;
+  const main = emp.criteria.find(c => c.id === currentMainCriterionId);
+  if(!main) return;
+  main.subCriteria = main.subCriteria || [];
+  main.subCriteria.push({id: Date.now(), title, points});
+  document.getElementById('newSubCriterionTitle').value = '';
+  document.getElementById('newSubCriterionPoints').value = '';
+  renderSubCriteriaList(main.subCriteria);
+}
+
+function deleteSubCriterion(idx){
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp) return;
+  const main = emp.criteria.find(c => c.id === currentMainCriterionId);
+  if(!main || !main.subCriteria) return;
+  main.subCriteria.splice(idx, 1);
+  renderSubCriteriaList(main.subCriteria);
+}
+
+function saveSubCriteriaChanges(){
+  const emp = employees.find(e => e.id === currentEditingEmployeeId);
+  if(!emp) return;
+  const main = emp.criteria.find(c => c.id === currentMainCriterionId);
+  if(!main) return;
+  const titleInputs = document.querySelectorAll('.sub-title-input');
+  const pointsInputs = document.querySelectorAll('.sub-points-input');
+  titleInputs.forEach(inp => {
+    const idx = parseInt(inp.getAttribute('data-sub-index'));
+    if(main.subCriteria[idx]) main.subCriteria[idx].title = inp.value.trim() || main.subCriteria[idx].title;
+  });
+  pointsInputs.forEach(inp => {
+    const idx = parseInt(inp.getAttribute('data-sub-index'));
+    let p = parseFloat(inp.value); if(isNaN(p) || p < 0) p = 0;
+    if(main.subCriteria[idx]) main.subCriteria[idx].points = p;
+  });
+  saveAll();
+  showNotification('تم حفظ المعايير الفرعية');
+}
+
+/* ================= التقييم اليومي ================= */
+function onEvalEmployeeChange(){
+  const empId = parseInt(document.getElementById('evalEmpSelect').value);
+  const emp = employees.find(e => e.id === empId);
+  const ctn = document.getElementById('criteriaScoresContainer');
+  if(!emp){ ctn.innerHTML = '<p>اختر موظفًا أولاً.</p>'; return; }
+  const total = (emp.criteria || []).reduce((s, c) => s + Number(c.weight || 0), 0);
+  if(total !== 100) alert(`تنبيه: مجموع أوزان معايير هذا الموظف = ${total} (يُفضَّل أن يكون 100).`);
+  const month = parseInt(document.getElementById('evalMonthSelect').value);
+  const year = parseInt(document.getElementById('evalYearSelect').value);
+  if(!emp.criteria || !emp.criteria.length){ ctn.innerHTML = '<p>لا توجد معايير لهذا الموظف.</p>'; return; }
+  let html = '';
+  emp.criteria.forEach(main => {
+    html += `<div class="score-item">
+      <div class="score-header"><span><strong>${escapeHtml(main.title)}</strong> (وزن رئيسي: ${main.weight})</span></div>`;
+    if(main.subCriteria && main.subCriteria.length){
+      main.subCriteria.forEach(sub => {
+        const critAss = partialAssessments.filter(a => a.employeeId === empId && a.criterionId === sub.id && a.month === month && a.year === year);
+        let info = 'لم يتم تقييم هذا المعيار الفرعي بعد';
+        if(critAss.length){
+          const last = critAss[critAss.length - 1];
+          const d = new Date(last.timestamp);
+          info = `آخر تقييم: ${d.getDate()} ${monthNames[d.getMonth()]} - درجة: ${last.score} من ${sub.points} - (${critAss.length} تقييم/ات هذا الشهر)`;
+        }
+        html += `<div style="margin:6px 0 0 0;padding:6px 8px;border-radius:8px;background:#fdfdfd;border:1px solid #eee;">
+          <div class="score-header">
+            <span>${escapeHtml(sub.title)} (نقاط قصوى: ${sub.points})</span>
+            <span>
+              <button class="btn-primary btn-small" onclick="openAssessmentModal(${empId},${sub.id},'${escapeHtml(main.title+' - '+sub.title).replace(/'/g,"\'")}',${sub.points})">+ تقييم اليوم</button>
+              <button class="btn-warning btn-small" onclick="openAssessmentViewModal(${empId},${sub.id},'${escapeHtml(main.title+' - '+sub.title).replace(/'/g,"\'")}',${sub.points})">📂 عرض التقييمات</button>
+            </span>
+          </div>
+          <div class="criteria-note">${info}</div>
+        </div>`;
+      });
+    } else {
+      const critAss = partialAssessments.filter(a => a.employeeId === empId && a.criterionId === main.id && a.month === month && a.year === year);
+      let info = 'لم يتم تقييم هذا المعيار بعد';
+      if(critAss.length){
+        const last = critAss[critAss.length - 1];
+        const d = new Date(last.timestamp);
+        info = `آخر تقييم: ${d.getDate()} ${monthNames[d.getMonth()]} - درجة: ${last.score} من ${main.weight} - (${critAss.length} تقييم/ات هذا الشهر)`;
+      }
+      html += `<div style="margin-top:6px;">
+        <div class="score-header">
+          <span>لا توجد معايير فرعية، سيتم استخدام هذا المعيار مباشرة.</span>
+          <span>
+            <button class="btn-primary btn-small" onclick="openAssessmentModal(${empId},${main.id},'${escapeHtml(main.title).replace(/'/g,"\'")}',${main.weight})">+ تقييم اليوم</button>
+            <button class="btn-warning btn-small" onclick="openAssessmentViewModal(${empId},${main.id},'${escapeHtml(main.title).replace(/'/g,"\'")}',${main.weight})">📂 عرض التقييمات</button>
+          </span>
+        </div>
+        <div class="criteria-note">${info}</div>
+      </div>`;
+    }
+    html += `</div>`;
+  });
+  ctn.innerHTML = html;
+}
+
+function openAssessmentModal(empId, critId, title, maxPoints){
+  currentAssessmentCriterionId = critId;
+  currentAssessmentMax = maxPoints;
+  tempImages = [];
+  document.getElementById('assessModalTitle').textContent = 'تقييم: ' + title;
+  const scoreInput = document.getElementById('assessScore');
+  scoreInput.min = '0'; scoreInput.max = String(maxPoints); scoreInput.step = '0.5';
+  scoreInput.value = (maxPoints / 2).toFixed(1);
+  document.getElementById('assessScoreHint').textContent = `يمكنك إدخال درجة من 0 إلى ${maxPoints}.`;
+  document.getElementById('assessNote').value = '';
+  document.getElementById('imagePreviewContainer').innerHTML = '';
+  document.getElementById('assessImages').value = '';
+  toggleModal('assessmentModal', true);
+}
+
+function openAssessmentViewModal(empId, critId, title, maxPoints){
+  currentViewingEmployeeId = empId;
+  currentViewingCriterionId = critId;
+  currentViewingMaxPoints = maxPoints;
+  const month = parseInt(document.getElementById('evalMonthSelect').value);
+  const year = parseInt(document.getElementById('evalYearSelect').value);
+  document.getElementById('viewAssessmentsTitle').textContent = 'تقييمات: ' + title;
+  document.getElementById('viewAssessmentsInfo').textContent = `الشهر: ${monthNames[month-1]} ${year} - نقاط قصوى: ${maxPoints}`;
+  const list = partialAssessments
+    .filter(a => a.employeeId === empId && a.criterionId === critId && a.month === month && a.year === year)
+    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  const ctn = document.getElementById('viewAssessmentsList');
+  if(!list.length){ ctn.innerHTML = '<p>لا توجد تقييمات مسجَّلة لهذا المعيار في هذا الشهر.</p>'; }
+  else {
+    ctn.innerHTML = list.map(a => {
+      const d = new Date(a.timestamp);
+      const dateStr = `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()} - ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+      return `<div class="assessment-item" id="assessment-item-${a.id}">
+        <div style="font-size:0.85rem;color:#555;">التاريخ: ${dateStr}</div>
+        <div class="form-group" style="margin-top:6px;">
+          <label>الدرجة (من ${maxPoints}):</label>
+          <input type="number" step="0.5" min="0" max="${maxPoints}" value="${a.score}" data-assessment-id="${a.id}" class="view-score-input">
+        </div>
+        <div class="form-group">
+          <label>الملاحظة:</label>
+          <textarea data-assessment-id="${a.id}" class="view-note-input">${a.note || ''}</textarea>
+        </div>
+        <div class="form-group">
+          <label>الصور الحالية:</label>
+          <div class="image-preview" id="view-images-${a.id}">
+            ${(a.images || []).map(img => `<img src="${img}">`).join('') || '<span style="font-size:0.8rem;color:#777;">لا توجد صور</span>'}
+          </div>
+        </div>
+        <div class="form-group">
+          <label>تحديث الصور (اختياري - سيستبدل الصور القديمة):</label>
+          <input type="file" accept="image/*" multiple onchange="handleUpdateAssessmentImages(event, ${a.id})">
+        </div>
+        <div style="text-align:left;margin-top:5px;">
+          <button class="btn-success btn-small" onclick="saveSingleAssessment(${a.id})">💾 حفظ التعديل</button>
+          <button class="btn-danger btn-small" onclick="deleteSingleAssessment(${a.id})">🗑️ حذف هذا التقييم</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  toggleModal('assessmentViewModal', true);
+}
+
+async function handleUpdateAssessmentImages(event, id){
+  const files = event.target.files;
+  if(!files || !files.length) return;
+  const maxSize = 600;
+  const newImages = [];
+  for(const file of files){
+    try{ const resized = await resizeImage(file, maxSize); newImages.push(resized); }
+    catch(e){ console.error('Image resize error', e); }
+  }
+  const idx = partialAssessments.findIndex(a => a.id === id);
+  if(idx === -1) return;
+  partialAssessments[idx].images = newImages;
+  saveAll();
+  const cont = document.getElementById('view-images-' + id);
+  cont.innerHTML = newImages.length ? newImages.map(img => `<img src="${img}">`).join('') : '<span style="font-size:0.8rem;color:#777;">لا توجد صور</span>';
+  showNotification('تم تحديث صور التقييم');
+}
+
+function saveSingleAssessment(id){
+  const idx = partialAssessments.findIndex(a => a.id === id);
+  if(idx === -1) return;
+  const scoreInput = document.querySelector(`.view-score-input[data-assessment-id="${id}"]`);
+  const noteInput = document.querySelector(`.view-note-input[data-assessment-id="${id}"]`);
+  if(!scoreInput || !noteInput) return;
+  let val = parseFloat(scoreInput.value) || 0;
+  if(val < 0) val = 0;
+  if(val > currentViewingMaxPoints) val = currentViewingMaxPoints;
+  partialAssessments[idx].score = val;
+  partialAssessments[idx].note = noteInput.value.trim();
+  saveAll();
+  showNotification('تم تحديث التقييم');
+  onEvalEmployeeChange();
+}
+
+function deleteSingleAssessment(id){
+  if(!confirm('هل تريد حذف هذا التقييم؟')) return;
+  partialAssessments = partialAssessments.filter(a => a.id !== id);
+  saveAll();
+  const el = document.getElementById('assessment-item-' + id);
+  if(el) el.remove();
+  showNotification('تم حذف التقييم');
+  onEvalEmployeeChange();
+}
+
+function resizeImage(file, maxSize){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = e => {
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if(w > h){ if(w > maxSize){ h *= maxSize / w; w = maxSize; } }
+        else { if(h > maxSize){ w *= maxSize / h; h = maxSize; } }
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function previewImages(input){
+  const ctn = document.getElementById('imagePreviewContainer');
+  ctn.innerHTML = '';
+  tempImages = [];
+  if(input.files && input.files.length){
+    for(const file of input.files){
+      try{
+        const resized = await resizeImage(file, 600);
+        tempImages.push(resized);
+        const img = document.createElement('img');
+        img.src = resized;
+        ctn.appendChild(img);
+      }catch(e){ console.error('Image resize error', e); }
+    }
+  }
+}
+
+function saveAssessment(){
+  const empId = parseInt(document.getElementById('evalEmpSelect').value);
+  if(!empId){ showNotification('اختر الموظف أولاً من قائمة التقييم اليومي', true); return; }
+  if(!currentAssessmentCriterionId){ showNotification('افتح نافذة التقييم من زر "+ تقييم اليوم" أولاً', true); return; }
+  let score = parseFloat(document.getElementById('assessScore').value) || 0;
+  if(score < 0) score = 0;
+  if(score > currentAssessmentMax) score = currentAssessmentMax;
+  const note = document.getElementById('assessNote').value.trim();
+  const month = parseInt(document.getElementById('evalMonthSelect').value);
+  const year = parseInt(document.getElementById('evalYearSelect').value);
+  const entry = {
+    id: Date.now(), employeeId: empId, criterionId: currentAssessmentCriterionId,
+    month, year, score, note, images: [...tempImages], timestamp: new Date().toISOString()
+  };
+  partialAssessments.push(entry);
+  saveAll();
+  toggleModal('assessmentModal', false);
+  onEvalEmployeeChange();
+  showNotification('تم حفظ تقييم المعيار');
+}
+
+/* ================= التقرير الشهري ================= */
+function calculateMonthlyReport(employeeId, month, year){
+  const emp = employees.find(e => e.id === employeeId);
+  if(!emp) return null;
+  const allAss = partialAssessments.filter(a => a.employeeId === employeeId && a.month === month && a.year === year);
+  if(!allAss.length) return null;
+  const criteriaResults = {};
+  (emp.criteria || []).forEach(main => {
+    let mainFinalScore = 0;
+    let mainNote = '';
+    let mainImages = [];
+    let daysSet = new Set();
+    if(main.subCriteria && main.subCriteria.length){
+      let subFinals = [];
+      main.subCriteria.forEach(sub => {
+        const list = allAss.filter(a => a.criterionId === sub.id);
+        if(list.length){
+          const avgScore = list.reduce((s, a) => s + a.score, 0) / list.length;
+          let finalScore = Math.min(avgScore, sub.points);
+          subFinals.push(finalScore);
+          list.forEach(a => {
+            if(a.note) mainNote += a.note + '\n\n';
+            if(a.images && a.images.length) mainImages.push(...a.images);
+            const d = new Date(a.timestamp);
+            daysSet.add(`${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`);
+          });
+        }
+      });
+      if(subFinals.length){
+        let sumSub = subFinals.reduce((s, v) => s + v, 0);
+        let totalSubPoints = main.subCriteria.reduce((s, sc) => s + Number(sc.points || 0), 0);
+        if(totalSubPoints > 0){ mainFinalScore = (sumSub / totalSubPoints) * main.weight; }
+        else { mainFinalScore = sumSub / subFinals.length; }
+        if(mainFinalScore > main.weight) mainFinalScore = main.weight;
+      } else {
+        mainFinalScore = main.weight;
+        mainNote += 'لم تُسجَّل أي تقييمات على المعايير الفرعية، اعتُبر المعيار كاملاً.\n';
+      }
+    } else {
+      const list = allAss.filter(a => a.criterionId === main.id);
+      if(list.length){
+        const avgScore = list.reduce((s, a) => s + a.score, 0) / list.length;
+        mainFinalScore = Math.min(avgScore, main.weight);
+        list.forEach(a => {
+          if(a.note) mainNote += a.note + '\n\n';
+          if(a.images && a.images.length) mainImages.push(...a.images);
+          const d = new Date(a.timestamp);
+          daysSet.add(`${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`);
+        });
+      } else {
+        mainFinalScore = main.weight;
+        mainNote += 'لم تُسجَّل أي تقييمات لهذا المعيار خلال الشهر، اعتُبر الأداء كاملاً (حصل على كامل وزنه).\n';
+      }
+    }
+    criteriaResults[main.id] = {
+      finalScore: mainFinalScore, maxWeight: main.weight,
+      note: (mainNote.trim() || 'لا توجد ملاحظات خاصة بهذا المعيار.'),
+      images: mainImages, days: Array.from(daysSet)
+    };
+  });
+  const totalPoints = Object.values(criteriaResults).reduce((s, r) => s + r.finalScore, 0);
+  return { id: Date.now(), employeeId, month, year, criteriaResults, finalTotalPoints: totalPoints, editedAt: null };
+}
+
+function generateReportPreview(){
+  const employeeId = parseInt(document.getElementById('reportEmpSelect').value);
+  const month = parseInt(document.getElementById('reportMonthSelect').value);
+  const year = parseInt(document.getElementById('reportYearSelect').value);
+  if(!employeeId){ showNotification('اختر الموظف أولاً', true); return; }
+  let report = calculateMonthlyReport(employeeId, month, year);
+  if(!report){ showNotification('لا يوجد بيانات تقييم لهذا الشهر', true); return; }
+  currentReportForEdit = JSON.parse(JSON.stringify(report));
+  displayReport(report, false);
+  document.getElementById('reportContainer').classList.remove('hidden');
+  document.getElementById('editReportBtn').classList.remove('hidden');
+  document.getElementById('exportPdfBtn').classList.remove('hidden');
+  document.getElementById('shareWaBtn').classList.remove('hidden');
+}
+
+function displayReport(report, fromSaved){
+  const emp = employees.find(e => e.id === report.employeeId);
+  const ctn = document.getElementById('reportContainer');
+  const monthName = monthNames[report.month - 1];
+  const sumWeights = (emp.criteria || []).reduce((s, c) => s + Number(c.weight || 0), 0);
+  let html = `<div class="report-summary">
+    <strong>الموظف:</strong> ${emp ? escapeHtml(emp.name) : ''}<br>
+    <strong>الشهر:</strong> ${monthName} ${report.year}<br>
+    <strong>مجموع أوزان المعايير الرئيسية:</strong> ${sumWeights} (يُفضَّل أن يكون 100)<br>
+    <strong>حالة التقرير:</strong> ${fromSaved ? 'نهائي (معدَّل يدويًا ومحفوظ)' : 'تقرير مبدئي محسوب آليًا من التقييمات'}
+  </div>`;
+  html += `<div class="total-score">النتيجة الكلية: ${report.finalTotalPoints.toFixed(1)} / ${sumWeights}</div>`;
+  html += '<h3>تفاصيل كل معيار رئيسي</h3>';
+  (emp.criteria || []).forEach(main => {
+    const r = report.criteriaResults[main.id];
+    if(!r) return;
+    const daysText = r.days && r.days.length ? ('أيام التقييم: ' + r.days.join(' ، ')) : 'لم تُسجّل أيام تقييم (حصل على كامل وزنه).';
+    html += `<div class="score-item">
+      <div class="score-header">
+        <span><strong>${escapeHtml(main.title)}</strong> (وزن: ${main.weight})</span>
+        <span>الدرجة النهائية (بعد المتوسط): ${r.finalScore.toFixed(2)} / ${main.weight}</span>
+      </div>
+      <div class="criteria-note">${daysText}</div>
+      <div style="margin-top:5px;white-space:pre-line;">ملاحظات: ${escapeHtml(r.note || 'لا توجد')}</div>
+      ${r.images && r.images.length ? `<div class="image-preview" style="margin-top:4px;">${r.images.map(img => `<img src="${img}">`).join('')}</div>` : ''}
+    </div>`;
+  });
+  ctn.innerHTML = html;
+}
+
+function editFinalReport(){
+  if(!currentReportForEdit){ showNotification('أنشئ التقرير أولاً', true); return; }
+  const emp = employees.find(e => e.id === currentReportForEdit.employeeId);
+  const ctn = document.getElementById('editReportContent');
+  ctn.innerHTML = '';
+  (emp.criteria || []).forEach(main => {
+    const r = currentReportForEdit.criteriaResults[main.id];
+    if(!r) return;
+    const days = r.days && r.days.length ? r.days.join(' ، ') : 'لا توجد أيام تقييم (ربما اعتُبر كاملاً)';
+    ctn.innerHTML += `<div class="score-item">
+      <div class="score-header"><span><strong>${escapeHtml(main.title)}</strong> (وزن: ${main.weight})</span></div>
+      <div class="form-group">
+        <label>الدرجة النهائية (من ${main.weight}):</label>
+        <input type="number" step="0.5" min="0" max="${main.weight}" data-crit-id="${main.id}" class="edit-score-input" value="${r.finalScore.toFixed(2)}">
+      </div>
+      <div class="form-group">
+        <label>ملاحظة نهائية لهذا المعيار:</label>
+        <textarea class="edit-note-input" data-crit-id="${main.id}">${r.note || ''}</textarea>
+      </div>
+      <div class="criteria-note">أيام التقييم المسجَّلة: ${days}</div>
+    </div>`;
+  });
+  recalcEditTotal();
+  toggleModal('editReportModal', true);
+  document.querySelectorAll('.edit-score-input').forEach(inp => { inp.addEventListener('input', recalcEditTotal); });
+}
+
+function recalcEditTotal(){
+  if(!currentReportForEdit) return;
+  const emp = employees.find(e => e.id === currentReportForEdit.employeeId);
+  let total = 0;
+  (emp.criteria || []).forEach(main => {
+    const inp = document.querySelector(`.edit-score-input[data-crit-id="${main.id}"]`);
+    if(!inp) return;
+    let val = parseFloat(inp.value) || 0;
+    if(val < 0) val = 0;
+    if(val > main.weight) val = main.weight;
+    total += val;
+  });
+  const sumWeights = (emp.criteria || []).reduce((s, c) => s + Number(c.weight || 0), 0);
+  document.getElementById('editTotalScore').textContent = 'النتيجة النهائية بعد التعديل: ' + total.toFixed(1) + ' / ' + sumWeights;
+}
+
+function saveEditedReport(){
+  if(!currentReportForEdit) return;
+  const emp = employees.find(e => e.id === currentReportForEdit.employeeId);
+  (emp.criteria || []).forEach(main => {
+    const scoreInp = document.querySelector(`.edit-score-input[data-crit-id="${main.id}"]`);
+    const noteInp = document.querySelector(`.edit-note-input[data-crit-id="${main.id}"]`);
+    if(!scoreInp || !noteInp) return;
+    let scoreVal = parseFloat(scoreInp.value) || 0;
+    if(scoreVal < 0) scoreVal = 0;
+    if(scoreVal > main.weight) scoreVal = main.weight;
+    currentReportForEdit.criteriaResults[main.id].finalScore = scoreVal;
+    currentReportForEdit.criteriaResults[main.id].note = (noteInp.value || '').trim();
+  });
+  currentReportForEdit.finalTotalPoints = Object.values(currentReportForEdit.criteriaResults).reduce((s, r) => s + r.finalScore, 0);
+  currentReportForEdit.editedAt = new Date().toISOString();
+  const idx = finalReports.findIndex(r => r.employeeId === currentReportForEdit.employeeId && r.month === currentReportForEdit.month && r.year === currentReportForEdit.year);
+  if(idx >= 0) finalReports[idx] = currentReportForEdit;
+  else finalReports.push(currentReportForEdit);
+  saveAll();
+  toggleModal('editReportModal', false);
+  displayReport(currentReportForEdit, true);
+  showNotification('تم حفظ التقرير النهائي');
+}
+
+function exportToPDF(){
+  if(!currentReportForEdit){ showNotification('أنشئ/اعرض التقرير أولاً', true); return; }
+  showNotification('سيتم فتح نافذة الطباعة، اختر "حفظ كـ PDF".');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector('.tab-btn[data-tab="reports"]').classList.add('active');
+  document.getElementById('reports').classList.add('active');
+  document.getElementById('reportContainer').classList.remove('hidden');
+  setTimeout(() => { window.print(); }, 500);
+}
+
+function shareToWhatsApp(){
+  if(!currentReportForEdit){ showNotification('أنشئ/احفظ التقرير أولاً', true); return; }
+  const r = currentReportForEdit;
+  const emp = employees.find(e => e.id === r.employeeId);
+  const monthName = monthNames[r.month - 1];
+  const sumWeights = (emp.criteria || []).reduce((s, c) => s + Number(c.weight || 0), 0);
+  let txt = `السلام عليكم ${emp ? emp.name : ''}\n`;
+  txt += `هذا ملخص تقييمك لشهر ${monthName} ${r.year}:\n\n`;
+  (emp.criteria || []).forEach(main => {
+    const cr = r.criteriaResults[main.id];
+    if(!cr) return;
+    txt += `- ${main.title}: ${cr.finalScore.toFixed(1)} من ${main.weight}\n`;
+    if(cr.note && cr.note.trim() !== '' && cr.note.trim() !== 'لا توجد ملاحظات خاصة بهذا المعيار.'){
+      txt += `ملاحظات: ${cr.note.trim()}\n`;
+    }
+    txt += `------------------------------\n`;
+  });
+  txt += `\nالنتيجة الكلية: ${r.finalTotalPoints.toFixed(1)} من ${sumWeights}\n`;
+  txt += `\nشكرًا لجهودك.\n`;
+  const encoded = encodeURIComponent(txt);
+  const phone = emp && emp.phone ? emp.phone : '';
+  const url = `https://wa.me/${phone}?text=${encoded}`;
+  window.open(url, '_blank');
+}
+
+/* ================= نظام الغيابات ================= */
+function calculateAbsenceDays(){
+  const start = document.getElementById('absenceStartDate').value;
+  const end = document.getElementById('absenceEndDate').value;
+  if(start && end){
+    const d1 = new Date(start);
+    const d2 = new Date(end);
+    const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+    if(diff > 0) document.getElementById('absenceDays').value = diff;
+  }
+}
+
+function onAbsenceEmployeeChange(){
+  renderAbsenceTab();
+}
+
+function renderAbsenceTab(){
+  const empId = parseInt(document.getElementById('absenceEmpSelect').value);
+  const year = parseInt(document.getElementById('absenceYearSelect').value);
+  const container = document.getElementById('absenceListContainer');
+  const balanceDisplay = document.getElementById('leaveBalanceDisplay');
+
+  if(!empId){
+    if(container) container.innerHTML = '<p>اختر موظفاً أولاً لعرض سجل غياباته.</p>';
+    if(balanceDisplay) balanceDisplay.innerHTML = '';
+    return;
+  }
+
+  const emp = employees.find(e => e.id === empId);
+  if(!emp) return;
+
+  // Show balance
+  const balance = leaveBalances.find(l => l.employeeId === empId && l.year === year);
+  const totalEntitled = balance ? balance.days : 0;
+  const yearAbsences = absences.filter(a => a.employeeId === empId && a.year === year && a.type === 'annual');
+  const totalTaken = yearAbsences.reduce((s, a) => s + Number(a.days || 0), 0);
+  const remaining = totalEntitled - totalTaken;
+
+  if(balanceDisplay){
+    balanceDisplay.innerHTML = `
+      <div class="balance-box">
+        <div class="big-number">${remaining}</div>
+        <div class="label">يوم متبقي من ${totalEntitled} يوم مستحق (${year})</div>
+        <div style="font-size:.8rem;margin-top:8px;opacity:.8;">تم أخذ: ${totalTaken} يوم | الموظف: ${escapeHtml(emp.name)}</div>
+      </div>
+    `;
+  }
+
+  // Show absence list
+  const empAbsences = absences.filter(a => a.employeeId === empId).sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+  if(!empAbsences.length){
+    if(container) container.innerHTML = '<p>لا توجد غيابات مسجَّلة لهذا الموظف.</p>';
+    return;
+  }
+
+  let html = `<table class="absence-table">
+    <thead><tr><th>#</th><th>النوع</th><th>من</th><th>إلى</th><th>الأيام</th><th>الملاحظة</th><th>إجراء</th></tr></thead>
+    <tbody>`;
+  empAbsences.forEach((a, i) => {
+    html += `<tr>
+      <td>${i+1}</td>
+      <td>${absenceTypeNames[a.type] || a.type}</td>
+      <td>${a.startDate}</td>
+      <td>${a.endDate}</td>
+      <td>${a.days}</td>
+      <td>${escapeHtml(a.note || '-')}</td>
+      <td><button class="btn-danger btn-small" onclick="deleteAbsence(${a.id})">حذف</button></td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+  if(container) container.innerHTML = html;
+}
+
+function saveLeaveBalance(){
+  const empId = parseInt(document.getElementById('absenceEmpSelect').value);
+  const year = parseInt(document.getElementById('absenceYearSelect').value);
+  const days = parseInt(document.getElementById('annualLeaveDays').value);
+  if(!empId){ showNotification('اختر الموظف أولاً', true); return; }
+  if(isNaN(days) || days < 0){ showNotification('أدخل عدد أيام صحيح', true); return; }
+
+  const idx = leaveBalances.findIndex(l => l.employeeId === empId && l.year === year);
+  if(idx >= 0) leaveBalances[idx].days = days;
+  else leaveBalances.push({ id: Date.now(), employeeId: empId, year, days });
+
+  saveAll();
+  renderAbsenceTab();
+  showNotification('تم حفظ الرصيد السنوي');
+}
+
+function addAbsence(){
+  const empId = parseInt(document.getElementById('absenceEmpSelect').value);
+  const type = document.getElementById('absenceType').value;
+  const startDate = document.getElementById('absenceStartDate').value;
+  const endDate = document.getElementById('absenceEndDate').value;
+  const days = parseFloat(document.getElementById('absenceDays').value);
+  const note = document.getElementById('absenceNote').value.trim();
+  const year = parseInt(document.getElementById('absenceYearSelect').value);
+
+  if(!empId){ showNotification('اختر الموظف أولاً', true); return; }
+  if(!startDate || !endDate){ showNotification('أدخل تاريخ الخروج والعودة', true); return; }
+  if(isNaN(days) || days <= 0){ showNotification('أدخل عدد أيام صحيح', true); return; }
+
+  absences.push({
+    id: Date.now(), employeeId: empId, type, startDate, endDate, days, note, year,
+    createdAt: new Date().toISOString()
+  });
+
+  saveAll();
+  document.getElementById('absenceStartDate').value = '';
+  document.getElementById('absenceEndDate').value = '';
+  document.getElementById('absenceDays').value = '';
+  document.getElementById('absenceNote').value = '';
+  renderAbsenceTab();
+  showNotification('تم تسجيل الغياب بنجاح');
+}
+
+function deleteAbsence(id){
+  if(!confirm('هل تريد حذف هذا السجل؟')) return;
+  absences = absences.filter(a => a.id !== id);
+  saveAll();
+  renderAbsenceTab();
+  showNotification('تم حذف السجل');
+}
+
+function showAbsenceReport(){
+  const empId = parseInt(document.getElementById('absenceEmpSelect').value);
+  const year = parseInt(document.getElementById('absenceYearSelect').value);
+  if(!empId){ showNotification('اختر الموظف أولاً', true); return; }
+
+  const emp = employees.find(e => e.id === empId);
+  const balance = leaveBalances.find(l => l.employeeId === empId && l.year === year);
+  const totalEntitled = balance ? balance.days : 0;
+  const empAbsences = absences.filter(a => a.employeeId === empId && a.year === year).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+  const totalTaken = empAbsences.reduce((s, a) => s + Number(a.days || 0), 0);
+  const remaining = totalEntitled - totalTaken;
+
+  currentAbsenceReportData = { type: 'single', empId, year, empName: emp.name };
+
+  let html = `<div class="absence-report-print" id="absenceReportPrintArea" style="padding:20px;">
+    <h2 style="text-align:center;color:#2c3e50;margin-bottom:5px;">${escapeHtml(emp.name)}</h2>
+    <p style="text-align:center;color:#666;margin-bottom:20px;font-size:.9rem;">تقرير الغيابات والإجازات - ${year}</p>`;
+
+  if(empAbsences.length){
+    html += `<table class="absence-table">
+      <thead><tr><th style="width:40px">#</th><th>من</th><th>إلى</th><th style="width:80px">عدد الأيام</th><th>سبب الغياب</th></tr></thead>
+      <tbody>`;
+    empAbsences.forEach((a, i) => {
+      html += `<tr>
+        <td>${i+1}</td>
+        <td>${a.startDate}</td>
+        <td>${a.endDate}</td>
+        <td>${a.days}</td>
+        <td>${escapeHtml(a.note || '-')}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+  } else {
+    html += `<p style="text-align:center;color:#666;">لا توجد غيابات مسجَّلة لهذه السنة.</p>`;
+  }
+
+  html += `<table class="absence-table" style="margin-top:15px;width:auto;min-width:400px;">
+    <tbody>
+      <tr><td style="text-align:right;font-weight:bold;background:#fff7f7;">مجموع الأيام التي أخذها</td><td style="text-align:center;font-weight:bold;color:#e74c3c;width:80px;">${totalTaken}</td></tr>
+      <tr><td style="text-align:right;font-weight:bold;background:#f7fbff;">عدد الأيام المستحقة</td><td style="text-align:center;font-weight:bold;color:#3498db;width:80px;">${totalEntitled}</td></tr>
+      <tr><td style="text-align:right;font-weight:bold;background:#f7fff7;">صافي الأيام المتبقية</td><td style="text-align:center;font-weight:bold;color:${remaining>=0?'#27ae60':'#e74c3c'};width:80px;">${remaining}</td></tr>
+    </tbody>
+  </table>
+  <p style="text-align:center;font-size:.75rem;color:#999;margin-top:20px;">تم إنشاء التقرير بتاريخ: ${new Date().toLocaleDateString('ar-SA')}</p>
+  </div>`;
+
+  document.getElementById('absenceReportModalTitle').textContent = `تقرير الغيابات - ${escapeHtml(emp.name)}`;
+  document.getElementById('absenceReportModalContent').innerHTML = html;
+  toggleModal('absenceReportModal', true);
+}
+function showAllAbsencesReport(){
+  if(!employees.length){ showNotification('لا يوجد موظفين', true); return; }
+  const year = parseInt(document.getElementById('absenceYearSelect').value);
+
+  currentAbsenceReportData = { type: 'all', year };
+
+  let html = `<div class="absence-report-print" id="allAbsencesReportPrintArea" style="padding:20px;">
+    <h2 style="text-align:center;color:#2c3e50;margin-bottom:5px;">📑 التقرير الشامل للغيابات</h2>
+    <p style="text-align:center;color:#666;margin-bottom:25px;font-size:.9rem;">السنة: ${year} | جميع الموظفين</p>`;
+
+  employees.forEach(emp => {
+    const balance = leaveBalances.find(l => l.employeeId === emp.id && l.year === year);
+    const totalEntitled = balance ? balance.days : 0;
+    const empAbsences = absences.filter(a => a.employeeId === emp.id && a.year === year).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+    const totalTaken = empAbsences.reduce((s, a) => s + Number(a.days || 0), 0);
+    const remaining = totalEntitled - totalTaken;
+
+    html += `<div style="margin-bottom:25px;border:1px solid #ddd;border-radius:8px;overflow:hidden;">
+      <div style="background:#3498db;color:#fff;padding:10px 15px;font-weight:bold;font-size:1.05rem;">${escapeHtml(emp.name)}</div>`;
+
+    if(empAbsences.length){
+      html += `<table class="absence-table" style="margin:0;border:none;">
+        <thead><tr><th style="width:40px">#</th><th>من</th><th>إلى</th><th style="width:80px">عدد الأيام</th><th>سبب الغياب</th></tr></thead>
+        <tbody>`;
+      empAbsences.forEach((a, i) => {
+        html += `<tr>
+          <td>${i+1}</td>
+          <td>${a.startDate}</td>
+          <td>${a.endDate}</td>
+          <td>${a.days}</td>
+          <td>${escapeHtml(a.note || '-')}</td>
+        </tr>`;
+      });
+      html += `</tbody></table>`;
+    } else {
+      html += `<p style="text-align:center;color:#666;padding:15px;">لا توجد غيابات مسجَّلة.</p>`;
+    }
+
+    html += `<table class="absence-table" style="margin:0;border:none;border-top:2px solid #ddd;width:100%;">
+      <tbody>
+        <tr><td style="text-align:right;font-weight:bold;background:#fff7f7;width:70%;">مجموع الأيام التي أخذها</td><td style="text-align:center;font-weight:bold;color:#e74c3c;">${totalTaken}</td></tr>
+        <tr><td style="text-align:right;font-weight:bold;background:#f7fbff;">عدد الأيام المستحقة</td><td style="text-align:center;font-weight:bold;color:#3498db;">${totalEntitled}</td></tr>
+        <tr><td style="text-align:right;font-weight:bold;background:#f7fff7;">صافي الأيام المتبقية</td><td style="text-align:center;font-weight:bold;color:${remaining>=0?'#27ae60':'#e74c3c'};">${remaining}</td></tr>
+      </tbody>
+    </table></div>`;
+  });
+
+  html += `<p style="text-align:center;font-size:.75rem;color:#999;margin-top:20px;">تم إنشاء التقرير بتاريخ: ${new Date().toLocaleDateString('ar-SA')}</p></div>`;
+
+  document.getElementById('allAbsencesReportContent').innerHTML = html;
+  toggleModal('allAbsencesReportModal', true);
+}
+function exportAbsenceReport(format){
+  const area = document.getElementById('absenceReportPrintArea');
+  if(!area){ showNotification('لا يوجد تقرير للتصدير', true); return; }
+
+  if(format === 'pdf'){
+    showNotification('جاري فتح نافذة الطباعة...');
+    toggleModal('absenceReportModal', false);
+    document.body.appendChild(area);
+    area.style.position = 'fixed';
+    area.style.top = '0';
+    area.style.left = '0';
+    area.style.width = '100%';
+    area.style.zIndex = '9999';
+    area.style.background = '#fff';
+    setTimeout(() => { window.print(); area.remove(); toggleModal('absenceReportModal', true); }, 500);
+  } else if(format === 'excel'){
+    const empId = currentAbsenceReportData.empId;
+    const year = currentAbsenceReportData.year;
+    const emp = employees.find(e => e.id === empId);
+    const empAbsences = absences.filter(a => a.employeeId === empId && a.year === year).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+    const balance = leaveBalances.find(l => l.employeeId === empId && l.year === year);
+    const totalEntitled = balance ? balance.days : 0;
+    const totalTaken = empAbsences.reduce((s, a) => s + Number(a.days || 0), 0);
+    const remaining = totalEntitled - totalTaken;
+    let csv = 'sep=,\n';
+    csv += 'الرقم,من,الى,عدد الايام,سبب الغياب\n';
+    empAbsences.forEach((a, i) => {
+      csv += `${i+1},${a.startDate},${a.endDate},${a.days},"${a.note || ''}"\n`;
+    });
+    csv += `\n`;
+    csv += `,مجموع الايام التى اخذها,${totalTaken}\n`;
+    csv += `,عدد الايام المستحقة,${totalEntitled}\n`;
+    csv += `,صافى الايام المتبقية,${remaining}\n`;
+    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `غيابات_${emp ? emp.name : 'موظف'}_${year}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showNotification('تم تصدير Excel (CSV)');
+  } else if(format === 'image'){
+    showNotification('جاري انشاء الصورة...');
+    try{
+      const canvas = await html2canvas(area, {scale:2, backgroundColor:'#fff'});
+      const link = document.createElement('a');
+      link.download = `تقرير_الغيابات_${currentAbsenceReportData.empName || 'الموظف'}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showNotification('تم حفظ الصورة');
+    }catch(e){ console.error(e); showNotification('فشل تصدير الصورة', true); }
+  } else if(format === 'whatsapp'){
+    const empId = currentAbsenceReportData.empId;
+    const year = currentAbsenceReportData.year;
+    const emp = employees.find(e => e.id === empId);
+    const balance = leaveBalances.find(l => l.employeeId === empId && l.year === year);
+    const totalEntitled = balance ? balance.days : 0;
+    const totalTaken = absences.filter(a => a.employeeId === empId && a.year === year).reduce((s, a) => s + Number(a.days || 0), 0);
+    const remaining = totalEntitled - totalTaken;
+    let txt = `السلام عليكم ${emp ? emp.name : ''}\n`;
+    txt += `ملخص غياباتك لسنة ${year}:\n`;
+    txt += `✅ المستحق: ${totalEntitled} يوم\n`;
+    txt += `📅 المأخوذ: ${totalTaken} يوم\n`;
+    txt += `💚 المتبقي: ${remaining} يوم\n`;
+    const url = `https://wa.me/${emp && emp.phone ? emp.phone : ''}?text=${encodeURIComponent(txt)}`;
+    window.open(url, '_blank');
+  }
+}
+function exportAllAbsencesReport(format){
   const area = document.getElementById('allAbsencesReportPrintArea');
   if(!area){ showNotification('لا يوجد تقرير للتصدير', true); return; }
 
