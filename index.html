@@ -2012,22 +2012,6 @@ function exportAllAbsencesReport(format){
     }catch(e){ console.error(e); showNotification('فشل تصدير الصورة', true); }
   }
 }
-
-
-<!-- PWA Service Worker Registration -->
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then((registration) => { console.log('SW registered:', registration.scope); })
-      .catch((error) => { console.log('SW registration failed:', error); });
-  });
-}
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
-if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-  console.log('Running as installed PWA');
-}
 </script>
 
 </body>
