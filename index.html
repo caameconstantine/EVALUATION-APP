@@ -1816,12 +1816,11 @@ function showAbsenceReport(){
 
   if(empAbsences.length){
     html += `<table class="absence-table" style="margin-top:15px;">
-      <thead><tr><th>#</th><th>النوع</th><th>تاريخ الخروج</th><th>تاريخ العودة</th><th>عدد الأيام</th><th>الملاحظة</th></tr></thead>
+      <thead><tr><th>#</th><th>من</th><th>إلى</th><th>عدد الأيام</th><th>سبب الغياب</th></tr></thead>
       <tbody>`;
     empAbsences.forEach((a, i) => {
       html += `<tr>
         <td>${i+1}</td>
-        <td>${absenceTypeNames[a.type] || a.type}</td>
         <td>${a.startDate}</td>
         <td>${a.endDate}</td>
         <td>${a.days}</td>
@@ -1833,9 +1832,12 @@ function showAbsenceReport(){
     html += `<p style="text-align:center;color:#666;margin-top:20px;">لا توجد غيابات مسجَّلة لهذه السنة.</p>`;
   }
 
-  html += `<div style="margin-top:20px;padding:15px;background:#f8f9fa;border-radius:10px;text-align:center;">
-    <strong>الصافي المتبقي:</strong> <span style="font-size:1.5rem;color:${remaining>=0?'#27ae60':'#e74c3c'}">${remaining}</span> يوم 
-    (${totalTaken} مأخوذة من ${totalEntitled} مستحقة)
+  html += `<div style="margin-top:20px;padding:15px;background:#f8f9fa;border-radius:10px;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;text-align:center;">
+      <div><div style="font-size:1.3rem;font-weight:bold;color:#e74c3c;">${totalTaken}</div><div style="font-size:.85rem;color:#666;">مجموع الأيام التي أخذها</div></div>
+      <div><div style="font-size:1.3rem;font-weight:bold;color:#3498db;">${totalEntitled}</div><div style="font-size:.85rem;color:#666;">عدد الأيام المستحقة</div></div>
+      <div><div style="font-size:1.3rem;font-weight:bold;color:${remaining>=0?'#27ae60':'#e74c3c'};">${remaining}</div><div style="font-size:.85rem;color:#666;">صافي الأيام المتبقية</div></div>
+    </div>
   </div>
   <div style="margin-top:15px;text-align:center;font-size:.8rem;color:#999;">
     تم إنشاء التقرير بتاريخ: ${new Date().toLocaleDateString('ar-SA')}
@@ -1876,12 +1878,11 @@ function showAllAbsencesReport(){
 
     if(empAbsences.length){
       html += `<table class="absence-table">
-        <thead><tr><th>#</th><th>النوع</th><th>من</th><th>إلى</th><th>الأيام</th><th>الملاحظة</th></tr></thead>
+        <thead><tr><th>#</th><th>من</th><th>إلى</th><th>عدد الأيام</th><th>سبب الغياب</th></tr></thead>
         <tbody>`;
       empAbsences.forEach((a, i) => {
         html += `<tr>
           <td>${i+1}</td>
-          <td>${absenceTypeNames[a.type] || a.type}</td>
           <td>${a.startDate}</td>
           <td>${a.endDate}</td>
           <td>${a.days}</td>
@@ -1892,6 +1893,11 @@ function showAllAbsencesReport(){
     } else {
       html += `<p style="text-align:center;color:#666;">لا توجد غيابات مسجَّلة.</p>`;
     }
+    html += `<div style="margin-top:12px;padding:10px;background:#f8f9fa;border-radius:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;font-size:.85rem;">
+      <div><strong style="color:#e74c3c">${totalTaken}</strong><br>مجموع الأيام المأخوذة</div>
+      <div><strong style="color:#3498db">${totalEntitled}</strong><br>الأيام المستحقة</div>
+      <div><strong style="color:${remaining>=0?'#27ae60':'#e74c3c'}">${remaining}</strong><br>الصافي المتبقي</div>
+    </div>`;
     html += `</div>`;
   });
 
@@ -1923,10 +1929,17 @@ async function exportAbsenceReport(format){
     const year = currentAbsenceReportData.year;
     const emp = employees.find(e => e.id === empId);
     const empAbsences = absences.filter(a => a.employeeId === empId && a.year === year).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-    let csv = '\uFEFFالرقم,النوع,تاريخ الخروج,تاريخ العودة,عدد الأيام,الملاحظة\n';
+    const balance = leaveBalances.find(l => l.employeeId === empId && l.year === year);
+    const totalEntitled = balance ? balance.days : 0;
+    const totalTaken = empAbsences.reduce((s, a) => s + Number(a.days || 0), 0);
+    const remaining = totalEntitled - totalTaken;
+    let csv = '\uFEFFالرقم,من,إلى,عدد الأيام,سبب الغياب\n';
     empAbsences.forEach((a, i) => {
-      csv += `${i+1},${absenceTypeNames[a.type] || a.type},${a.startDate},${a.endDate},${a.days},"${a.note || ''}"\n`;
+      csv += `${i+1},${a.startDate},${a.endDate},${a.days},"${a.note || ''}"\n`;
     });
+    csv += `\nمجموع الأيام التي أخذها,${totalTaken}\n`;
+    csv += `عدد الأيام المستحقة,${totalEntitled}\n`;
+    csv += `صافي الأيام المتبقية,${remaining}\n`;
     const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1979,12 +1992,20 @@ async function exportAllAbsencesReport(format){
     setTimeout(() => { window.print(); area.remove(); toggleModal('allAbsencesReportModal', true); }, 500);
   } else if(format === 'excel'){
     const year = currentAbsenceReportData.year;
-    let csv = '\uFEFFاسم الموظف,النوع,تاريخ الخروج,تاريخ العودة,عدد الأيام,الملاحظة\n';
+    let csv = '\uFEFFاسم الموظف,من,إلى,عدد الأيام,سبب الغياب\n';
     employees.forEach(emp => {
       const empAbsences = absences.filter(a => a.employeeId === emp.id && a.year === year).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+      const balance = leaveBalances.find(l => l.employeeId === emp.id && l.year === year);
+      const totalEntitled = balance ? balance.days : 0;
+      const totalTaken = empAbsences.reduce((s, a) => s + Number(a.days || 0), 0);
+      const remaining = totalEntitled - totalTaken;
       empAbsences.forEach(a => {
-        csv += `"${emp.name}",${absenceTypeNames[a.type] || a.type},${a.startDate},${a.endDate},${a.days},"${a.note || ''}"\n`;
+        csv += `"${emp.name}",${a.startDate},${a.endDate},${a.days},"${a.note || ''}"\n`;
       });
+      if(empAbsences.length){
+        csv += `"${emp.name} - ملخص",مجموع الأيام المأخوذة,${totalTaken},الأيام المستحقة,${totalEntitled}\n`;
+        csv += `"${emp.name} - ملخص",صافي الأيام المتبقية,${remaining},,\n\n`;
+      }
     });
     const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
     const url = URL.createObjectURL(blob);
