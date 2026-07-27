@@ -1,13 +1,13 @@
 {
   "name": "نظام تقييم الموظفين الشهري",
   "short_name": "تقييم الموظفين",
-  "description": "نظام سحابي لتقييم أداء الموظفين شهرياً مع تقارير وإحصائيات",
-  "start_url": "/EVALUATION-APP/",
+  "description": "نظام سحابي لتقييم أداء الموظفين شهرياً مع تقارير وإحصائيات ومتابعة الغيابات",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#667eea",
   "theme_color": "#764ba2",
   "orientation": "portrait-primary",
-  "scope": "/EVALUATION-APP/",
+  "scope": ".",
   "lang": "ar",
   "dir": "rtl",
   "icons": [
@@ -30,20 +30,6 @@
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "screenshot-phone.png",
-      "sizes": "400x800",
-      "type": "image/png",
-      "form_factor": "narrow"
-    },
-    {
-      "src": "screenshot-pc.png",
-      "sizes": "900x600",
-      "type": "image/png",
-      "form_factor": "wide"
-    }
-  ],
   "categories": [
     "business",
     "productivity"
@@ -53,37 +39,25 @@
       "name": "الموظفين",
       "short_name": "الموظفين",
       "description": "عرض قائمة الموظفين",
-      "url": "/EVALUATION-APP/?tab=employees",
-      "icons": [
-        {
-          "src": "app_icon_v2_72.png",
-          "sizes": "72x72"
-        }
-      ]
+      "url": "?tab=employees"
     },
     {
       "name": "التقييم",
       "short_name": "التقييم",
       "description": "تقييم الموظفين اليومي",
-      "url": "/EVALUATION-APP/?tab=evaluate",
-      "icons": [
-        {
-          "src": "app_icon_v2_72.png",
-          "sizes": "72x72"
-        }
-      ]
+      "url": "?tab=evaluate"
+    },
+    {
+      "name": "الغيابات",
+      "short_name": "الغيابات",
+      "description": "متابعة غيابات الموظفين",
+      "url": "?tab=absences"
     },
     {
       "name": "التقارير",
       "short_name": "التقارير",
       "description": "عرض التقارير الشهرية",
-      "url": "/EVALUATION-APP/?tab=reports",
-      "icons": [
-        {
-          "src": "app_icon_v2_72.png",
-          "sizes": "72x72"
-        }
-      ]
+      "url": "?tab=reports"
     }
   ]
 }
