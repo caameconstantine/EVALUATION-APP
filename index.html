@@ -160,13 +160,13 @@ body{background:#fff;padding:0;margin:0}
 <div id="loginForm" class="auth-form active">
 <div class="form-group"><label>البريد الإلكتروني:</label><input type="email" id="loginEmail" placeholder="example@email.com" autocomplete="email"></div>
 <div class="form-group"><label>كلمة المرور:</label><div class="password-input-wrapper"><input type="password" id="loginPassword" placeholder="********" autocomplete="current-password"><button type="button" class="toggle-password" data-target="loginPassword">👁️</button></div></div>
-<button class="btn-primary" id="btnLogin" style="width:100%;margin-top:8px;font-size:1rem;padding:12px;">🔒 تسجيل الدخول</button>
-<button class="forgot-link" id="forgotPasswordLink" type="button">نسيت كلمة المرور؟</button>
+<button class="btn-primary" id="btnLogin" onclick="doLogin()" style="width:100%;margin-top:8px;font-size:1rem;padding:12px;">🔒 تسجيل الدخول</button>
+<button class="forgot-link" id="forgotPasswordLink" type="button" onclick="showForgotModal()">نسيت كلمة المرور؟</button>
 </div>
 <div id="signupForm" class="auth-form">
 <div class="form-group"><label>البريد الإلكتروني:</label><input type="email" id="signupEmail" placeholder="example@email.com" autocomplete="email"></div>
 <div class="form-group"><label>كلمة المرور (6 أحرف على الأقل):</label><div class="password-input-wrapper"><input type="password" id="signupPassword" placeholder="********" autocomplete="new-password"><button type="button" class="toggle-password" data-target="signupPassword">👁️</button></div></div>
-<button class="btn-success" id="btnSignup" style="width:100%;margin-top:8px;font-size:1rem;padding:12px;">📝 إنشاء حساب</button>
+<button class="btn-success" id="btnSignup" onclick="doSignup()" style="width:100%;margin-top:8px;font-size:1rem;padding:12px;">📝 إنشاء حساب</button>
 </div>
 <div id="authLoading" class="auth-loading hidden">جاري المعالجة... ⏳</div>
 <div id="userInfoDisplay" class="user-info hidden"></div>
@@ -225,10 +225,10 @@ body{background:#fff;padding:0;margin:0}
 <h2>📅 متابعة الغيابات والإجازات</h2>
 <div class="absence-card">
 <h4>⚙️ إدارة الرصيد السنوي</h4>
-<div class="form-group"><label>اختر الموظف:</label><select id="absenceEmpSelect"><option value="">-- اختر موظف --</option></select></div>
-<div class="form-group"><label>السنة:</label><select id="absenceYearSelect"></select></div>
+<div class="form-group"><label>اختر الموظف:</label><select id="absenceEmpSelect" onchange="onAbsenceEmployeeChange()"><option value="">-- اختر موظف --</option></select></div>
+<div class="form-group"><label>السنة:</label><select id="absenceYearSelect" onchange="onAbsenceEmployeeChange()"></select></div>
 <div class="form-group"><label>عدد أيام الإجازة المستحقة للسنة:</label><input type="number" id="annualLeaveDays" placeholder="مثال: 30" min="0" step="1"></div>
-<button class="btn-primary" id="saveLeaveBalanceBtn">💾 حفظ الرصيد السنوي</button>
+<button class="btn-primary" id="saveLeaveBalanceBtn" onclick="saveLeaveBalance()">💾 حفظ الرصيد السنوي</button>
 <div id="leaveBalanceDisplay" style="margin-top:15px;"></div>
 </div>
 <div class="absence-card">
@@ -242,12 +242,12 @@ body{background:#fff;padding:0;margin:0}
 </select>
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-<div class="form-group"><label>تاريخ الخروج:</label><input type="date" id="absenceStartDate"></div>
-<div class="form-group"><label>تاريخ العودة:</label><input type="date" id="absenceEndDate"></div>
+<div class="form-group"><label>تاريخ الخروج:</label><input type="date" id="absenceStartDate" onchange="calculateAbsenceDays()"></div>
+<div class="form-group"><label>تاريخ العودة:</label><input type="date" id="absenceEndDate" onchange="calculateAbsenceDays()"></div>
 </div>
 <div class="form-group"><label>عدد الأيام:</label><input type="number" id="absenceDays" placeholder="يُحسب تلقائياً" min="0.5" step="0.5"></div>
 <div class="form-group"><label>ملاحظة (اختياري):</label><input type="text" id="absenceNote" placeholder="مثال: زيارة عائلية"></div>
-<button class="btn-success" id="addAbsenceBtn">➕ تسجيل الغياب</button>
+<button class="btn-success" id="addAbsenceBtn" onclick="addAbsence()">➕ تسجيل الغياب</button>
 </div>
 <div class="absence-card">
 <h4>📋 سجل الغيابات</h4>
@@ -255,8 +255,8 @@ body{background:#fff;padding:0;margin:0}
 </div>
 <div class="absence-card">
 <h4>📊 تقرير الغيابات</h4>
-<button class="btn-info" id="showAbsenceReportBtn">📄 عرض تقرير الغيابات</button>
-<button class="btn-purple" id="showAllAbsencesReportBtn">📑 تقرير شامل (جميع الموظفين)</button>
+<button class="btn-info" id="showAbsenceReportBtn" onclick="showAbsenceReport()">📄 عرض تقرير الغيابات</button>
+<button class="btn-purple" id="showAllAbsencesReportBtn" onclick="showAllAbsencesReport()">📑 تقرير شامل (جميع الموظفين)</button>
 <div id="absenceReportContainer" style="margin-top:15px;"></div>
 </div>
 </div>
@@ -380,7 +380,7 @@ body{background:#fff;padding:0;margin:0}
 <button class="btn-success" onclick="exportAbsenceReport('excel')">📊 Excel</button>
 <button class="btn-info" onclick="exportAbsenceReport('image')">🖼️ صورة</button>
 <button class="btn-warning" onclick="exportAbsenceReport('whatsapp')">📱 واتساب</button>
-<button class="btn-danger" id="closeAbsenceReportModal">إغلاق</button>
+<button class="btn-danger" id="closeAbsenceReportModal" onclick="toggleModal('absenceReportModal', false)">إغلاق</button>
 </div>
 </div></div>
 
@@ -391,7 +391,7 @@ body{background:#fff;padding:0;margin:0}
 <button class="btn-primary" onclick="exportAllAbsencesReport('pdf')">🖨️ PDF</button>
 <button class="btn-success" onclick="exportAllAbsencesReport('excel')">📊 Excel</button>
 <button class="btn-info" onclick="exportAllAbsencesReport('image')">🖼️ صورة</button>
-<button class="btn-danger" id="closeAllAbsencesReportModal">إلغاء</button>
+<button class="btn-danger" id="closeAllAbsencesReportModal" onclick="toggleModal('allAbsencesReportModal', false)">إلغاء</button>
 </div>
 </div></div>
 
@@ -618,6 +618,62 @@ function handleUrlParams(){
   if(tab&&['employees','evaluate','absences','reports'].includes(tab)){
     switchToTab(tab);
   }
+}
+
+
+/* ===== Inline handler wrappers ===== */
+function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPassword').value.trim();
+  if(!email || !pass){ showNotification('أدخل البريد وكلمة المرور', true); return; }
+  const authLoading = document.getElementById('authLoading');
+  if(authLoading) authLoading.classList.remove('hidden');
+  auth.signInWithEmailAndPassword(email, pass)
+    .then((result) => {
+      currentUser = { type: 'firebase', uid: result.user.uid, email: result.user.email };
+      try{ localStorage.setItem('app_logged_user', JSON.stringify(currentUser)); }catch(e){}
+      showNotification('تم تسجيل الدخول بنجاح!');
+      if(authLoading) authLoading.classList.add('hidden');
+    })
+    .catch((e) => {
+      console.error(e);
+      showNotification('خطأ في تسجيل الدخول: ' + (e.message || ''), true);
+      if(authLoading) authLoading.classList.add('hidden');
+    });
+}
+
+function doSignup(){
+  const email = document.getElementById('signupEmail').value.trim();
+  const pass = document.getElementById('signupPassword').value.trim();
+  if(!email || !pass){ showNotification('أدخل البريد وكلمة المرور', true); return; }
+  if(pass.length < 6){ showNotification('كلمة المرور يجب أن تكون 6 أحرف على الأقل', true); return; }
+  const authLoading = document.getElementById('authLoading');
+  if(authLoading) authLoading.classList.remove('hidden');
+  auth.createUserWithEmailAndPassword(email, pass)
+    .then((result) => {
+      showNotification('تم إنشاء الحساب وتسجيل الدخول');
+      currentUser = { type: 'firebase', uid: result.user.uid, email: result.user.email };
+      try{ localStorage.setItem('app_logged_user', JSON.stringify(currentUser)); }catch(e){}
+      if(authLoading) authLoading.classList.add('hidden');
+    })
+    .catch((e) => {
+      console.error(e);
+      showNotification('خطأ في إنشاء الحساب: ' + (e.message || ''), true);
+      if(authLoading) authLoading.classList.add('hidden');
+    });
+}
+
+function showForgotModal(){
+  const forgotModal = document.getElementById('forgotPasswordModal');
+  const resetSuccessMsg = document.getElementById('resetSuccessMsg');
+  if(resetSuccessMsg) resetSuccessMsg.classList.remove('show');
+  document.getElementById('resetEmail').value = '';
+  const loginEmailInput = document.getElementById('loginEmail');
+  const resetEmailInput = document.getElementById('resetEmail');
+  if(loginEmailInput && resetEmailInput && loginEmailInput.value.trim()){
+    resetEmailInput.value = loginEmailInput.value.trim();
+  }
+  if(forgotModal) forgotModal.classList.add('show');
 }
 
 /* ========== DOMContentLoaded ========== */
