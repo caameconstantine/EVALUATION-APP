@@ -170,6 +170,7 @@ body{background:#fff;padding:0;margin:0}
 </div>
 <div id="authLoading" class="auth-loading hidden">جاري المعالجة... ⏳</div>
 <div id="userInfoDisplay" class="user-info hidden"></div>
+<button id="installPwaBtn" class="btn-success" style="width:100%;margin-top:12px;font-size:1rem;padding:12px;display:none;">📲 تثبيت التطبيق</button>
 </div>
 </div>
 
@@ -778,6 +779,8 @@ document.addEventListener('DOMContentLoaded', () => {
       else { input.type = 'password'; this.textContent = '👁️'; }
     });
   });
+  setupInstallButton();
+
 });
 
 function attachUIEvents(){
@@ -1802,21 +1805,13 @@ function showAbsenceReport(){
 
   currentAbsenceReportData = { type: 'single', empId, year, empName: emp.name };
 
-  let html = `<div class="absence-report-print" id="absenceReportPrintArea">
-    <div style="text-align:center;margin-bottom:20px;">
-      <h2 style="color:#2c3e50;">تقرير الغيابات والإجازات</h2>
-      <p style="color:#666;">الموظف: <strong>${escapeHtml(emp.name)}</strong> | السنة: <strong>${year}</strong></p>
-    </div>
-    <div class="stats-grid">
-      <div class="stat-box"><div class="number">${totalEntitled}</div><div class="label">الأيام المستحقة</div></div>
-      <div class="stat-box"><div class="number">${totalTaken}</div><div class="label">الأيام المأخوذة</div></div>
-      <div class="stat-box"><div class="number" style="color:${remaining>=0?'#27ae60':'#e74c3c'}">${remaining}</div><div class="label">المتبقي</div></div>
-      <div class="stat-box"><div class="number">${empAbsences.length}</div><div class="label">عدد السجلات</div></div>
-    </div>`;
+  let html = `<div class="absence-report-print" id="absenceReportPrintArea" style="padding:20px;">
+    <h2 style="text-align:center;color:#2c3e50;margin-bottom:5px;">${escapeHtml(emp.name)}</h2>
+    <p style="text-align:center;color:#666;margin-bottom:20px;font-size:.9rem;">تقرير الغيابات والإجازات - ${year}</p>`;
 
   if(empAbsences.length){
-    html += `<table class="absence-table" style="margin-top:15px;">
-      <thead><tr><th>#</th><th>من</th><th>إلى</th><th>عدد الأيام</th><th>سبب الغياب</th></tr></thead>
+    html += `<table class="absence-table">
+      <thead><tr><th style="width:40px">#</th><th>من</th><th>إلى</th><th style="width:80px">عدد الأيام</th><th>سبب الغياب</th></tr></thead>
       <tbody>`;
     empAbsences.forEach((a, i) => {
       html += `<tr>
@@ -1829,37 +1824,32 @@ function showAbsenceReport(){
     });
     html += `</tbody></table>`;
   } else {
-    html += `<p style="text-align:center;color:#666;margin-top:20px;">لا توجد غيابات مسجَّلة لهذه السنة.</p>`;
+    html += `<p style="text-align:center;color:#666;">لا توجد غيابات مسجَّلة لهذه السنة.</p>`;
   }
 
-  html += `<div style="margin-top:20px;padding:15px;background:#f8f9fa;border-radius:10px;">
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;text-align:center;">
-      <div><div style="font-size:1.3rem;font-weight:bold;color:#e74c3c;">${totalTaken}</div><div style="font-size:.85rem;color:#666;">مجموع الأيام التي أخذها</div></div>
-      <div><div style="font-size:1.3rem;font-weight:bold;color:#3498db;">${totalEntitled}</div><div style="font-size:.85rem;color:#666;">عدد الأيام المستحقة</div></div>
-      <div><div style="font-size:1.3rem;font-weight:bold;color:${remaining>=0?'#27ae60':'#e74c3c'};">${remaining}</div><div style="font-size:.85rem;color:#666;">صافي الأيام المتبقية</div></div>
-    </div>
-  </div>
-  <div style="margin-top:15px;text-align:center;font-size:.8rem;color:#999;">
-    تم إنشاء التقرير بتاريخ: ${new Date().toLocaleDateString('ar-SA')}
-  </div>
+  html += `<table class="absence-table" style="margin-top:15px;width:auto;min-width:400px;">
+    <tbody>
+      <tr><td style="text-align:right;font-weight:bold;background:#fff7f7;">مجموع الأيام التي أخذها</td><td style="text-align:center;font-weight:bold;color:#e74c3c;width:80px;">${totalTaken}</td></tr>
+      <tr><td style="text-align:right;font-weight:bold;background:#f7fbff;">عدد الأيام المستحقة</td><td style="text-align:center;font-weight:bold;color:#3498db;width:80px;">${totalEntitled}</td></tr>
+      <tr><td style="text-align:right;font-weight:bold;background:#f7fff7;">صافي الأيام المتبقية</td><td style="text-align:center;font-weight:bold;color:${remaining>=0?'#27ae60':'#e74c3c'};width:80px;">${remaining}</td></tr>
+    </tbody>
+  </table>
+  <p style="text-align:center;font-size:.75rem;color:#999;margin-top:20px;">تم إنشاء التقرير بتاريخ: ${new Date().toLocaleDateString('ar-SA')}</p>
   </div>`;
 
   document.getElementById('absenceReportModalTitle').textContent = `تقرير الغيابات - ${escapeHtml(emp.name)}`;
   document.getElementById('absenceReportModalContent').innerHTML = html;
   toggleModal('absenceReportModal', true);
 }
-
 function showAllAbsencesReport(){
   if(!employees.length){ showNotification('لا يوجد موظفين', true); return; }
   const year = parseInt(document.getElementById('absenceYearSelect').value);
 
   currentAbsenceReportData = { type: 'all', year };
 
-  let html = `<div class="absence-report-print" id="allAbsencesReportPrintArea">
-    <div style="text-align:center;margin-bottom:20px;">
-      <h2 style="color:#2c3e50;">📑 التقرير الشامل للغيابات</h2>
-      <p style="color:#666;">السنة: <strong>${year}</strong> | جميع الموظفين</p>
-    </div>`;
+  let html = `<div class="absence-report-print" id="allAbsencesReportPrintArea" style="padding:20px;">
+    <h2 style="text-align:center;color:#2c3e50;margin-bottom:5px;">📑 التقرير الشامل للغيابات</h2>
+    <p style="text-align:center;color:#666;margin-bottom:25px;font-size:.9rem;">السنة: ${year} | جميع الموظفين</p>`;
 
   employees.forEach(emp => {
     const balance = leaveBalances.find(l => l.employeeId === emp.id && l.year === year);
@@ -1868,17 +1858,12 @@ function showAllAbsencesReport(){
     const totalTaken = empAbsences.reduce((s, a) => s + Number(a.days || 0), 0);
     const remaining = totalEntitled - totalTaken;
 
-    html += `<div style="margin-bottom:30px;border:2px solid #e0e0e0;border-radius:12px;padding:15px;">
-      <h3 style="color:#3498db;border-bottom:2px solid #3498db;padding-bottom:8px;margin-bottom:12px;">${escapeHtml(emp.name)}</h3>
-      <div class="stats-grid" style="margin-bottom:12px;">
-        <div class="stat-box"><div class="number">${totalEntitled}</div><div class="label">المستحقة</div></div>
-        <div class="stat-box"><div class="number">${totalTaken}</div><div class="label">المأخوذة</div></div>
-        <div class="stat-box"><div class="number" style="color:${remaining>=0?'#27ae60':'#e74c3c'}">${remaining}</div><div class="label">المتبقي</div></div>
-      </div>`;
+    html += `<div style="margin-bottom:25px;border:1px solid #ddd;border-radius:8px;overflow:hidden;">
+      <div style="background:#3498db;color:#fff;padding:10px 15px;font-weight:bold;font-size:1.05rem;">${escapeHtml(emp.name)}</div>`;
 
     if(empAbsences.length){
-      html += `<table class="absence-table">
-        <thead><tr><th>#</th><th>من</th><th>إلى</th><th>عدد الأيام</th><th>سبب الغياب</th></tr></thead>
+      html += `<table class="absence-table" style="margin:0;border:none;">
+        <thead><tr><th style="width:40px">#</th><th>من</th><th>إلى</th><th style="width:80px">عدد الأيام</th><th>سبب الغياب</th></tr></thead>
         <tbody>`;
       empAbsences.forEach((a, i) => {
         html += `<tr>
@@ -1891,24 +1876,23 @@ function showAllAbsencesReport(){
       });
       html += `</tbody></table>`;
     } else {
-      html += `<p style="text-align:center;color:#666;">لا توجد غيابات مسجَّلة.</p>`;
+      html += `<p style="text-align:center;color:#666;padding:15px;">لا توجد غيابات مسجَّلة.</p>`;
     }
-    html += `<div style="margin-top:12px;padding:10px;background:#f8f9fa;border-radius:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;font-size:.85rem;">
-      <div><strong style="color:#e74c3c">${totalTaken}</strong><br>مجموع الأيام المأخوذة</div>
-      <div><strong style="color:#3498db">${totalEntitled}</strong><br>الأيام المستحقة</div>
-      <div><strong style="color:${remaining>=0?'#27ae60':'#e74c3c'}">${remaining}</strong><br>الصافي المتبقي</div>
-    </div>`;
-    html += `</div>`;
+
+    html += `<table class="absence-table" style="margin:0;border:none;border-top:2px solid #ddd;width:100%;">
+      <tbody>
+        <tr><td style="text-align:right;font-weight:bold;background:#fff7f7;width:70%;">مجموع الأيام التي أخذها</td><td style="text-align:center;font-weight:bold;color:#e74c3c;">${totalTaken}</td></tr>
+        <tr><td style="text-align:right;font-weight:bold;background:#f7fbff;">عدد الأيام المستحقة</td><td style="text-align:center;font-weight:bold;color:#3498db;">${totalEntitled}</td></tr>
+        <tr><td style="text-align:right;font-weight:bold;background:#f7fff7;">صافي الأيام المتبقية</td><td style="text-align:center;font-weight:bold;color:${remaining>=0?'#27ae60':'#e74c3c'};">${remaining}</td></tr>
+      </tbody>
+    </table></div>`;
   });
 
-  html += `<div style="text-align:center;font-size:.8rem;color:#999;margin-top:20px;">
-    تم إنشاء التقرير بتاريخ: ${new Date().toLocaleDateString('ar-SA')}
-  </div></div>`;
+  html += `<p style="text-align:center;font-size:.75rem;color:#999;margin-top:20px;">تم إنشاء التقرير بتاريخ: ${new Date().toLocaleDateString('ar-SA')}</p></div>`;
 
   document.getElementById('allAbsencesReportContent').innerHTML = html;
   toggleModal('allAbsencesReportModal', true);
 }
-
 async function exportAbsenceReport(format){
   const area = document.getElementById('absenceReportPrintArea');
   if(!area){ showNotification('لا يوجد تقرير للتصدير', true); return; }
@@ -1933,13 +1917,15 @@ async function exportAbsenceReport(format){
     const totalEntitled = balance ? balance.days : 0;
     const totalTaken = empAbsences.reduce((s, a) => s + Number(a.days || 0), 0);
     const remaining = totalEntitled - totalTaken;
-    let csv = '\uFEFFالرقم,من,إلى,عدد الأيام,سبب الغياب\n';
+    let csv = 'sep=,\n';
+    csv += 'الرقم,من,الى,عدد الايام,سبب الغياب\n';
     empAbsences.forEach((a, i) => {
       csv += `${i+1},${a.startDate},${a.endDate},${a.days},"${a.note || ''}"\n`;
     });
-    csv += `\nمجموع الأيام التي أخذها,${totalTaken}\n`;
-    csv += `عدد الأيام المستحقة,${totalEntitled}\n`;
-    csv += `صافي الأيام المتبقية,${remaining}\n`;
+    csv += `\n`;
+    csv += `,مجموع الايام التى اخذها,${totalTaken}\n`;
+    csv += `,عدد الايام المستحقة,${totalEntitled}\n`;
+    csv += `,صافى الايام المتبقية,${remaining}\n`;
     const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1948,7 +1934,7 @@ async function exportAbsenceReport(format){
     URL.revokeObjectURL(url);
     showNotification('تم تصدير Excel (CSV)');
   } else if(format === 'image'){
-    showNotification('جاري إنشاء الصورة...');
+    showNotification('جاري انشاء الصورة...');
     try{
       const canvas = await html2canvas(area, {scale:2, backgroundColor:'#fff'});
       const link = document.createElement('a');
@@ -1974,7 +1960,6 @@ async function exportAbsenceReport(format){
     window.open(url, '_blank');
   }
 }
-
 async function exportAllAbsencesReport(format){
   const area = document.getElementById('allAbsencesReportPrintArea');
   if(!area){ showNotification('لا يوجد تقرير للتصدير', true); return; }
@@ -1992,7 +1977,8 @@ async function exportAllAbsencesReport(format){
     setTimeout(() => { window.print(); area.remove(); toggleModal('allAbsencesReportModal', true); }, 500);
   } else if(format === 'excel'){
     const year = currentAbsenceReportData.year;
-    let csv = '\uFEFFاسم الموظف,من,إلى,عدد الأيام,سبب الغياب\n';
+    let csv = 'sep=,\n';
+    csv += 'اسم الموظف,من,الى,عدد الايام,سبب الغياب\n';
     employees.forEach(emp => {
       const empAbsences = absences.filter(a => a.employeeId === emp.id && a.year === year).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
       const balance = leaveBalances.find(l => l.employeeId === emp.id && l.year === year);
@@ -2003,8 +1989,11 @@ async function exportAllAbsencesReport(format){
         csv += `"${emp.name}",${a.startDate},${a.endDate},${a.days},"${a.note || ''}"\n`;
       });
       if(empAbsences.length){
-        csv += `"${emp.name} - ملخص",مجموع الأيام المأخوذة,${totalTaken},الأيام المستحقة,${totalEntitled}\n`;
-        csv += `"${emp.name} - ملخص",صافي الأيام المتبقية,${remaining},,\n\n`;
+        csv += `\n`;
+        csv += `"${emp.name} - ملخص",مجموع الايام التى اخذها,${totalTaken}\n`;
+        csv += `"${emp.name} - ملخص",عدد الايام المستحقة,${totalEntitled}\n`;
+        csv += `"${emp.name} - ملخص",صافى الايام المتبقية,${remaining}\n`;
+        csv += `\n`;
       }
     });
     const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
@@ -2015,7 +2004,7 @@ async function exportAllAbsencesReport(format){
     URL.revokeObjectURL(url);
     showNotification('تم تصدير Excel (CSV) الشامل');
   } else if(format === 'image'){
-    showNotification('جاري إنشاء الصورة... قد يستغرق بعض الوقت');
+    showNotification('جاري انشاء الصورة... قد يستغرق بعض الوقت');
     try{
       const canvas = await html2canvas(area, {scale:2, backgroundColor:'#fff'});
       const link = document.createElement('a');
@@ -2082,21 +2071,45 @@ function clearAllDataConfirm(){
   renderEmployeeList(); fillEmployeeSelects(); renderAbsenceTab();
   showNotification('تم مسح جميع البيانات من هذا المتصفح. ما زال بإمكانك استيراد نسخة احتياطية لاحقًا.');
 }
-</script>
 
-<!-- PWA Service Worker Registration -->
-<script>
+/* ===== PWA Install Button ===== */
+let deferredPrompt = null;
+
+function setupInstallButton(){
+  const installBtn = document.getElementById('installPwaBtn');
+  if(!installBtn) return;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'block';
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if(!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if(outcome === 'accepted'){
+      showNotification('✅ تم تثبيت التطبيق بنجاح!');
+      installBtn.style.display = 'none';
+    }
+    deferredPrompt = null;
+  });
+
+  window.addEventListener('appinstalled', () => {
+    showNotification('✅ تم تثبيت التطبيق!');
+    installBtn.style.display = 'none';
+    deferredPrompt = null;
+  });
+}
+
+/* PWA Service Worker */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js')
       .then((registration) => { console.log('SW registered:', registration.scope); })
       .catch((error) => { console.log('SW registration failed:', error); });
   });
-}
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
-if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-  console.log('Running as installed PWA');
 }
 </script>
 
