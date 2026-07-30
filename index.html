@@ -43,7 +43,7 @@ button{padding:8px 14px;border:none;border-radius:8px;font-size:.85rem;font-weig
 .score-item{background:#ffffff;border-radius:10px;padding:10px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
 .score-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px;flex-wrap:wrap}
 .criteria-note{font-size:.8rem;color:#666;margin-top:3px}
-.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:none;justify-content:center;align-items:center;z-index:10000}
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:none;justify-content:center;align-items:center;z-index:1000}
 .modal.show{display:flex}
 .modal-content{background:#fff;border-radius:15px;max-width:650px;width:92%;max-height:90vh;overflow-y:auto;padding:15px 15px 20px;animation:fadeIn .25s}
 @keyframes fadeIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
@@ -52,7 +52,7 @@ button{padding:8px 14px;border:none;border-radius:8px;font-size:.85rem;font-weig
 .report-summary{background:#f5f7fa;padding:10px;border-radius:10px;margin-top:10px}
 .total-score{font-size:1.4rem;font-weight:bold;color:#27ae60;text-align:center;margin:10px 0}
 .hidden{display:none!important}
-.notification{position:fixed;top:15px;left:50%;transform:translateX(-50%);background:#27ae60;color:#fff;padding:10px 22px;border-radius:10px;font-size:.9rem;box-shadow:0 4px 10px rgba(0,0,0,.3);z-index:20000;display:none;min-width:280px;text-align:center}
+.notification{position:fixed;top:15px;left:50%;transform:translateX(-50%);background:#27ae60;color:#fff;padding:10px 22px;border-radius:10px;font-size:.9rem;box-shadow:0 4px 10px rgba(0,0,0,.3);z-index:2000;display:none;min-width:280px;text-align:center}
 .notification.error{background:#e74c3c}
 .login-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);z-index:9999;justify-content:center;align-items:center;display:flex}
 .login-screen.hidden{display:none}
@@ -160,13 +160,13 @@ body{background:#fff;padding:0;margin:0}
 <div id="loginForm" class="auth-form active">
 <div class="form-group"><label>البريد الإلكتروني:</label><input type="email" id="loginEmail" placeholder="example@email.com" autocomplete="email"></div>
 <div class="form-group"><label>كلمة المرور:</label><div class="password-input-wrapper"><input type="password" id="loginPassword" placeholder="********" autocomplete="current-password"><button type="button" class="toggle-password" data-target="loginPassword">👁️</button></div></div>
-<button class="btn-primary" id="btnLogin" style="width:100%;margin-top:8px;font-size:1rem;padding:12px;">🔒 تسجيل الدخول</button>
-<button class="forgot-link" id="forgotPasswordLink" type="button">نسيت كلمة المرور؟</button>
+<button class="btn-primary" id="btnLogin" onclick="doLogin()" style="width:100%;margin-top:8px;font-size:1rem;padding:12px;">🔒 تسجيل الدخول</button>
+<button class="forgot-link" id="forgotPasswordLink" type="button" onclick="showForgotModal()">نسيت كلمة المرور؟</button>
 </div>
 <div id="signupForm" class="auth-form">
 <div class="form-group"><label>البريد الإلكتروني:</label><input type="email" id="signupEmail" placeholder="example@email.com" autocomplete="email"></div>
 <div class="form-group"><label>كلمة المرور (6 أحرف على الأقل):</label><div class="password-input-wrapper"><input type="password" id="signupPassword" placeholder="********" autocomplete="new-password"><button type="button" class="toggle-password" data-target="signupPassword">👁️</button></div></div>
-<button class="btn-success" id="btnSignup" style="width:100%;margin-top:8px;font-size:1rem;padding:12px;">📝 إنشاء حساب</button>
+<button class="btn-success" id="btnSignup" onclick="doSignup()" style="width:100%;margin-top:8px;font-size:1rem;padding:12px;">📝 إنشاء حساب</button>
 </div>
 <div id="authLoading" class="auth-loading hidden">جاري المعالجة... ⏳</div>
 <div id="userInfoDisplay" class="user-info hidden"></div>
@@ -589,13 +589,7 @@ function checkLoginStatusOnLoad(){
         else { ui.innerHTML=`<strong>وضع الضيف:</strong> البيانات محلية`; }
       }
       hideLoginScreen();
-      initTabs();
-      initDates();
       loadAllData();
-      if(!uiEventsAttached){
-        attachUIEvents();
-        uiEventsAttached = true;
-      }
     }catch(e){ try{ localStorage.removeItem('app_logged_user'); }catch(_){} }
   }
 }
@@ -624,6 +618,62 @@ function handleUrlParams(){
   if(tab&&['employees','evaluate','absences','reports'].includes(tab)){
     switchToTab(tab);
   }
+}
+
+
+/* ===== Inline handler wrappers ===== */
+function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPassword').value.trim();
+  if(!email || !pass){ showNotification('أدخل البريد وكلمة المرور', true); return; }
+  const authLoading = document.getElementById('authLoading');
+  if(authLoading) authLoading.classList.remove('hidden');
+  auth.signInWithEmailAndPassword(email, pass)
+    .then((result) => {
+      currentUser = { type: 'firebase', uid: result.user.uid, email: result.user.email };
+      try{ localStorage.setItem('app_logged_user', JSON.stringify(currentUser)); }catch(e){}
+      showNotification('تم تسجيل الدخول بنجاح!');
+      if(authLoading) authLoading.classList.add('hidden');
+    })
+    .catch((e) => {
+      console.error(e);
+      showNotification('خطأ في تسجيل الدخول: ' + (e.message || ''), true);
+      if(authLoading) authLoading.classList.add('hidden');
+    });
+}
+
+function doSignup(){
+  const email = document.getElementById('signupEmail').value.trim();
+  const pass = document.getElementById('signupPassword').value.trim();
+  if(!email || !pass){ showNotification('أدخل البريد وكلمة المرور', true); return; }
+  if(pass.length < 6){ showNotification('كلمة المرور يجب أن تكون 6 أحرف على الأقل', true); return; }
+  const authLoading = document.getElementById('authLoading');
+  if(authLoading) authLoading.classList.remove('hidden');
+  auth.createUserWithEmailAndPassword(email, pass)
+    .then((result) => {
+      showNotification('تم إنشاء الحساب وتسجيل الدخول');
+      currentUser = { type: 'firebase', uid: result.user.uid, email: result.user.email };
+      try{ localStorage.setItem('app_logged_user', JSON.stringify(currentUser)); }catch(e){}
+      if(authLoading) authLoading.classList.add('hidden');
+    })
+    .catch((e) => {
+      console.error(e);
+      showNotification('خطأ في إنشاء الحساب: ' + (e.message || ''), true);
+      if(authLoading) authLoading.classList.add('hidden');
+    });
+}
+
+function showForgotModal(){
+  const forgotModal = document.getElementById('forgotPasswordModal');
+  const resetSuccessMsg = document.getElementById('resetSuccessMsg');
+  if(resetSuccessMsg) resetSuccessMsg.classList.remove('show');
+  document.getElementById('resetEmail').value = '';
+  const loginEmailInput = document.getElementById('loginEmail');
+  const resetEmailInput = document.getElementById('resetEmail');
+  if(loginEmailInput && resetEmailInput && loginEmailInput.value.trim()){
+    resetEmailInput.value = loginEmailInput.value.trim();
+  }
+  if(forgotModal) forgotModal.classList.add('show');
 }
 
 /* ========== DOMContentLoaded ========== */
@@ -785,6 +835,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       else { input.type = 'password'; this.textContent = '👁️'; }
     });
   });
+  setupInstallButton();
+
 });
 
 async function attachUIEvents(){
@@ -1809,36 +1861,69 @@ function showAbsenceReport(){
 
   currentAbsenceReportData = { type: 'single', empId, year, empName: emp.name };
 
-  let html = `<div class="absence-report-print" id="absenceReportPrintArea" style="padding:20px;">
-    <h2 style="text-align:center;color:#2c3e50;margin-bottom:5px;">${escapeHtml(emp.name)}</h2>
-    <p style="text-align:center;color:#666;margin-bottom:20px;font-size:.9rem;">تقرير الغيابات والإجازات - ${year}</p>`;
+  let html = `<div class="absence-report-print" id="absenceReportPrintArea" style="padding:20px;font-family:'Segoe UI',Tahoma,sans-serif;direction:rtl;">
+    <h2 style="text-align:center;color:#2c3e50;margin-bottom:5px;font-size:1.6rem;">تقرير الغيابات والإجازات</h2>
+    <div style="text-align:center;color:#666;margin-bottom:25px;font-size:1rem;font-weight:bold;">
+      الموظف: ${escapeHtml(emp.name)} | السنة: ${year}
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:25px;max-width:500px;margin-left:auto;margin-right:auto;">
+      <div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:15px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+        <div style="font-size:2.2rem;font-weight:bold;color:#3498db;">${totalEntitled}</div>
+        <div style="font-size:0.9rem;color:#666;margin-top:5px;">الأيام المستحقة</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:15px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+        <div style="font-size:2.2rem;font-weight:bold;color:#e74c3c;">${totalTaken}</div>
+        <div style="font-size:0.9rem;color:#666;margin-top:5px;">الأيام المأخوذة</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:15px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+        <div style="font-size:2.2rem;font-weight:bold;color:#3498db;">${empAbsences.length}</div>
+        <div style="font-size:0.9rem;color:#666;margin-top:5px;">عدد السجلات</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:15px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+        <div style="font-size:2.2rem;font-weight:bold;color:${remaining>=0?'#27ae60':'#e74c3c'};">${remaining}</div>
+        <div style="font-size:0.9rem;color:#666;margin-top:5px;">المتبقي</div>
+      </div>
+    </div>
+
+    <table class="absence-table" style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:0.9rem;">
+      <thead>
+        <tr style="background:#3498db;color:#fff;">
+          <th style="border:1px solid #ddd;padding:10px;text-align:center;width:40px;">#</th>
+          <th style="border:1px solid #ddd;padding:10px;text-align:center;">النوع</th>
+          <th style="border:1px solid #ddd;padding:10px;text-align:center;">تاريخ الخروج</th>
+          <th style="border:1px solid #ddd;padding:10px;text-align:center;">تاريخ العودة</th>
+          <th style="border:1px solid #ddd;padding:10px;text-align:center;">عدد الأيام</th>
+          <th style="border:1px solid #ddd;padding:10px;text-align:center;">الملاحظة</th>
+        </tr>
+      </thead>
+      <tbody>`;
 
   if(empAbsences.length){
-    html += `<table class="absence-table">
-      <thead><tr><th style="width:40px">#</th><th>من</th><th>إلى</th><th style="width:80px">عدد الأيام</th><th>سبب الغياب</th></tr></thead>
-      <tbody>`;
     empAbsences.forEach((a, i) => {
-      html += `<tr>
-        <td>${i+1}</td>
-        <td>${a.startDate}</td>
-        <td>${a.endDate}</td>
-        <td>${a.days}</td>
-        <td>${escapeHtml(a.note || '-')}</td>
+      const typeName = absenceTypeNames[a.type] || a.type;
+      html += `<tr style="background:${i%2===0?'#f8f9fa':'#fff'};">
+        <td style="border:1px solid #ddd;padding:8px;text-align:center;font-weight:bold;">${i+1}</td>
+        <td style="border:1px solid #ddd;padding:8px;text-align:center;">${typeName}</td>
+        <td style="border:1px solid #ddd;padding:8px;text-align:center;">${a.startDate}</td>
+        <td style="border:1px solid #ddd;padding:8px;text-align:center;">${a.endDate}</td>
+        <td style="border:1px solid #ddd;padding:8px;text-align:center;font-weight:bold;">${a.days}</td>
+        <td style="border:1px solid #ddd;padding:8px;text-align:center;">${escapeHtml(a.note || '-')}</td>
       </tr>`;
     });
-    html += `</tbody></table>`;
   } else {
-    html += `<p style="text-align:center;color:#666;">لا توجد غيابات مسجَّلة لهذه السنة.</p>`;
+    html += `<tr><td colspan="6" style="border:1px solid #ddd;padding:15px;text-align:center;color:#999;">لا توجد غيابات مسجَّلة لهذه السنة.</td></tr>`;
   }
 
-  html += `<table class="absence-table" style="margin-top:15px;width:auto;min-width:400px;">
-    <tbody>
-      <tr><td style="text-align:right;font-weight:bold;background:#fff7f7;">مجموع الأيام التي أخذها</td><td style="text-align:center;font-weight:bold;color:#e74c3c;width:80px;">${totalTaken}</td></tr>
-      <tr><td style="text-align:right;font-weight:bold;background:#f7fbff;">عدد الأيام المستحقة</td><td style="text-align:center;font-weight:bold;color:#3498db;width:80px;">${totalEntitled}</td></tr>
-      <tr><td style="text-align:right;font-weight:bold;background:#f7fff7;">صافي الأيام المتبقية</td><td style="text-align:center;font-weight:bold;color:${remaining>=0?'#27ae60':'#e74c3c'};width:80px;">${remaining}</td></tr>
-    </tbody>
-  </table>
-  <p style="text-align:center;font-size:.75rem;color:#999;margin-top:20px;">تم إنشاء التقرير بتاريخ: ${new Date().toLocaleDateString('ar-SA')}</p>
+  html += `</tbody></table>
+
+    <div style="background:#f0f8ff;border-radius:12px;padding:15px;text-align:center;margin-top:15px;border:1px solid #dbeafe;">
+      <div style="font-size:1.3rem;font-weight:bold;color:${remaining>=0?'#27ae60':'#e74c3c'};">
+        الصافي المتبقي: ${remaining} يوم (${totalTaken} مأخوذة من ${totalEntitled} مستحقة)
+      </div>
+    </div>
+
+    <p style="text-align:center;font-size:0.8rem;color:#999;margin-top:20px;">تم إنشاء التقرير بتاريخ: ${new Date().toLocaleDateString('ar-SA')}</p>
   </div>`;
 
   document.getElementById('absenceReportModalTitle').textContent = `تقرير الغيابات - ${escapeHtml(emp.name)}`;
@@ -1851,9 +1936,9 @@ function showAllAbsencesReport(){
 
   currentAbsenceReportData = { type: 'all', year };
 
-  let html = `<div class="absence-report-print" id="allAbsencesReportPrintArea" style="padding:20px;">
-    <h2 style="text-align:center;color:#2c3e50;margin-bottom:5px;">📑 التقرير الشامل للغيابات</h2>
-    <p style="text-align:center;color:#666;margin-bottom:25px;font-size:.9rem;">السنة: ${year} | جميع الموظفين</p>`;
+  let html = `<div class="absence-report-print" id="allAbsencesReportPrintArea" style="padding:20px;font-family:'Segoe UI',Tahoma,sans-serif;direction:rtl;">
+    <h2 style="text-align:center;color:#2c3e50;margin-bottom:5px;font-size:1.6rem;">📑 التقرير الشامل للغيابات والإجازات</h2>
+    <p style="text-align:center;color:#666;margin-bottom:25px;font-size:1rem;font-weight:bold;">السنة: ${year} | جميع الموظفين</p>`;
 
   employees.forEach(emp => {
     const balance = leaveBalances.find(l => l.employeeId === emp.id && l.year === year);
@@ -1862,42 +1947,73 @@ function showAllAbsencesReport(){
     const totalTaken = empAbsences.reduce((s, a) => s + Number(a.days || 0), 0);
     const remaining = totalEntitled - totalTaken;
 
-    html += `<div style="margin-bottom:25px;border:1px solid #ddd;border-radius:8px;overflow:hidden;">
-      <div style="background:#3498db;color:#fff;padding:10px 15px;font-weight:bold;font-size:1.05rem;">${escapeHtml(emp.name)}</div>`;
+    html += `<div style="margin-bottom:30px;border:1px solid #ddd;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+      <div style="background:#3498db;color:#fff;padding:12px 15px;font-weight:bold;font-size:1.1rem;text-align:center;">${escapeHtml(emp.name)}</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:15px;max-width:480px;margin:0 auto;">
+        <div style="background:#f8f9fa;border:1px solid #e0e0e0;border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-size:1.8rem;font-weight:bold;color:#3498db;">${totalEntitled}</div>
+          <div style="font-size:0.85rem;color:#666;margin-top:4px;">الأيام المستحقة</div>
+        </div>
+        <div style="background:#f8f9fa;border:1px solid #e0e0e0;border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-size:1.8rem;font-weight:bold;color:#e74c3c;">${totalTaken}</div>
+          <div style="font-size:0.85rem;color:#666;margin-top:4px;">الأيام المأخوذة</div>
+        </div>
+        <div style="background:#f8f9fa;border:1px solid #e0e0e0;border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-size:1.8rem;font-weight:bold;color:#3498db;">${empAbsences.length}</div>
+          <div style="font-size:0.85rem;color:#666;margin-top:4px;">عدد السجلات</div>
+        </div>
+        <div style="background:#f8f9fa;border:1px solid #e0e0e0;border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-size:1.8rem;font-weight:bold;color:${remaining>=0?'#27ae60':'#e74c3c'};">${remaining}</div>
+          <div style="font-size:0.85rem;color:#666;margin-top:4px;">المتبقي</div>
+        </div>
+      </div>
+
+      <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+        <thead>
+          <tr style="background:#3498db;color:#fff;">
+            <th style="border:1px solid #ddd;padding:8px;text-align:center;width:35px;">#</th>
+            <th style="border:1px solid #ddd;padding:8px;text-align:center;">النوع</th>
+            <th style="border:1px solid #ddd;padding:8px;text-align:center;">تاريخ الخروج</th>
+            <th style="border:1px solid #ddd;padding:8px;text-align:center;">تاريخ العودة</th>
+            <th style="border:1px solid #ddd;padding:8px;text-align:center;">عدد الأيام</th>
+            <th style="border:1px solid #ddd;padding:8px;text-align:center;">الملاحظة</th>
+          </tr>
+        </thead>
+        <tbody>`;
 
     if(empAbsences.length){
-      html += `<table class="absence-table" style="margin:0;border:none;">
-        <thead><tr><th style="width:40px">#</th><th>من</th><th>إلى</th><th style="width:80px">عدد الأيام</th><th>سبب الغياب</th></tr></thead>
-        <tbody>`;
       empAbsences.forEach((a, i) => {
-        html += `<tr>
-          <td>${i+1}</td>
-          <td>${a.startDate}</td>
-          <td>${a.endDate}</td>
-          <td>${a.days}</td>
-          <td>${escapeHtml(a.note || '-')}</td>
+        const typeName = absenceTypeNames[a.type] || a.type;
+        html += `<tr style="background:${i%2===0?'#f8f9fa':'#fff'};">
+          <td style="border:1px solid #ddd;padding:6px;text-align:center;font-weight:bold;">${i+1}</td>
+          <td style="border:1px solid #ddd;padding:6px;text-align:center;">${typeName}</td>
+          <td style="border:1px solid #ddd;padding:6px;text-align:center;">${a.startDate}</td>
+          <td style="border:1px solid #ddd;padding:6px;text-align:center;">${a.endDate}</td>
+          <td style="border:1px solid #ddd;padding:6px;text-align:center;font-weight:bold;">${a.days}</td>
+          <td style="border:1px solid #ddd;padding:6px;text-align:center;">${escapeHtml(a.note || '-')}</td>
         </tr>`;
       });
-      html += `</tbody></table>`;
     } else {
-      html += `<p style="text-align:center;color:#666;padding:15px;">لا توجد غيابات مسجَّلة.</p>`;
+      html += `<tr><td colspan="6" style="border:1px solid #ddd;padding:12px;text-align:center;color:#999;">لا توجد غيابات مسجَّلة.</td></tr>`;
     }
 
-    html += `<table class="absence-table" style="margin:0;border:none;border-top:2px solid #ddd;width:100%;">
-      <tbody>
-        <tr><td style="text-align:right;font-weight:bold;background:#fff7f7;width:70%;">مجموع الأيام التي أخذها</td><td style="text-align:center;font-weight:bold;color:#e74c3c;">${totalTaken}</td></tr>
-        <tr><td style="text-align:right;font-weight:bold;background:#f7fbff;">عدد الأيام المستحقة</td><td style="text-align:center;font-weight:bold;color:#3498db;">${totalEntitled}</td></tr>
-        <tr><td style="text-align:right;font-weight:bold;background:#f7fff7;">صافي الأيام المتبقية</td><td style="text-align:center;font-weight:bold;color:${remaining>=0?'#27ae60':'#e74c3c'};">${remaining}</td></tr>
-      </tbody>
-    </table></div>`;
+    html += `</tbody></table>
+
+      <div style="background:#f0f8ff;padding:12px;text-align:center;border-top:2px solid #ddd;">
+        <div style="font-size:1.1rem;font-weight:bold;color:${remaining>=0?'#27ae60':'#e74c3c'};">
+          الصافي المتبقي: ${remaining} يوم (${totalTaken} مأخوذة من ${totalEntitled} مستحقة)
+        </div>
+      </div>
+    </div>`;
   });
 
-  html += `<p style="text-align:center;font-size:.75rem;color:#999;margin-top:20px;">تم إنشاء التقرير بتاريخ: ${new Date().toLocaleDateString('ar-SA')}</p></div>`;
+  html += `<p style="text-align:center;font-size:0.8rem;color:#999;margin-top:20px;">تم إنشاء التقرير بتاريخ: ${new Date().toLocaleDateString('ar-SA')}</p></div>`;
 
   document.getElementById('allAbsencesReportContent').innerHTML = html;
   toggleModal('allAbsencesReportModal', true);
 }
-function exportAbsenceReport(format){
+async function exportAbsenceReport(format){
   const area = document.getElementById('absenceReportPrintArea');
   if(!area){ showNotification('لا يوجد تقرير للتصدير', true); return; }
 
@@ -1921,15 +2037,22 @@ function exportAbsenceReport(format){
     const totalEntitled = balance ? balance.days : 0;
     const totalTaken = empAbsences.reduce((s, a) => s + Number(a.days || 0), 0);
     const remaining = totalEntitled - totalTaken;
-    let csv = 'sep=,\n';
-    csv += 'الرقم,من,الى,عدد الايام,سبب الغياب\n';
+
+    let csv = '\uFEFF';
+    csv += 'تقرير الغيابات والإجازات\n';
+    csv += `الموظف: ${emp ? emp.name : ''}\n`;
+    csv += `السنة: ${year}\n\n`;
+    csv += 'الأيام المستحقة,الأيام المأخوذة,عدد السجلات,المتبقي\n';
+    csv += `${totalEntitled},${totalTaken},${empAbsences.length},${remaining}\n\n`;
+    csv += '#,النوع,تاريخ الخروج,تاريخ العودة,عدد الأيام,الملاحظة\n';
     empAbsences.forEach((a, i) => {
-      csv += `${i+1},${a.startDate},${a.endDate},${a.days},"${a.note || ''}"\n`;
+      const typeName = absenceTypeNames[a.type] || a.type;
+      csv += `${i+1},${typeName},${a.startDate},${a.endDate},${a.days},"${a.note || ''}"\n`;
     });
     csv += `\n`;
-    csv += `,مجموع الايام التى اخذها,${totalTaken}\n`;
-    csv += `,عدد الايام المستحقة,${totalEntitled}\n`;
-    csv += `,صافى الايام المتبقية,${remaining}\n`;
+    csv += `الصافي المتبقي,${remaining} يوم (${totalTaken} مأخوذة من ${totalEntitled} مستحقة)\n`;
+    csv += `\nتم إنشاء التقرير بتاريخ: ${new Date().toLocaleDateString('ar-SA')}\n`;
+
     const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1964,7 +2087,7 @@ function exportAbsenceReport(format){
     window.open(url, '_blank');
   }
 }
-function exportAllAbsencesReport(format){
+async function exportAllAbsencesReport(format){
   const area = document.getElementById('allAbsencesReportPrintArea');
   if(!area){ showNotification('لا يوجد تقرير للتصدير', true); return; }
 
@@ -1981,21 +2104,40 @@ function exportAllAbsencesReport(format){
     setTimeout(() => { window.print(); area.remove(); toggleModal('allAbsencesReportModal', true); }, 500);
   } else if(format === 'excel'){
     const year = currentAbsenceReportData.year;
-    let csv = '\uFEFFاسم الموظف,من,إلى,عدد الأيام,سبب الغياب\n';
+    let csv = '\uFEFF';
+    csv += `تقرير شامل للغيابات والإجازات - السنة ${year}\n\n`;
+    csv += 'اسم الموظف,الأيام المستحقة,الأيام المأخوذة,عدد السجلات,المتبقي\n';
+
     employees.forEach(emp => {
-      const empAbsences = absences.filter(a => a.employeeId === emp.id && a.year === year).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
       const balance = leaveBalances.find(l => l.employeeId === emp.id && l.year === year);
       const totalEntitled = balance ? balance.days : 0;
+      const empAbsences = absences.filter(a => a.employeeId === emp.id && a.year === year);
       const totalTaken = empAbsences.reduce((s, a) => s + Number(a.days || 0), 0);
       const remaining = totalEntitled - totalTaken;
-      empAbsences.forEach(a => {
-        csv += `"${emp.name}",${a.startDate},${a.endDate},${a.days},"${a.note || ''}"\n`;
-      });
+      csv += `"${emp.name}",${totalEntitled},${totalTaken},${empAbsences.length},${remaining}\n`;
+    });
+
+    csv += `\n\n`;
+    csv += 'تفاصيل الغيابات:\n';
+    csv += 'اسم الموظف,#,النوع,تاريخ الخروج,تاريخ العودة,عدد الأيام,الملاحظة\n';
+
+    employees.forEach(emp => {
+      const empAbsences = absences.filter(a => a.employeeId === emp.id && a.year === year).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
       if(empAbsences.length){
-        csv += `"${emp.name} - ملخص",مجموع الأيام المأخوذة,${totalTaken},الأيام المستحقة,${totalEntitled}\n`;
-        csv += `"${emp.name} - ملخص",صافي الأيام المتبقية,${remaining},,\n\n`;
+        empAbsences.forEach((a, i) => {
+          const typeName = absenceTypeNames[a.type] || a.type;
+          csv += `"${emp.name}",${i+1},${typeName},${a.startDate},${a.endDate},${a.days},"${a.note || ''}"\n`;
+        });
+        const balance = leaveBalances.find(l => l.employeeId === emp.id && l.year === year);
+        const totalEntitled = balance ? balance.days : 0;
+        const totalTaken = empAbsences.reduce((s, a) => s + Number(a.days || 0), 0);
+        const remaining = totalEntitled - totalTaken;
+        csv += `"${emp.name} - الملخص",الصافي المتبقي,${remaining} يوم (${totalTaken} مأخوذة من ${totalEntitled} مستحقة)\n\n`;
       }
     });
+
+    csv += `\nتم إنشاء التقرير بتاريخ: ${new Date().toLocaleDateString('ar-SA')}\n`;
+
     const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2004,7 +2146,7 @@ function exportAllAbsencesReport(format){
     URL.revokeObjectURL(url);
     showNotification('تم تصدير Excel (CSV) الشامل');
   } else if(format === 'image'){
-    showNotification('جاري إنشاء الصورة... قد يستغرق بعض الوقت');
+    showNotification('جاري انشاء الصورة... قد يستغرق بعض الوقت');
     try{
       const canvas = await html2canvas(area, {scale:2, backgroundColor:'#fff'});
       const link = document.createElement('a');
@@ -2015,77 +2157,44 @@ function exportAllAbsencesReport(format){
     }catch(e){ console.error(e); showNotification('فشل تصدير الصورة', true); }
   }
 }
+/* ===== PWA Install Button ===== */
+let deferredPrompt = null;
 
-/* ================= النسخ الاحتياطي ================= */
-function exportDataToFile(){
-  try{
-    const data = { employees, partialAssessments, finalReports, absences, leaveBalances, exportedAt: new Date().toISOString() };
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const dateStr = new Date().toISOString().slice(0, 10);
-    a.href = url; a.download = `evaluation_backup_${dateStr}.json`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showNotification('تم تصدير البيانات بنجاح إلى ملف JSON. احتفظ به في مكان آمن.');
-  }catch(e){
-    console.error(e);
-    showNotification('حدث خطأ أثناء تصدير البيانات.', true);
-  }
-}
+async function setupInstallButton(){
+  const installBtn = document.getElementById('installPwaBtn');
+  if(!installBtn) return;
 
-function handleImportDataFile(e){
-  const file = e.target.files[0];
-  if(!file){ showNotification('لم يتم اختيار أي ملف.', true); return; }
-  const reader = new FileReader();
-  reader.onload = function(ev){
-    try{
-      const text = ev.target.result;
-      const data = JSON.parse(text);
-      if(!data || typeof data !== 'object'){ showNotification('ملف غير صالح.', true); return; }
-      if(!confirm('سيتم استبدال البيانات الحالية بالبيانات الموجودة في الملف. هل تريد المتابعة؟')) return;
-      employees = data.employees || [];
-      partialAssessments = data.partialAssessments || [];
-      finalReports = data.finalReports || [];
-      absences = data.absences || [];
-      leaveBalances = data.leaveBalances || [];
-      saveAll();
-      renderEmployeeList();
-      fillEmployeeSelects();
-      renderAbsenceTab();
-      showNotification('تم استيراد البيانات بنجاح.');
-    }catch(err){
-      console.error(err);
-      showNotification('فشل استيراد البيانات. تأكد من أن الملف هو ملف النسخة الاحتياطية الصحيح.', true);
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'block';
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if(!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if(outcome === 'accepted'){
+      showNotification('✅ تم تثبيت التطبيق بنجاح!');
+      installBtn.style.display = 'none';
     }
-  };
-  reader.onerror = function(){ showNotification('فشل قراءة الملف.', true); };
-  reader.readAsText(file, 'utf-8');
+    deferredPrompt = null;
+  });
+
+  window.addEventListener('appinstalled', () => {
+    showNotification('✅ تم تثبيت التطبيق!');
+    installBtn.style.display = 'none';
+    deferredPrompt = null;
+  });
 }
 
-function clearAllDataConfirm(){
-  if(!confirm('تحذير: هذا سيمسح جميع الموظفين والتقييمات والغيابات من هذا المتصفح فقط. هل أنت متأكد؟')) return;
-  employees = []; partialAssessments = []; finalReports = []; absences = []; leaveBalances = [];
-  saveAll();
-  renderEmployeeList(); fillEmployeeSelects(); renderAbsenceTab();
-  showNotification('تم مسح جميع البيانات من هذا المتصفح. ما زال بإمكانك استيراد نسخة احتياطية لاحقًا.');
-}
-</script>
-
-<!-- PWA Service Worker Registration -->
-<script>
+/* PWA Service Worker */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js')
       .then((registration) => { console.log('SW registered:', registration.scope); })
       .catch((error) => { console.log('SW registration failed:', error); });
   });
-}
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
-if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-  console.log('Running as installed PWA');
 }
 </script>
 
