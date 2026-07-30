@@ -1981,8 +1981,7 @@ function exportAllAbsencesReport(format){
     setTimeout(() => { window.print(); area.remove(); toggleModal('allAbsencesReportModal', true); }, 500);
   } else if(format === 'excel'){
     const year = currentAbsenceReportData.year;
-    let csv = 'sep=,\n';
-    csv += 'اسم الموظف,من,الى,عدد الايام,سبب الغياب\n';
+    let csv = '\uFEFFاسم الموظف,من,إلى,عدد الأيام,سبب الغياب\n';
     employees.forEach(emp => {
       const empAbsences = absences.filter(a => a.employeeId === emp.id && a.year === year).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
       const balance = leaveBalances.find(l => l.employeeId === emp.id && l.year === year);
@@ -1993,11 +1992,8 @@ function exportAllAbsencesReport(format){
         csv += `"${emp.name}",${a.startDate},${a.endDate},${a.days},"${a.note || ''}"\n`;
       });
       if(empAbsences.length){
-        csv += `\n`;
-        csv += `"${emp.name} - ملخص",مجموع الايام التى اخذها,${totalTaken}\n`;
-        csv += `"${emp.name} - ملخص",عدد الايام المستحقة,${totalEntitled}\n`;
-        csv += `"${emp.name} - ملخص",صافى الايام المتبقية,${remaining}\n`;
-        csv += `\n`;
+        csv += `"${emp.name} - ملخص",مجموع الأيام المأخوذة,${totalTaken},الأيام المستحقة,${totalEntitled}\n`;
+        csv += `"${emp.name} - ملخص",صافي الأيام المتبقية,${remaining},,\n\n`;
       }
     });
     const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
@@ -2008,7 +2004,7 @@ function exportAllAbsencesReport(format){
     URL.revokeObjectURL(url);
     showNotification('تم تصدير Excel (CSV) الشامل');
   } else if(format === 'image'){
-    showNotification('جاري انشاء الصورة... قد يستغرق بعض الوقت');
+    showNotification('جاري إنشاء الصورة... قد يستغرق بعض الوقت');
     try{
       const canvas = await html2canvas(area, {scale:2, backgroundColor:'#fff'});
       const link = document.createElement('a');
@@ -2075,42 +2071,21 @@ function clearAllDataConfirm(){
   renderEmployeeList(); fillEmployeeSelects(); renderAbsenceTab();
   showNotification('تم مسح جميع البيانات من هذا المتصفح. ما زال بإمكانك استيراد نسخة احتياطية لاحقًا.');
 }
+</script>
 
-/* ===== PWA Install Button ===== */
-let deferredPrompt = null;
-
-function setupInstallButton(){
-  const installBtn = document.getElementById('installPwaBtn');
-  if(!installBtn) return;
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBtn.style.display = 'block';
-  });
-  installBtn.addEventListener('click', async () => {
-    if(!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if(outcome === 'accepted'){
-      showNotification('✅ تم تثبيت التطبيق بنجاح!');
-      installBtn.style.display = 'none';
-    }
-    deferredPrompt = null;
-  });
-  window.addEventListener('appinstalled', () => {
-    showNotification('✅ تم تثبيت التطبيق!');
-    installBtn.style.display = 'none';
-    deferredPrompt = null;
-  });
-}
-
-/* ===== Service Worker ===== */
+<!-- PWA Service Worker Registration -->
+<script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js')
       .then((registration) => { console.log('SW registered:', registration.scope); })
       .catch((error) => { console.log('SW registration failed:', error); });
   });
+}
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
+if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+  console.log('Running as installed PWA');
 }
 </script>
 
