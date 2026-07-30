@@ -7,156 +7,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
-
-/* ===== Inline handler wrappers ===== */
-function doLogin(){
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass = document.getElementById('loginPassword').value.trim();
-  if(!email || !pass){ showNotification('أدخل البريد وكلمة المرور', true); return; }
-  const authLoading = document.getElementById('authLoading');
-  if(authLoading) authLoading.classList.remove('hidden');
-  auth.signInWithEmailAndPassword(email, pass)
-    .then((result) => {
-      currentUser = { type: 'firebase', uid: result.user.uid, email: result.user.email };
-      try{ localStorage.setItem('app_logged_user', JSON.stringify(currentUser)); }catch(e){}
-      showNotification('تم تسجيل الدخول بنجاح!');
-      if(authLoading) authLoading.classList.add('hidden');
-    })
-    .catch((e) => {
-      console.error(e);
-      showNotification('خطأ في تسجيل الدخول: ' + (e.message || ''), true);
-      if(authLoading) authLoading.classList.add('hidden');
-    });
-}
-
-function doSignup(){
-  const email = document.getElementById('signupEmail').value.trim();
-  const pass = document.getElementById('signupPassword').value.trim();
-  if(!email || !pass){ showNotification('أدخل البريد وكلمة المرور', true); return; }
-  if(pass.length < 6){ showNotification('كلمة المرور يجب أن تكون 6 أحرف على الأقل', true); return; }
-  const authLoading = document.getElementById('authLoading');
-  if(authLoading) authLoading.classList.remove('hidden');
-  auth.createUserWithEmailAndPassword(email, pass)
-    .then((result) => {
-      showNotification('تم إنشاء الحساب وتسجيل الدخول');
-      currentUser = { type: 'firebase', uid: result.user.uid, email: result.user.email };
-      try{ localStorage.setItem('app_logged_user', JSON.stringify(currentUser)); }catch(e){}
-      if(authLoading) authLoading.classList.add('hidden');
-    })
-    .catch((e) => {
-      console.error(e);
-      showNotification('خطأ في إنشاء الحساب: ' + (e.message || ''), true);
-      if(authLoading) authLoading.classList.add('hidden');
-    });
-}
-
-function showForgotModal(){
-  const forgotModal = document.getElementById('forgotPasswordModal');
-  const resetSuccessMsg = document.getElementById('resetSuccessMsg');
-  if(resetSuccessMsg) resetSuccessMsg.classList.remove('show');
-  document.getElementById('resetEmail').value = '';
-  const loginEmailInput = document.getElementById('loginEmail');
-  const resetEmailInput = document.getElementById('resetEmail');
-  if(loginEmailInput && resetEmailInput && loginEmailInput.value.trim()){
-    resetEmailInput.value = loginEmailInput.value.trim();
-  }
-  if(forgotModal) forgotModal.classList.add('show');
-}
-
-/* ===== PWA Install ===== */
-let deferredPrompt = null;
-
-function setupInstallButton(){
-  const installBtn = document.getElementById('installPwaBtn');
-  if(!installBtn) return;
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBtn.style.display = 'block';
-  });
-  installBtn.addEventListener('click', async () => {
-    if(!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if(outcome === 'accepted'){
-      showNotification('✅ تم تثبيت التطبيق بنجاح!');
-      installBtn.style.display = 'none';
-    }
-    deferredPrompt = null;
-  });
-  window.addEventListener('appinstalled', () => {
-    showNotification('✅ تم تثبيت التطبيق!');
-    installBtn.style.display = 'none';
-    deferredPrompt = null;
-  });
-}
-
-/* ===== Backup functions ===== */
-function exportDataToFile(){
-  try{
-    const data = { employees, partialAssessments, finalReports, absences, leaveBalances, exportedAt: new Date().toISOString() };
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const dateStr = new Date().toISOString().slice(0, 10);
-    a.href = url; a.download = `evaluation_backup_${dateStr}.json`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showNotification('تم تصدير البيانات بنجاح إلى ملف JSON. احتفظ به في مكان آمن.');
-  }catch(e){
-    console.error(e);
-    showNotification('حدث خطأ أثناء تصدير البيانات.', true);
-  }
-}
-
-function handleImportDataFile(e){
-  const file = e.target.files[0];
-  if(!file){ showNotification('لم يتم اختيار أي ملف.', true); return; }
-  const reader = new FileReader();
-  reader.onload = function(ev){
-    try{
-      const text = ev.target.result;
-      const data = JSON.parse(text);
-      if(!data || typeof data !== 'object'){ showNotification('ملف غير صالح.', true); return; }
-      if(!confirm('سيتم استبدال البيانات الحالية بالبيانات الموجودة في الملف. هل تريد المتابعة؟')) return;
-      employees = data.employees || [];
-      partialAssessments = data.partialAssessments || [];
-      finalReports = data.finalReports || [];
-      absences = data.absences || [];
-      leaveBalances = data.leaveBalances || [];
-      saveAll();
-      renderEmployeeList();
-      fillEmployeeSelects();
-      renderAbsenceTab();
-      showNotification('تم استيراد البيانات بنجاح.');
-    }catch(err){
-      console.error(err);
-      showNotification('فشل استيراد البيانات. تأكد من أن الملف هو ملف النسخة الاحتياطية الصحيح.', true);
-    }
-  };
-  reader.onerror = function(){ showNotification('فشل قراءة الملف.', true); };
-  reader.readAsText(file, 'utf-8');
-}
-
-function clearAllDataConfirm(){
-  if(!confirm('تحذير: هذا سيمسح جميع الموظفين والتقييمات والغيابات من هذا المتصفح فقط. هل أنت متأكد؟')) return;
-  employees = []; partialAssessments = []; finalReports = []; absences = []; leaveBalances = [];
-  saveAll();
-  renderEmployeeList(); fillEmployeeSelects(); renderAbsenceTab();
-  showNotification('تم مسح جميع البيانات من هذا المتصفح. ما زال بإمكانك استيراد نسخة احتياطية لاحقًا.');
-}
-
-/* ===== Service Worker ===== */
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then((registration) => { console.log('SW registered:', registration.scope); })
-      .catch((error) => { console.log('SW registration failed:', error); });
-  });
-}
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *{box-sizing:border-box;font-family:"Segoe UI",Tahoma,sans-serif;margin:0;padding:0}
 body{background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:15px;direction:rtl}
@@ -309,13 +160,13 @@ body{background:#fff;padding:0;margin:0}
 <div id="loginForm" class="auth-form active">
 <div class="form-group"><label>البريد الإلكتروني:</label><input type="email" id="loginEmail" placeholder="example@email.com" autocomplete="email"></div>
 <div class="form-group"><label>كلمة المرور:</label><div class="password-input-wrapper"><input type="password" id="loginPassword" placeholder="********" autocomplete="current-password"><button type="button" class="toggle-password" data-target="loginPassword">👁️</button></div></div>
-<button class="btn-primary" id="btnLogin" onclick="doLogin()" style="width:100%;margin-top:8px;font-size:1rem;padding:12px;">🔒 تسجيل الدخول</button>
-<button class="forgot-link" id="forgotPasswordLink" type="button" onclick="showForgotModal()">نسيت كلمة المرور؟</button>
+<button class="btn-primary" id="btnLogin" style="width:100%;margin-top:8px;font-size:1rem;padding:12px;">🔒 تسجيل الدخول</button>
+<button class="forgot-link" id="forgotPasswordLink" type="button">نسيت كلمة المرور؟</button>
 </div>
 <div id="signupForm" class="auth-form">
 <div class="form-group"><label>البريد الإلكتروني:</label><input type="email" id="signupEmail" placeholder="example@email.com" autocomplete="email"></div>
 <div class="form-group"><label>كلمة المرور (6 أحرف على الأقل):</label><div class="password-input-wrapper"><input type="password" id="signupPassword" placeholder="********" autocomplete="new-password"><button type="button" class="toggle-password" data-target="signupPassword">👁️</button></div></div>
-<button class="btn-success" id="btnSignup" onclick="doSignup()" style="width:100%;margin-top:8px;font-size:1rem;padding:12px;">📝 إنشاء حساب</button>
+<button class="btn-success" id="btnSignup" style="width:100%;margin-top:8px;font-size:1rem;padding:12px;">📝 إنشاء حساب</button>
 </div>
 <div id="authLoading" class="auth-loading hidden">جاري المعالجة... ⏳</div>
 <div id="userInfoDisplay" class="user-info hidden"></div>
@@ -2168,6 +2019,100 @@ function exportAllAbsencesReport(format){
     }catch(e){ console.error(e); showNotification('فشل تصدير الصورة', true); }
   }
 }
+
+/* ================= النسخ الاحتياطي ================= */
+function exportDataToFile(){
+  try{
+    const data = { employees, partialAssessments, finalReports, absences, leaveBalances, exportedAt: new Date().toISOString() };
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.href = url; a.download = `evaluation_backup_${dateStr}.json`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showNotification('تم تصدير البيانات بنجاح إلى ملف JSON. احتفظ به في مكان آمن.');
+  }catch(e){
+    console.error(e);
+    showNotification('حدث خطأ أثناء تصدير البيانات.', true);
+  }
+}
+
+function handleImportDataFile(e){
+  const file = e.target.files[0];
+  if(!file){ showNotification('لم يتم اختيار أي ملف.', true); return; }
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    try{
+      const text = ev.target.result;
+      const data = JSON.parse(text);
+      if(!data || typeof data !== 'object'){ showNotification('ملف غير صالح.', true); return; }
+      if(!confirm('سيتم استبدال البيانات الحالية بالبيانات الموجودة في الملف. هل تريد المتابعة؟')) return;
+      employees = data.employees || [];
+      partialAssessments = data.partialAssessments || [];
+      finalReports = data.finalReports || [];
+      absences = data.absences || [];
+      leaveBalances = data.leaveBalances || [];
+      saveAll();
+      renderEmployeeList();
+      fillEmployeeSelects();
+      renderAbsenceTab();
+      showNotification('تم استيراد البيانات بنجاح.');
+    }catch(err){
+      console.error(err);
+      showNotification('فشل استيراد البيانات. تأكد من أن الملف هو ملف النسخة الاحتياطية الصحيح.', true);
+    }
+  };
+  reader.onerror = function(){ showNotification('فشل قراءة الملف.', true); };
+  reader.readAsText(file, 'utf-8');
+}
+
+function clearAllDataConfirm(){
+  if(!confirm('تحذير: هذا سيمسح جميع الموظفين والتقييمات والغيابات من هذا المتصفح فقط. هل أنت متأكد؟')) return;
+  employees = []; partialAssessments = []; finalReports = []; absences = []; leaveBalances = [];
+  saveAll();
+  renderEmployeeList(); fillEmployeeSelects(); renderAbsenceTab();
+  showNotification('تم مسح جميع البيانات من هذا المتصفح. ما زال بإمكانك استيراد نسخة احتياطية لاحقًا.');
+}
+
+/* ===== PWA Install Button ===== */
+let deferredPrompt = null;
+
+function setupInstallButton(){
+  const installBtn = document.getElementById('installPwaBtn');
+  if(!installBtn) return;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'block';
+  });
+  installBtn.addEventListener('click', async () => {
+    if(!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if(outcome === 'accepted'){
+      showNotification('✅ تم تثبيت التطبيق بنجاح!');
+      installBtn.style.display = 'none';
+    }
+    deferredPrompt = null;
+  });
+  window.addEventListener('appinstalled', () => {
+    showNotification('✅ تم تثبيت التطبيق!');
+    installBtn.style.display = 'none';
+    deferredPrompt = null;
+  });
+}
+
+/* ===== Service Worker ===== */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then((registration) => { console.log('SW registered:', registration.scope); })
+      .catch((error) => { console.log('SW registration failed:', error); });
+  });
+}
+</script>
 
 </body>
 </html>
